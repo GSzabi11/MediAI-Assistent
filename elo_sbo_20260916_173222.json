@@ -1,0 +1,137 @@
+{
+  "mode": "sbo",
+  "model": "large-v3-turbo",
+  "chat": [
+    {
+      "id": 0,
+      "role": "beteg",
+      "duration": 1.92,
+      "text": "Most már hallgat!"
+    },
+    {
+      "id": 1,
+      "role": "orvos",
+      "duration": 2.18,
+      "text": "Jó napot, kiwánok!"
+    },
+    {
+      "id": 2,
+      "role": "beteg",
+      "duration": 1.47,
+      "text": "Szia!"
+    },
+    {
+      "id": 3,
+      "role": "orvos",
+      "duration": 2.27,
+      "text": "Mi a panasza í?"
+    },
+    {
+      "id": 4,
+      "role": "beteg",
+      "duration": 3.14,
+      "text": "Fáj a lábam és a fülem."
+    },
+    {
+      "id": 5,
+      "role": "orvos",
+      "duration": 2.24,
+      "text": "És mióta fáj?"
+    },
+    {
+      "id": 6,
+      "role": "beteg",
+      "duration": 2.5,
+      "text": "Kb. 2 hete."
+    },
+    {
+      "id": 7,
+      "role": "orvos",
+      "duration": 3.17,
+      "text": "És milyen típusú fájdalom?"
+    },
+    {
+      "id": 8,
+      "role": "beteg",
+      "duration": 4.9,
+      "text": "Éles, szúró a fülembe, a lábomba pedig tompa."
+    },
+    {
+      "id": 9,
+      "role": "orvos",
+      "duration": 3.42,
+      "text": "Miért te ebből eset az elmúlt időben?"
+    },
+    {
+      "id": 10,
+      "role": "beteg",
+      "duration": 2.94,
+      "text": "Nem, de sok szest íttam."
+    },
+    {
+      "id": 11,
+      "role": "orvos",
+      "duration": 4.42,
+      "text": "Akkor lehetséges, hogy érted, csak ön nem emlékszik rá."
+    },
+    {
+      "id": 12,
+      "role": "beteg",
+      "duration": 4.13,
+      "text": "Az nem kizárt, mondjuk a tegnapi napra sem emlékszem."
+    },
+    {
+      "id": 13,
+      "role": "orvos",
+      "duration": 5.89,
+      "text": "Akkor jöjjön, megvizsgáljuk a fülét, meg a lábát, és meglátjuk, hogy..."
+    },
+    {
+      "id": 14,
+      "role": "orvos",
+      "duration": 2.05,
+      "text": "Hogyan tovább?"
+    },
+    {
+      "id": 15,
+      "role": "beteg",
+      "duration": 3.3,
+      "text": "Oké, de finom abban már szváj."
+    }
+  ],
+  "extraction": {
+    "fo_panasz": "fáj a lábam és a fülem",
+    "tunetek": [
+      {
+        "tunet": "fáj a láb",
+        "jelen_van": true,
+        "lokalizacio": null,
+        "kezdet_idotartam": null,
+        "jelleg_sulyossag": null,
+        "forras_turn_ids": [
+          5
+        ]
+      },
+      {
+        "tunet": "fáj a fülem",
+        "jelen_van": true,
+        "lokalizacio": null,
+        "kezdet_idotartam": null,
+        "jelleg_sulyossag": null,
+        "forras_turn_ids": [
+          4
+        ]
+      }
+    ],
+    "gyogyszerek": [],
+    "allergiak": [],
+    "elozmenyek": [],
+    "kulcsszavak": [
+      "szest",
+      "tagnapi napra"
+    ],
+    "_figyelmeztetesek": [
+      "'fáj a láb': a forrás csak orvosi megszólalás, beteg válasza nélkül"
+    ]
+  }
+}

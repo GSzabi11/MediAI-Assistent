@@ -1,0 +1,395 @@
+"""
+Orvosi hangprofil – felvétel, mentés, betöltés.
+
+Működés (ensure_profile):
+  - Ha az orvosnak még nincs profilja: kiír néhány mondatot, egyenként felolvastatja,
+    minden mondatot ellenőriz (hangerő, beszédhossz), majd elmenti.
+  - Ha van profil: egyszerűen betölti.
+  - Ha van WAV, de hiányzik a beágyazás, vagy azóta beágyazó modellt váltottatok:
+    a WAV-ból újraszámolja, nem kell újra felvenni.
+
+Fájlok orvosonként (orvos_profilok/):
+  <doctor_id>.wav   – a mondatok beszédrészei összefűzve, 16 kHz, mono, 16 bit PCM
+  <doctor_id>.npy   – hanglenyomat (embedding) a gyors napi összehasonlításhoz
+  <doctor_id>.json  – metaadatok: dátum, beágyazó modell, nettó beszédidő, minőség
+
+Önállóan is futtatható:
+  python hangprofil.py --doctor-id drkovacs            # betölt, vagy ha nincs, felvesz
+  python hangprofil.py --doctor-id drkovacs --uj       # új felvétel (a régi mentésre kerül)
+  python hangprofil.py --doctor-id drkovacs --teszt    # élő próba: mennyire ismer fel
+"""
+import argparse
+import json
+import os
+import queue
+import shutil
+import sys
+import time
+import wave
+from datetime import datetime
+
+import numpy as np
+import sounddevice as sd
+import torch
+from silero_vad import VADIterator, get_speech_timestamps, load_silero_vad
+
+from beszed_pipeline import _load_env_file
+
+_load_env_file()
+
+SR = 16000
+CHUNK = 512  # a Silero VAD 16 kHz-en 512 mintás blokkokat vár
+PROFILE_DIR = "orvos_profilok"
+EMBED_MODEL = "pyannote/wespeaker-voxceleb-resnet34-LM"
+
+# A felolvasandó mondatok. A hanglenyomat szövegfüggetlen, tehát nem a tartalom a
+# lényeg, hanem hogy (1) elég nettó beszéd legyen (~30+ mp), (2) sokféle magyar hang
+# szerepeljen (ö/ő/ü/ű, gy/ny/ty, sz/zs/cs, hosszú magánhangzók), és (3) a stílus a
+# munka közbeni beszédhez hasonlítson: kérdések, utasítások, számok diktálása.
+ENROLL_SENTENCES = [
+    "Jó napot kívánok, kérem, mondja el, mi történt önnel.",
+    "Mióta tart a fájdalom, hová sugárzik, és érez-e zsibbadást a kezében vagy a lábában?",
+    "Szed rendszeresen gyógyszert, például vérnyomáscsökkentőt, vérhígítót vagy inzulint?",
+    "Most meghallgatom a szívét és a tüdejét. Vegyen mély levegőt, és tartsa bent egy pillanatig.",
+    "A bal kamra ejekciós frakciója ötvenöt százalék, regionális falmozgászavar nem látható.",
+    "Az E per e vessző arány tizenkettő, a tricuspidalis regurgitáció sebessége két egész nyolc méter per szekundum.",
+    "Hány éves korában műtötték, és volt-e azóta szövődménye vagy gyógyszerallergiás reakciója?",
+    "Köszönöm a türelmét. Az eredményeket egy óra múlva megbeszéljük a hozzátartozójával együtt.",
+]
+
+MIN_SENTENCE_SPEECH = 2.0    # mp nettó beszéd mondatonként
+MIN_TOTAL_SPEECH = 25.0      # mp nettó beszéd összesen
+MAX_TRIES = 3                # ennyiszer kérjük újra ugyanazt a mondatot
+# Tájékoztató küszöbök (mikrofonfüggők) – a figyelmeztetéshez, nem tiltáshoz
+QUIET_PEAK = 0.03
+CLIP_PEAK = 0.98
+MIN_SNR = 4.0
+
+
+# ---------------------------------------------------------------------------
+# Fájlkezelés
+# ---------------------------------------------------------------------------
+def profile_paths(doctor_id: str) -> dict:
+    os.makedirs(PROFILE_DIR, exist_ok=True)
+    base = os.path.join(PROFILE_DIR, doctor_id)
+    return {"wav": base + ".wav", "npy": base + ".npy", "json": base + ".json"}
+
+
+def save_wav(path: str, audio: np.ndarray, sr: int = SR):
+    pcm16 = np.clip(audio * 32767, -32768, 32767).astype(np.int16)
+    with wave.open(path, "wb") as f:
+        f.setnchannels(1)
+        f.setsampwidth(2)
+        f.setframerate(sr)
+        f.writeframes(pcm16.tobytes())
+
+
+def load_wav(path: str) -> np.ndarray:
+    with wave.open(path, "rb") as f:
+        if f.getframerate() != SR or f.getnchannels() != 1 or f.getsampwidth() != 2:
+            raise ValueError(f"{path}: 16 kHz, mono, 16 bites WAV kell "
+                             f"(ez {f.getframerate()} Hz, {f.getnchannels()} csatorna)")
+        raw = f.readframes(f.getnframes())
+    return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32767
+
+
+def backup_profile(paths: dict):
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    for p in paths.values():
+        if os.path.exists(p):
+            shutil.move(p, f"{p}.bak_{stamp}")
+
+
+def cosine(a, b) -> float:
+    a, b = np.ravel(a), np.ravel(b)
+    return float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-9))
+
+
+# ---------------------------------------------------------------------------
+# Hanglenyomat
+# ---------------------------------------------------------------------------
+class SpeakerID:
+    """Hanglenyomat egy hangrészletből. A modellt csak egyszer tölti le a HF-ről
+    (ehhez kell a HF_TOKEN), utána helyben, internet nélkül fut."""
+
+    def __init__(self, device: str | None = None):
+        from pyannote.audio import Inference, Model
+
+        token = os.environ.get("HF_TOKEN")
+        if not token:
+            raise RuntimeError("Nincs HF_TOKEN (a .env fájlban vagy környezeti változóként).")
+        device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        model = Model.from_pretrained(EMBED_MODEL, token=token)
+        self.inference = Inference(model, window="whole")
+        self.inference.to(torch.device(device))
+
+    def embed(self, audio: np.ndarray) -> np.ndarray:
+        wav = torch.from_numpy(audio.astype(np.float32)).unsqueeze(0)
+        return np.ravel(self.inference({"waveform": wav, "sample_rate": SR}))
+
+
+# ---------------------------------------------------------------------------
+# Felvétel
+# ---------------------------------------------------------------------------
+def _level_bar(chunk: np.ndarray, width: int = 30) -> str:
+    rms = float(np.sqrt(np.mean(chunk ** 2)))
+    n = min(width, int(rms * width * 12))
+    return "█" * n + "·" * (width - n)
+
+
+def record_until_pause(vad_model, device, max_sec: float = 20.0,
+                       end_silence_ms: int = 1200, start_timeout: float = 10.0) -> np.ndarray:
+    """Addig vesz fel, amíg a beszéd után ~1,2 mp szünet nem jön (vagy lejár az idő)."""
+    q: queue.Queue = queue.Queue()
+
+    def callback(indata, frames, t, status):
+        q.put(indata[:, 0].copy())
+
+    vad = VADIterator(vad_model, sampling_rate=SR,
+                      min_silence_duration_ms=end_silence_ms, speech_pad_ms=150)
+    chunks, pending = [], np.zeros(0, dtype=np.float32)
+    started, t0, n = False, time.time(), 0
+    with sd.InputStream(samplerate=SR, channels=1, dtype="float32",
+                        blocksize=CHUNK, device=device, callback=callback):
+        while True:
+            try:
+                pending = np.concatenate([pending, q.get(timeout=1)])
+            except queue.Empty:
+                continue
+            while len(pending) >= CHUNK:
+                chunk, pending = pending[:CHUNK], pending[CHUNK:]
+                chunks.append(chunk)
+                n += 1
+                if n % 5 == 0:
+                    state = "beszéd" if started else "várok"
+                    print(f"\r    🎙 [{_level_bar(chunk)}] {state}   ", end="", flush=True)
+                event = vad(torch.from_numpy(chunk))
+                if event and "start" in event:
+                    started = True
+                if event and "end" in event and started:
+                    vad.reset_states()
+                    print("\r" + " " * 60 + "\r", end="")
+                    return np.concatenate(chunks)
+            elapsed = time.time() - t0
+            if (not started and elapsed > start_timeout) or elapsed > max_sec:
+                vad.reset_states()
+                print("\r" + " " * 60 + "\r", end="")
+                return np.concatenate(chunks) if chunks else np.zeros(0, dtype=np.float32)
+
+
+def speech_only(audio: np.ndarray, vad_model) -> np.ndarray:
+    """Csak a beszédrészek – a szünetek és a háttérzaj nem kerülnek a profilba."""
+    if len(audio) == 0:
+        return audio
+    ts = get_speech_timestamps(torch.from_numpy(audio), vad_model,
+                               sampling_rate=SR, speech_pad_ms=100)
+    if not ts:
+        return np.zeros(0, dtype=np.float32)
+    return np.concatenate([audio[t["start"]:t["end"]] for t in ts])
+
+
+def measure_noise(device, seconds: float = 2.0) -> float:
+    print(f"\n  Háttérzaj mérése {seconds:.0f} mp – kérem, most maradjon csendben...")
+    rec = sd.rec(int(seconds * SR), samplerate=SR, channels=1, dtype="float32", device=device)
+    sd.wait()
+    return float(np.sqrt(np.mean(rec[:, 0] ** 2)))
+
+
+def sentence_problems(raw: np.ndarray, speech: np.ndarray, noise_rms: float) -> tuple[list, list]:
+    """(hibák, figyelmeztetések) – hiba esetén újra kell mondani."""
+    errors, warns = [], []
+    dur = len(speech) / SR
+    if dur < MIN_SENTENCE_SPEECH:
+        errors.append(f"túl kevés beszéd érzékelhető ({dur:.1f} mp)")
+    if len(raw):
+        peak = float(np.max(np.abs(raw)))
+        if peak < QUIET_PEAK:
+            errors.append("nagyon halk – beszéljen közelebb a mikrofonhoz, vagy emelje a mikrofon szintjét")
+        if peak > CLIP_PEAK:
+            warns.append("túlvezérelt, torzulhat – kicsit távolabbról vagy halkabban")
+    if len(speech) and noise_rms > 0:
+        snr = float(np.sqrt(np.mean(speech ** 2))) / noise_rms
+        if snr < MIN_SNR:
+            warns.append(f"a beszéd alig hangosabb a háttérzajnál (arány: {snr:.1f})")
+    return errors, warns
+
+
+def enroll(doctor_id: str, spk: SpeakerID, device=None) -> np.ndarray:
+    paths = profile_paths(doctor_id)
+    vad_model = load_silero_vad()
+
+    print(f"\n{'=' * 70}\nHANGPROFIL FELVÉTELE – {doctor_id}\n{'=' * 70}")
+    print("Pár mondatot fog felolvasni, egyenként. Tippek a jó profilhoz:")
+    print("  • ugyanazzal a mikrofonnal és távolságból, ahogy munka közben fogja használni")
+    print("  • természetes tempóban és hangerővel, ahogy egy beteggel beszél")
+    print("  • a mondat végén tartson egy kis szünetet – a felvétel magától leáll")
+
+    noise = measure_noise(device)
+    if noise > 0.02:
+        print(f"  ⚠ Viszonylag zajos környezet (zajszint: {noise:.3f}). Ha lehet, keressen csendesebb helyet.")
+    else:
+        print(f"  ✓ Háttérzaj rendben ({noise:.3f})")
+
+    segments: list[np.ndarray] = []
+    total = len(ENROLL_SENTENCES)
+    skipped_in_row = 0
+    for idx, sentence in enumerate(ENROLL_SENTENCES, 1):
+        accepted = False
+        for attempt in range(1, MAX_TRIES + 1):
+            print(f"\n[{idx}/{total}]  \"{sentence}\"")
+            input("    Enter, majd olvassa fel...")
+            raw = record_until_pause(vad_model, device)
+            speech = speech_only(raw, vad_model)
+            errors, warns = sentence_problems(raw, speech, noise)
+            for w in warns:
+                print(f"    ⚠ {w}")
+            if not errors:
+                print(f"    ✓ rendben ({len(speech) / SR:.1f} mp beszéd)")
+                segments.append(speech)
+                accepted = True
+                break
+            print("    ✗ " + "; ".join(errors))
+            if attempt < MAX_TRIES:
+                print("    Kérem, mondja el újra.")
+            else:
+                print("    Kihagyom ezt a mondatot.")
+        skipped_in_row = 0 if accepted else skipped_in_row + 1
+        # Ha már az elején semmi nem sikerül, valószínűleg a mikrofonnal van baj –
+        # ne kelljen az összes mondaton végigszenvedni.
+        if (idx == 1 and not accepted) or skipped_in_row >= 2:
+            raise RuntimeError(
+                "A felvétel nem sikerül – valószínűleg mikrofonprobléma. Ellenőrizze, hogy a "
+                "megfelelő eszköz van-e kiválasztva (--list-devices, majd --device N), nincs-e "
+                "némítva, és a Windows engedélyezi-e a mikrofon használatát a Pythonnak."
+            )
+
+    # Összhang-ellenőrzés: minden mondat ugyanattól a beszélőtől származik-e?
+    # (kiszűri, ha valaki közbeszólt, vagy egy mondat főleg zaj volt)
+    if len(segments) >= 3:
+        embs = [spk.embed(s) for s in segments]
+        sims = []
+        for i, e in enumerate(embs):
+            others = np.mean([x for j, x in enumerate(embs) if j != i], axis=0)
+            sims.append(cosine(e, others))
+        median = float(np.median(sims))
+        keep = [i for i, s in enumerate(sims) if s >= median - 0.15]
+        dropped = len(segments) - len(keep)
+        if dropped:
+            print(f"\n  ⚠ {dropped} mondat hangja eltért a többitől (zaj vagy közbeszólás?), kihagyom.")
+        segments = [segments[i] for i in keep]
+        sims = [sims[i] for i in keep]
+    else:
+        sims = []
+
+    audio = np.concatenate(segments) if segments else np.zeros(0, dtype=np.float32)
+    net = len(audio) / SR
+    if net < MIN_SENTENCE_SPEECH * 2:
+        raise RuntimeError("Nem gyűlt össze elég beszéd a profilhoz. Ellenőrizze a mikrofont (--list-devices).")
+    if net < MIN_TOTAL_SPEECH:
+        print(f"\n  ⚠ Csak {net:.0f} mp használható beszéd gyűlt össze (ajánlott: {MIN_TOTAL_SPEECH:.0f}+). "
+              f"A profil működik, de pontatlanabb lehet – később vegye fel újra: --uj")
+
+    emb = spk.embed(audio)
+    save_wav(paths["wav"], audio)
+    np.save(paths["npy"], emb)
+    meta = {
+        "doctor_id": doctor_id,
+        "created": datetime.now().isoformat(timespec="seconds"),
+        "embed_model": EMBED_MODEL,
+        "sample_rate": SR,
+        "net_speech_sec": round(net, 1),
+        "sentences_used": len(segments),
+        "noise_rms": round(noise, 4),
+        "self_similarity_min": round(min(sims), 3) if sims else None,
+        "input_device": sd.query_devices(device, "input")["name"],
+    }
+    with open(paths["json"], "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=2)
+    print(f"\n✓ Profil elmentve ({net:.0f} mp beszéd, {len(segments)} mondat): {paths['wav']}")
+    return emb
+
+
+# ---------------------------------------------------------------------------
+# Betöltés vagy létrehozás
+# ---------------------------------------------------------------------------
+def ensure_profile(doctor_id: str, spk: SpeakerID, device=None, force_new: bool = False) -> np.ndarray:
+    """Betölti az orvos hangprofilját; ha nincs, felveszi. Mindig a hanglenyomatot adja vissza."""
+    paths = profile_paths(doctor_id)
+
+    if force_new:
+        if os.path.exists(paths["wav"]):
+            backup_profile(paths)
+            print("A korábbi profil biztonsági mentésre került (.bak_<időbélyeg>).")
+        return enroll(doctor_id, spk, device)
+
+    if not os.path.exists(paths["wav"]):
+        print(f"\nMég nincs hangprofil ehhez az orvoshoz: {doctor_id}")
+        return enroll(doctor_id, spk, device)
+
+    meta = {}
+    if os.path.exists(paths["json"]):
+        with open(paths["json"], encoding="utf-8") as f:
+            meta = json.load(f)
+
+    if os.path.exists(paths["npy"]) and meta.get("embed_model") == EMBED_MODEL:
+        emb = np.load(paths["npy"])
+        print(f"✓ Hangprofil betöltve: {doctor_id} "
+              f"({meta.get('net_speech_sec', '?')} mp beszéd, felvéve: {meta.get('created', '?')})")
+        return emb
+
+    # Van WAV, de nincs (érvényes) hanglenyomat – pl. modellváltás után
+    reason = "hiányzik a hanglenyomat" if not os.path.exists(paths["npy"]) else \
+        f"a beágyazó modell megváltozott ({meta.get('embed_model')} → {EMBED_MODEL})"
+    print(f"Hangprofil újraszámolása a meglévő felvételből: {reason}")
+    emb = spk.embed(load_wav(paths["wav"]))
+    np.save(paths["npy"], emb)
+    meta.update(embed_model=EMBED_MODEL, reembedded=datetime.now().isoformat(timespec="seconds"))
+    meta.setdefault("doctor_id", doctor_id)
+    with open(paths["json"], "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=2)
+    print(f"✓ Hangprofil frissítve: {doctor_id}")
+    return emb
+
+
+def live_test(emb: np.ndarray, spk: SpeakerID, device=None, rounds: int = 5):
+    """Rövid próba: mondjon pár mondatot saját magaként, majd kérjen meg valakit."""
+    vad_model = load_silero_vad()
+    print("\nÉlő próba – beszéljen, a rendszer kiírja a hasonlóságot a profilhoz (Ctrl+C: vége).")
+    print("Próbálja ki saját hangján, majd kérjen meg valaki mást is.\n")
+    try:
+        for _ in range(rounds * 4):
+            raw = record_until_pause(vad_model, device, end_silence_ms=800)
+            speech = speech_only(raw, vad_model)
+            if len(speech) / SR < 1.0:
+                continue
+            sim = cosine(spk.embed(speech), emb)
+            bar = "█" * max(0, int(sim * 30))
+            print(f"  hasonlóság: {sim:5.2f}  {bar}")
+    except KeyboardInterrupt:
+        pass
+    print("\nA küszöböt (elo_teszt.py --threshold) a saját és a más hangján mért értékek közé állítsa.")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--doctor-id", required=True, help="a Medi-AI rendszerbeli orvos-azonosító")
+    ap.add_argument("--uj", action="store_true", help="új felvétel (a régi biztonsági mentésre kerül)")
+    ap.add_argument("--teszt", action="store_true", help="élő próba a profillal")
+    ap.add_argument("--device", type=int, default=None, help="mikrofon indexe")
+    ap.add_argument("--list-devices", action="store_true")
+    args = ap.parse_args()
+
+    if args.list_devices:
+        print(sd.query_devices())
+        return
+    try:
+        spk = SpeakerID()
+    except RuntimeError as e:
+        sys.exit(str(e))
+    emb = ensure_profile(args.doctor_id, spk, args.device, force_new=args.uj)
+    if args.teszt:
+        live_test(emb, spk, args.device)
+
+
+if __name__ == "__main__":
+    main()

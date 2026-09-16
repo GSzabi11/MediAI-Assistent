@@ -1,0 +1,136 @@
+{
+  "mode": "sbo",
+  "model": "large-v3-turbo",
+  "chat": [
+    {
+      "id": 0,
+      "role": "orvos",
+      "duration": 3.65,
+      "text": "Jó napot kívánok, miért jött ma hozzánk?"
+    },
+    {
+      "id": 1,
+      "role": "beteg",
+      "duration": 3.1,
+      "text": "Szia! Elhagytam az inzulint."
+    },
+    {
+      "id": 2,
+      "role": "beteg",
+      "duration": 2.5,
+      "text": "Iñácti óta szorító!"
+    },
+    {
+      "id": 3,
+      "role": "orvos",
+      "duration": 2.62,
+      "text": "Pumpát? Vagy mit hagyott el?"
+    },
+    {
+      "id": 4,
+      "role": "beteg",
+      "duration": 2.27,
+      "text": "Igen, az indiákciót."
+    },
+    {
+      "id": 5,
+      "role": "orvos",
+      "duration": 3.87,
+      "text": "De ön nem metformint kéne szedjen?"
+    },
+    {
+      "id": 6,
+      "role": "beteg",
+      "duration": 3.2,
+      "text": "Nem hiszem, inzulint mondtak nekem."
+    },
+    {
+      "id": 7,
+      "role": "orvos",
+      "duration": 3.94,
+      "text": "Rendben, akkor írok fel Önnek."
+    },
+    {
+      "id": 8,
+      "role": "orvos",
+      "duration": 2.4,
+      "text": "A sportinzulint."
+    },
+    {
+      "id": 9,
+      "role": "beteg",
+      "duration": 1.95,
+      "text": "Hogy mit ír fel?"
+    },
+    {
+      "id": 10,
+      "role": "orvos",
+      "duration": 2.75,
+      "text": "Aspart Insulind"
+    },
+    {
+      "id": 11,
+      "role": "beteg",
+      "duration": 1.5,
+      "text": "Oké."
+    },
+    {
+      "id": 12,
+      "role": "beteg",
+      "duration": 2.14,
+      "text": "És azt hogy kell szedni?"
+    },
+    {
+      "id": 13,
+      "role": "orvos",
+      "duration": 4.96,
+      "text": "Poszprandiálisan, ami azt jelenti, hogy evés után."
+    },
+    {
+      "id": 14,
+      "role": "orvos",
+      "duration": 4.61,
+      "text": "Mármint evés előtt, hogy evés után jó legyen a cukra."
+    }
+  ],
+  "extraction": {
+    "fo_panasz": "szorító",
+    "tunetek": [
+      {
+        "tunet": "szorító",
+        "jelen_van": true,
+        "lokalizacio": null,
+        "kezdet_idotartam": "Iñácti óta",
+        "jelleg_sulyossag": null,
+        "forras_turn_ids": [
+          2
+        ]
+      },
+      {
+        "tunet": "inzulint elhagyás",
+        "jelen_van": true,
+        "lokalizacio": null,
+        "kezdet_idotartam": null,
+        "jelleg_sulyossag": null,
+        "forras_turn_ids": [
+          1
+        ]
+      }
+    ],
+    "gyogyszerek": [
+      "inulint"
+    ],
+    "allergiak": [],
+    "elozmenyek": [],
+    "kulcsszavak": [
+      "inulint",
+      "sportinzulin",
+      "aspart insulind",
+      "evés után",
+      "evés előtt"
+    ],
+    "_figyelmeztetesek": [
+      "NÉV NEM EGYEZIK: 'inulint' (gyogyszerek) nem szerepel az átiratban – az átiratban elhangzott alak: 'inzulint'"
+    ]
+  }
+}
