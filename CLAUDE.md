@@ -15,7 +15,7 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
   Még NEM kötött be a backendbe.
 - **frontend/** — React (Figma-terv alapján, még nincs kód).
 
-## A rendszer központi elve: az Allitas (Claim)
+## A rendszer központi elve: az Allitas (Statement)
 
 Minden orvosnak mutatott állítás — laborjelölés, trend, gyógyszer-riasztás,
 LLM-összefoglaló — egy `allitas` sorként létezik, sose nyers szövegként.
@@ -63,7 +63,7 @@ Hibernate csak ellenőriz.
 ## Java konvenciók, amiket eddig követtünk
 
 - **Modul szerinti csomagolás, modulon belül réteg**: minden funkció
-  (`patient`, később `recording`, `claim`, ...) saját mappa, abban
+  (`patient`, később `recording`, `statement`, ...) saját mappa, abban
   `api/ persistence/ service/ exception/` almappák. A `GlobalExceptionHandler`
   és minden modulon átnyúló dolog `common/api`-ban van, NEM egy konkrét
   modulban.

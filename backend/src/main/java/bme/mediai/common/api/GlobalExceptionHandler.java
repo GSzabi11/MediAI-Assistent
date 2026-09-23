@@ -5,6 +5,8 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import bme.mediai.statement.exception.StatementNotFoundException;
+import bme.mediai.statement.exception.StatementSourcePatientMismatchException;
 import bme.mediai.medicalcare.exception.MedicalCareClosedException;
 import bme.mediai.medicalcare.exception.MedicalCareNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCarePatientMismatchException;
@@ -69,6 +71,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({MedicalCareClosedException.class, MedicalCarePatientMismatchException.class})
     ProblemDetail handleMedicalCareConflict(RuntimeException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(StatementNotFoundException.class)
+    ProblemDetail handleStatementNotFound(StatementNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(StatementSourcePatientMismatchException.class)
+    ProblemDetail handleStatementSourceMismatch(StatementSourcePatientMismatchException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

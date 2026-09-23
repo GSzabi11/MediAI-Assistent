@@ -13,7 +13,8 @@ egy diagram nem mutat.
 
 Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `voice_profile` (= `hangprofil`), `recording` (= `felvetel`),
-`utterance` (= `megszolalas`), `medical_care` (= `ellatas`).
+`utterance` (= `megszolalas`), `medical_care` (= `ellatas`),
+`statement` (= `allitas`).
 
 ## `app_user` (felhasznalo)
 
@@ -80,7 +81,7 @@ a fiókkal együtt törlendő.
   beteg törlésekor (CASCADE mindkét táblára) a `RESTRICT` az utasítás
   közepén, a még ki nem törölt felvételen elhasalna; a `NO ACTION` csak az
   utasítás végén ellenőriz.
-- `type`: `SBO | OUTPATIENT | ECHO` (diagram: `sbo | ambulans | echo`).
+- `type`: `SBO | AMBULANCE | ECHO` (diagram: `sbo | ambulans | echo`).
 
 ## `utterance` (megszolalas)
 
@@ -121,15 +122,47 @@ törölné.
 magát. **Konvenció**: mindig a legfrissebb `idopont` az érvényes állapot;
 ezt minden lekérdezésnél következetesen kell alkalmazni.
 
-## `allitas.claim_type` és `bizonytalansag` — CHECK-invariáns
+## `statement` (allitas) — V9
+
+Típusok: `DETERMINISTIC_RULE | RETRIEVED_FACT | MODEL_INFERENCE`
+(= `szabaly | forras | modell`). Megváltoztathatatlan; a jóváhagyás külön
+tábla lesz (`allitas_jovahagyas`).
+
+**Invariánsok — mind DB CHECK-kel ÉS a `Statement` konstruktorában:**
 
 ```sql
-CONSTRAINT rule_has_no_uncertainty  CHECK (tipus <> 'szabaly' OR bizonytalansag IS NULL);
-CONSTRAINT model_needs_uncertainty  CHECK (tipus <> 'modell'  OR bizonytalansag IS NOT NULL);
+CONSTRAINT rule_has_no_uncertainty CHECK (type <> 'DETERMINISTIC_RULE' OR uncertainty IS NULL);
+CONSTRAINT model_needs_uncertainty CHECK (type <> 'MODEL_INFERENCE'    OR uncertainty IS NOT NULL);
+-- + producer_matches_type: RULE ↔ DETERMINISTIC_RULE, MODEL ↔ MODEL_INFERENCE,
+--   EXTRACTOR ↔ RETRIEVED_FACT;  model_producer_complete: modelName + seed + promptHash
 ```
 
-Ugyanez a Java-oldali `Allitas` (majdani) entitáson is legyen kikényszerítve,
-hogy egy LLM-kimenet séma szinten se tűnhessen szabály-alapúnak.
+- **Az API nem hozhat létre `DETERMINISTIC_RULE`-t** (400) — különben egy
+  LLM-kimenet kliensoldalról szabálynak álcázhatná magát. Csak a (majdani)
+  Java szabálymotorok hozhatják létre. Jelenleg ilyen nincs.
+- **`uncertainty`**: `LOW | MEDIUM | HIGH` — kategória, nem szám: a kis
+  LLM-ek numerikus valószínűségei rosszul kalibráltak.
+- **`source` (MERRE), JSONB, `type` diszkriminátorral**: `AUDIO {recordingId,
+  turnIds[]}`, `DOCUMENT {documentId, charStart, charEnd}`, `IMAGE
+  {documentId, page, x, y, width, height}` (bbox normált 0–1). AUDIO-nál a
+  service ellenőrzi: a felvétel létezik, **ugyanannak a betegnek** a felvétele
+  (409), és a turn_id-k léteznek. **Ismert rés**: DOCUMENT/IMAGE-nél a
+  `documentId` létezése NEM ellenőrizhető, amíg nincs `dokumentum` tábla —
+  csak a szerkezet (tartomány, bbox a lapon belül).
+- **`RETRIEVED_FACT` = szó szerint**: AUDIO forrásnál a szövegnek (kisbetűs,
+  whitespace-normalizált) benne kell lennie a hivatkozott megszólalásokban,
+  különben 400 — átfogalmazott szöveg `MODEL_INFERENCE`.
+- **`producer` (HOGY), JSONB**: `RULE {ruleId, ruleVersion}`, `MODEL
+  {modelName, seed, promptHash, asrModel}`, `EXTRACTOR {extractorName,
+  extractorVersion, asrModel}`. Az `asrModel`-t AUDIO forrásnál a service a
+  felvételből írja be (voice-module.md: mindkét modell rögzítendő), a
+  kliensét felülírja.
+- **MIKOR**: `created_at` DB `now()`; `clinical_time` NOT NULL — ha a kliens
+  nem küldi, AUDIO forrásnál a felvétel `recorded_at`-je, DOCUMENT/IMAGE-nél
+  kötelező (400). Tudatos kompromisszum: pl. „két napja fáj” tünetnél a
+  felvétel ideje nem a tünet kezdete — ha fontos, a kinyerő küldje.
+- JSONB ↔ Java: `@JdbcTypeCode(SqlTypes.JSON)` sealed interface + record-ok,
+  Hibernate 7.4 Jackson 3 FormatMapperrel.
 
 ## `labor.ertek_num` vs `ertek_szoveg`
 
