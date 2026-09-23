@@ -1,0 +1,274 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>MediAI API-térkép</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --ground: #F3F6F5;
+    --surface: #FFFFFF;
+    --ink: #16211E;
+    --muted: #5A6763;
+    --line: #D9E1DE;
+    --accent: #0E6F66;
+    --get: #1D5FD1;   --get-bg: #E6EEFC;
+    --post: #16794A;  --post-bg: #E3F4EA;
+    --put: #A15C00;   --put-bg: #FBF0DD;
+    --patch: #7440C2; --patch-bg: #F0E8FB;
+    --tag: #EEF2F1;
+    --warn: #A33B2B;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0E1412; --surface: #151D1A; --ink: #E3EAE7; --muted: #95A39E; --line: #26322E;
+      --accent: #4CC2B4;
+      --get: #8AB2FF;   --get-bg: #17243D;
+      --post: #6FD39F;  --post-bg: #13291E;
+      --put: #F0B35A;   --put-bg: #2E2211;
+      --patch: #C3A1F5; --patch-bg: #251B36;
+      --tag: #1D2724; --warn: #F08A78;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0E1412; --surface: #151D1A; --ink: #E3EAE7; --muted: #95A39E; --line: #26322E;
+    --accent: #4CC2B4;
+    --get: #8AB2FF;   --get-bg: #17243D;
+    --post: #6FD39F;  --post-bg: #13291E;
+    --put: #F0B35A;   --put-bg: #2E2211;
+    --patch: #C3A1F5; --patch-bg: #251B36;
+    --tag: #1D2724; --warn: #F08A78;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 20px 56px; }
+
+  header { display: grid; gap: 14px; margin-bottom: 28px; }
+  .eyebrow { font: 500 12px/1 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  h1 { margin: 0; font-size: clamp(26px, 4vw, 36px); line-height: 1.15; font-weight: 700; text-wrap: balance; letter-spacing: -.01em; }
+  .lede { margin: 0; max-width: 68ch; color: var(--muted); }
+  .lede code, .note code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12.5px; color: var(--ink); }
+
+  .summary { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; font-variant-numeric: tabular-nums; }
+  .summary b { font-size: 20px; font-weight: 600; }
+  .summary span { color: var(--muted); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .legend .item { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
+
+  .m { display: inline-block; min-width: 52px; text-align: center; padding: 2px 0; border-radius: 4px; font: 600 11px/1.5 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .03em; }
+  .m.get { color: var(--get); background: var(--get-bg); }
+  .m.post { color: var(--post); background: var(--post-bg); }
+  .m.put { color: var(--put); background: var(--put-bg); }
+  .m.patch { color: var(--patch); background: var(--patch-bg); }
+
+  .t { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--tag); color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+  .t.warn { color: var(--warn); }
+
+  .domains { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); gap: 20px; align-items: start; }
+  section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  section > h2 { margin: 0; padding: 14px 18px 4px; font-size: 16px; font-weight: 600; }
+  section > .sub { margin: 0; padding: 0 18px 12px; color: var(--muted); font-size: 13px; border-bottom: 1px solid var(--line); }
+
+  .res { padding: 12px 18px 14px; border-bottom: 1px solid var(--line); }
+  .res:last-child { border-bottom: 0; }
+  .res.child { padding-left: 42px; position: relative; background: color-mix(in srgb, var(--ground) 45%, var(--surface)); }
+  .res.child::before { content: ""; position: absolute; left: 26px; top: 0; height: 26px; width: 10px; border-left: 1.5px solid var(--line); border-bottom: 1.5px solid var(--line); border-bottom-left-radius: 4px; }
+  .base { font: 500 13px/1.4 "IBM Plex Mono", ui-monospace, monospace; color: var(--accent); margin-bottom: 8px; overflow-wrap: anywhere; }
+  .base small { font-family: "IBM Plex Sans", sans-serif; color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+  li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 10px; align-items: start; }
+  .path { font: 13px/1.5 "IBM Plex Mono", ui-monospace, monospace; overflow-wrap: anywhere; }
+  .path .q { color: var(--muted); }
+  .desc { grid-column: 2; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+
+  .note { margin-top: 24px; padding: 14px 18px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 13px; display: grid; gap: 6px; max-width: 90ch; }
+  .note strong { color: var(--ink); font-weight: 600; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">backend · Spring Boot · /api</div>
+    <h1>MediAI API-térkép</h1>
+    <p class="lede">A backend összes REST-végpontja szakterületenként. A behúzott sorok beágyazott erőforrások (pl. a megszólalás mindig egy felvétel alatt él). Minden <code>/api</code> hívást a hozzáférési napló automatikusan rögzít.</p>
+    <div class="summary">
+      <div><b>45</b> <span>végpont</span></div>
+      <div><b>14</b> <span>kontroller</span></div>
+      <div><b>12</b> <span>modul</span></div>
+      <div><b>V16</b> <span>legutóbbi migráció</span></div>
+    </div>
+    <div class="legend" aria-label="Jelmagyarázat">
+      <span class="item"><span class="m get">GET</span> olvasás</span>
+      <span class="item"><span class="m post">POST</span> létrehozás / művelet</span>
+      <span class="item"><span class="m put">PUT</span> beállítás</span>
+      <span class="item"><span class="m patch">PATCH</span> állapotváltás</span>
+      <span class="item"><span class="t">egyszer</span> csak egyszer hívható sikeresen</span>
+      <span class="item"><span class="t">törzsben keres</span> érzékeny adat nem mehet URL-be</span>
+      <span class="item"><span class="t warn">EXPORT</span> a naplóban kivitelként jelenik meg</span>
+    </div>
+  </header>
+
+  <div class="domains">
+
+    <section>
+      <h2>Beteg és ellátás</h2>
+      <p class="sub">A beteg a gyökér: minden klinikai adat hozzá kötődik.</p>
+      <div class="res">
+        <div class="base">/api/patients <small>beteg</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/patients</span><span class="desc">Beteg felvétele (TAJ opcionális)</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/patients/{id}</span><span class="desc">Egy beteg</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/patients</span><span class="desc">Összes beteg</span></li>
+          <li><span class="m post">POST</span><span class="path">/api/patients/search</span><span class="desc">Keresés TAJ-ra vagy név + anyja neve + születési dátum <span class="t">törzsben keres</span></span></li>
+        </ul>
+      </div>
+      <div class="res">
+        <div class="base">/api/medical-cares <small>ellátás</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/medical-cares</span><span class="desc">Ellátás megnyitása (SBO / AMBULANCE / ECHO)</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/medical-cares/{id}</span><span class="desc">Egy ellátás</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/medical-cares<span class="q">?patientId=</span></span><span class="desc">Beteg ellátásai</span></li>
+          <li><span class="m post">POST</span><span class="path">/api/medical-cares/{id}/close</span><span class="desc">Lezárás, DB-idővel <span class="t">egyszer</span></span></li>
+        </ul>
+      </div>
+      <div class="res">
+        <div class="base">/api/lab-results <small>laboreredmény</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/lab-results</span><span class="desc">Teljes panel egy tranzakcióban; cenzorált érték elutasítva</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/lab-results/{id}</span><span class="desc">Egy eredmény</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/lab-results<span class="q">?patientId=&amp;name=</span></span><span class="desc">Beteg eredményei; <code>name</code>-mel egy vizsgálat trendje</span></li>
+        </ul>
+      </div>
+      <div class="res">
+        <div class="base">/api/medications <small>gyógyszer</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/medications</span><span class="desc">Rögzítés; forrás csak jóváhagyott állítás lehet</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/medications/{id}</span><span class="desc">Egy gyógyszer</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/medications<span class="q">?patientId=&amp;activeOnly=</span></span><span class="desc">Beteg gyógyszerei, szűrhetően a szedettekre</span></li>
+          <li><span class="m post">POST</span><span class="path">/api/medications/{id}/discontinue</span><span class="desc">Leállítás; újrakezdés = új sor <span class="t">egyszer</span></span></li>
+        </ul>
+      </div>
+      <div class="res">
+        <div class="base">/api/allergies <small>allergia</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/allergies</span><span class="desc">Rögzítés; egy anyag betegenként egyszer</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/allergies/{id}</span><span class="desc">Egy allergia</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/allergies<span class="q">?patientId=</span></span><span class="desc">Beteg allergiái, ABC-sorrendben</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Állítások</h2>
+      <p class="sub">Minden orvosnak mutatott állítás: MI · MERRE · MIKOR · HOGY. Jóváhagyás nélkül PENDING.</p>
+      <div class="res">
+        <div class="base">/api/statements <small>állítás</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/statements</span><span class="desc">RETRIEVED_FACT vagy MODEL_INFERENCE; szabály-állítás csak belső motorból</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/statements/{id}</span><span class="desc">Egy állítás, aktuális jóváhagyási állapottal</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/statements<span class="q">?patientId=</span></span><span class="desc">Beteg állításai, klinikai idő szerint</span></li>
+        </ul>
+      </div>
+      <div class="res child">
+        <div class="base">/api/statements/{statementId}/approvals <small>jóváhagyás</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">…/approvals</span><span class="desc">ACCEPTED / REJECTED / MODIFIED — csak DOCTOR</span></li>
+          <li><span class="m get">GET</span><span class="path">…/approvals</span><span class="desc">Döntési előzmény, legújabb elöl</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Hang</h2>
+      <p class="sub">A Python hangmodul kész eredményét fogadja; a hangfolyam nem megy át a Springen.</p>
+      <div class="res">
+        <div class="base">/api/recordings <small>felvétel</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/recordings</span><span class="desc">Felvétel indítása; az orvos aktív hangprofilja automatikusan</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/recordings/{id}</span><span class="desc">Egy felvétel</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/recordings<span class="q">?patientId=</span></span><span class="desc">Beteg felvételei</span></li>
+          <li><span class="m patch">PATCH</span><span class="path">/api/recordings/{id}/status</span><span class="desc">RECORDING → PROCESSING → DONE | FAILED</span></li>
+        </ul>
+      </div>
+      <div class="res child">
+        <div class="base">/api/recordings/{recordingId}/utterances <small>megszólalás</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">…/utterances</span><span class="desc">Összes megszólalás egyben, csak PROCESSING-ben <span class="t">egyszer</span></span></li>
+          <li><span class="m get">GET</span><span class="path">…/utterances</span><span class="desc">Megszólalások turnId szerint</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Dokumentumok</h2>
+      <p class="sub">A fájl lemezen, a hash és a típus a szerver által számolva; a szöveg a RAG és a forrás-hivatkozás alapja.</p>
+      <div class="res">
+        <div class="base">/api/documents <small>dokumentum</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/documents</span><span class="desc">Feltöltés (multipart: file, patientId, type, clinicalDate)</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/documents/{id}</span><span class="desc">Metaadatok</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/documents<span class="q">?patientId=</span></span><span class="desc">Beteg dokumentumai</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/documents/{id}/file</span><span class="desc">A fájl letöltése <span class="t warn">EXPORT</span></span></li>
+          <li><span class="m put">PUT</span><span class="path">/api/documents/{id}/text</span><span class="desc">Kinyert szöveg beállítása <span class="t">egyszer</span></span></li>
+          <li><span class="m get">GET</span><span class="path">/api/documents/{id}/text</span><span class="desc">Kinyert szöveg (text/plain)</span></li>
+        </ul>
+      </div>
+      <div class="res child">
+        <div class="base">/api/documents/{documentId}/chunks <small>RAG-darab</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">…/chunks</span><span class="desc">Pozíciók + 1024 dim. embedding; a szöveget a Spring vágja ki <span class="t">egyszer</span></span></li>
+          <li><span class="m get">GET</span><span class="path">…/chunks</span><span class="desc">Darabok pozíció szerint</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Felhasználók és hangprofil</h2>
+      <p class="sub">Orvos és admin fiókok. Bejelentkezés még nincs.</p>
+      <div class="res">
+        <div class="base">/api/users <small>felhasználó</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/users</span><span class="desc">Felvétel; jelszó BCrypt-hash-ként</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/users/{id}</span><span class="desc">Egy felhasználó</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/users<span class="q">?role=</span></span><span class="desc">Összes, vagy szerepkör szerint (DOCTOR / ADMIN)</span></li>
+          <li><span class="m post">POST</span><span class="path">/api/users/search</span><span class="desc">Felhasználónévre vagy emailre <span class="t">törzsben keres</span></span></li>
+        </ul>
+      </div>
+      <div class="res">
+        <div class="base">/api/voice-profiles <small>hangprofil</small></div>
+        <ul>
+          <li><span class="m post">POST</span><span class="path">/api/voice-profiles</span><span class="desc">Új profil; a korábbi aktív automatikusan inaktív lesz</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/voice-profiles/{userId}/active</span><span class="desc">Az orvos aktív profilja</span></li>
+          <li><span class="m get">GET</span><span class="path">/api/voice-profiles/{userId}/history</span><span class="desc">Összes profil, régiekkel együtt</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Audit</h2>
+      <p class="sub">Csak hozzáfűzhető napló; bejegyzést kizárólag az interceptor ír.</p>
+      <div class="res">
+        <div class="base">/api/access-logs <small>hozzáférési napló</small></div>
+        <ul>
+          <li><span class="m get">GET</span><span class="path">/api/access-logs<span class="q">?patientId= | ?userId=</span></span><span class="desc">Ki nézte a beteget, illetve mit nézett a felhasználó</span></li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="note">
+    <div><strong>Minden hívásra érvényes:</strong> az <code>X-User-Id</code> fejléc adja meg, ki a hívó (ideiglenes, a bejelentkezés bevezetéséig). Nélküle a naplóban üres a felhasználó.</div>
+    <div><strong>Hibaválaszok:</strong> 404 nem létező erőforrás, 409 szabály- vagy állapotütközés, 400 hibás bemenet — a saját kivételek ProblemDetail formában, üzenettel.</div>
+  </div>
+</div>
+
+</body></html>
