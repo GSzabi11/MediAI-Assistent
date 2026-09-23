@@ -16,7 +16,8 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `utterance` (= `megszolalas`), `medical_care` (= `ellatas`),
 `statement` (= `allitas`), `statement_approval` (= `allitas_jovahagyas`),
 `document` (= `dokumentum`), `document_chunk` (= `doc_chunk`),
-`lab_result` (= `labor`), `medication` (= `gyogyszer`), `allergy` (= `allergia`).
+`lab_result` (= `labor`), `medication` (= `gyogyszer`), `allergy` (= `allergia`),
+`access_log` (= `hozzaferes_naplo`).
 
 ## `app_user` (felhasznalo)
 
@@ -112,11 +113,35 @@ char-offset, kép bbox, hang `felvetel_id`+`turn_id`. Normalizált táblával
 ez három nullolható oszlopcsoport lenne. Ára: nincs FK-kényszer rajta, a
 `turn_id` érvényességét kódban kell ellenőrizni.
 
-## Miért nincs FK a `hozzaferes_naplo.paciens_id`-n
+## `access_log` (hozzaferes_naplo) — V16
 
-Szándékos. A beteg törlése után is meg kell maradnia az audit-nyomnak,
-hogy ki nézte meg korábban — egy `ON DELETE CASCADE` pont a bizonyítékot
-törölné.
+**Miért nincs FK a `patient_id`-n**: szándékos. A beteg törlése után is meg
+kell maradnia az audit-nyomnak, hogy ki nézte meg korábban — egy `ON DELETE
+CASCADE` pont a bizonyítékot törölné. (`user_id`-n van FK, `RESTRICT`: a
+felhasználó nem törölhető, amíg naplósora van.)
+
+- **Csak hozzáfűzés**: DB-trigger tilt minden `UPDATE`/`DELETE`/`TRUNCATE`-et,
+  az entitás `@Immutable`. Nincs író API-végpont — bejegyzés csak az
+  interceptoron keresztül keletkezik.
+- **Automatikus**: `AccessLogInterceptor` minden `/api/**` hívást naplóz a
+  válasz után. `action`: GET → `READ`, `…/file` letöltés → `EXPORT`,
+  `…/search` (POST, mert a TAJ nem mehet query stringbe) → `READ`, minden más
+  → `WRITE`. `resource` = metódus + út, **query string nélkül**.
+- **Beteg meghatározása** sorrendben: `?patientId=` → az út
+  (`/api/patients/{id}`, ill. `/api/documents/{id}…` → a tábla `patient_id`-je,
+  `PatientResolver`) → létrehozásnál a `Location` fejléc. **Korlát**: ahol a
+  beteg csak a kérés törzsében van és nincs `Location` (pl. `POST
+  /api/lab-results`, `POST /api/patients/search`), a `patient_id` NULL.
+- **Felhasználó**: ideiglenesen az `X-User-Id` fejléc; nem létező vagy hiányzó
+  → NULL. Bejelentkezés nélkül ez **nem bizonyító erejű** (bárki bármit
+  beírhat) — az autentikáció bevezetésekor a bejelentkezett felhasználóból kell.
+- **`http_status` — a diagramon nincs, tudatos kiegészítés**: a sikertelen
+  (pl. 404-es) próbálkozások is látszanak, ami biztonsági szempontból pont az
+  érdekes eset.
+- Ha a naplóírás elbukik, a válasz már elment: a hiba csak a szerver-logba
+  kerül (ERROR). Szigorúbb (fail-closed) megoldás későbbi döntés.
+- Olvasás: `GET /api/access-logs?patientId=` vagy `?userId=` (pontosan az
+  egyik). Maga a napló olvasása is naplózódik.
 
 ## `statement` / `statement_approval` viszonya (allitas / allitas_jovahagyas) — V10
 
