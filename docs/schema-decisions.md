@@ -12,7 +12,7 @@ egy diagram nem mutat.
 `doc_chunk`, `iranyelv_chunk`.
 
 Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
-`voice_profile` (= `hangprofil`).
+`voice_profile` (= `hangprofil`), `recording` (= `felvetel`).
 
 ## `app_user` (felhasznalo)
 
@@ -36,6 +36,28 @@ kezeli a vektort, a Spring csak metaadatot. Ha Java-oldalon kell, a
 `threshold` nullázható — a Python tesztenként adja meg, nem a profilban.
 `ON DELETE CASCADE` az `app_user`-re: a hanglenyomat biometrikus adat,
 a fiókkal együtt törlendő.
+
+## `recording` (felvetel)
+
+- **Törlési szabályok**: `patient_id` → `ON DELETE CASCADE` (beteg-gyerektábla);
+  `user_id` → `RESTRICT` (orvos nem törölhető, amíg felvételei vannak — a
+  betegdokumentáció nem tűnhet el vele); `voice_profile_id` → `SET NULL`
+  (a biometrikus profil törölhető, a felvétel megmarad).
+- **`encounter_id` FK nélkül**, nullázható — az `ellatas`/encounter tábla
+  még nem létezik; az FK a vele együtt érkező migrációban kerül rá.
+  Addig az érték nincs ellenőrizve.
+- **`voice_profile_id` nem a klienstől jön**: létrehozáskor a service az
+  orvos akkor aktív profilját írja be (vagy NULL).
+- **Státusz-állapotgép** (`RecordingStatus.canTransitionTo`, az entitás
+  kényszeríti ki): `RECORDING → PROCESSING | FAILED`,
+  `PROCESSING → DONE | FAILED`, `DONE`/`FAILED` végállapot. Tiltott
+  átmenet → 409. `duration_sec` a `PROCESSING`-re lépéskor kötelező.
+- **`recorded_at` = a felvétel létrejöttének pillanata**, a DB adja
+  (`default now()`, V6), a kliens nem küldheti; nincs külön `created_at`.
+  Entitáson `@Generated` + `insertable=false` — Java-oldalon NEM állítjuk
+  (a kettő keverése miatt a V5-ös sorok NULL-t kaptak).
+- `asr_model` NOT NULL: a voice-module.md szerint az `eloallito`-ban az
+  ASR-modellt is rögzíteni kell, ez a forrása.
 
 ## Miért JSONB az `allitas.forras` és `eloallito`
 

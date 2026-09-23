@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.patient.exception.TajConflictException;
+import bme.mediai.recording.exception.InvalidStatusTransitionException;
+import bme.mediai.recording.exception.RecordingNotFoundException;
 import bme.mediai.user.exception.EmailConflictException;
 import bme.mediai.user.exception.UserNotFoundException;
 import bme.mediai.user.exception.UsernameConflictException;
@@ -38,6 +40,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(VoiceProfileNotFoundException.class)
     ProblemDetail handleVoiceProfileNotFound(VoiceProfileNotFoundException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(RecordingNotFoundException.class)
+    ProblemDetail handleRecordingNotFound(RecordingNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    ProblemDetail handleInvalidTransition(InvalidStatusTransitionException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
