@@ -11,7 +11,8 @@ egy diagram nem mutat.
 `allitas_jovahagyas`, `hozzaferes_naplo`, később: `gyogyszer`, `allergia`,
 `doc_chunk`, `iranyelv_chunk`.
 
-Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja).
+Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
+`voice_profile` (= `hangprofil`).
 
 ## `app_user` (felhasznalo)
 
@@ -19,6 +20,22 @@ Angol elnevezés, a tábla neve `app_user`, mert a `user` Postgresben
 foglalt szó. Jelszó sosem tárolódik nyersen: `password_hash` (BCrypt, a
 `spring-security-crypto` modulból — a teljes Spring Security még nincs
 bekötve). A szerepkör `DOCTOR | ADMIN`, CHECK-kel kikényszerítve.
+
+## `voice_profile` (hangprofil)
+
+Felhasználónként több sor (a Python `--uj` a régit `.bak`-ként megtartja),
+de legfeljebb egy `active = true` — részleges egyedi indexszel
+(`WHERE active = true`) kikényszerítve, nem csak kódban. Létrehozáskor a
+service a régi aktívat inaktiválja és **flush-ol** a beszúrás előtt (IDENTITY
+miatt az INSERT azonnal fut, a dirty-check UPDATE csak commitkor).
+
+Az `embedding vector(256)` (wespeaker-resnet34, float32) oszlop létezik, de
+a JPA-entitás szándékosan NEM képezi le: egyelőre a Python hangmodul
+kezeli a vektort, a Spring csak metaadatot. Ha Java-oldalon kell, a
+`hibernate-vector` + `float[]` + `@JdbcTypeCode(SqlTypes.VECTOR)` az út.
+`threshold` nullázható — a Python tesztenként adja meg, nem a profilban.
+`ON DELETE CASCADE` az `app_user`-re: a hanglenyomat biometrikus adat,
+a fiókkal együtt törlendő.
 
 ## Miért JSONB az `allitas.forras` és `eloallito`
 

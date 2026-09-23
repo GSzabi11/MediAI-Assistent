@@ -30,8 +30,10 @@ A Spring a nyilvántartás rendszere, nem audio-relay.
 
 ## `doctor_id`
 
-A `felhasznalo.id` — a hangprofil a felhasználói fiók adata, nem külön
-azonosítási réteg (`hangprofil.felhasznalo_id` FK).
+Az `app_user.id` — a hangprofil a felhasználói fiók adata, nem külön
+azonosítási réteg (`voice_profile.user_id` FK). A Python `doctor_id`-je
+(pl. `drkovacs`) jelenleg a felhasználónév, nem a numerikus id — az
+integrációnál ezt le kell képezni.
 
 ## Szerepkiosztás: háromértékű, nem bináris
 

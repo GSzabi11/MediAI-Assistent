@@ -10,6 +10,7 @@ import bme.mediai.patient.exception.TajConflictException;
 import bme.mediai.user.exception.EmailConflictException;
 import bme.mediai.user.exception.UserNotFoundException;
 import bme.mediai.user.exception.UsernameConflictException;
+import bme.mediai.voiceprofile.exception.VoiceProfileNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -32,6 +33,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({UsernameConflictException.class, EmailConflictException.class})
     ProblemDetail handleUserConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(VoiceProfileNotFoundException.class)
+    ProblemDetail handleVoiceProfileNotFound(VoiceProfileNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
