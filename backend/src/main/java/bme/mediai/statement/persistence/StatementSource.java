@@ -27,7 +27,8 @@ public sealed interface StatementSource {
         }
     }
 
-    // A dokumentum-tábla még nem létezik: a documentId létezését nem tudjuk ellenőrizni.
+    // Offszetek Unicode code pointban; a dokumentum létezését, betegét és a tartományt
+    // a StatementService ellenőrzi a kinyert szövegen.
     record Document(Long documentId, Integer charStart, Integer charEnd) implements StatementSource {
         @Override
         public void validate() {

@@ -5,6 +5,11 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import bme.mediai.document.exception.ChunksAlreadyExistException;
+import bme.mediai.document.exception.DocumentNotFoundException;
+import bme.mediai.document.exception.DuplicateDocumentException;
+import bme.mediai.document.exception.ExtractedTextAlreadySetException;
+import bme.mediai.document.exception.ExtractedTextMissingException;
 import bme.mediai.statement.exception.ApproverNotDoctorException;
 import bme.mediai.statement.exception.RuleStatementNotModifiableException;
 import bme.mediai.statement.exception.StatementNotFoundException;
@@ -88,6 +93,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({ApproverNotDoctorException.class, RuleStatementNotModifiableException.class})
     ProblemDetail handleApprovalConflict(RuntimeException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(DocumentNotFoundException.class)
+    ProblemDetail handleDocumentNotFound(DocumentNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler({DuplicateDocumentException.class, ExtractedTextAlreadySetException.class,
+            ExtractedTextMissingException.class, ChunksAlreadyExistException.class})
+    ProblemDetail handleDocumentConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

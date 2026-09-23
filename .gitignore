@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Betegdokumentumok (feltöltött leletek) - SOHA ne kerüljenek a gitbe
+data/

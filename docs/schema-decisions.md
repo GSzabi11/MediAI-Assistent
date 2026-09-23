@@ -14,7 +14,8 @@ egy diagram nem mutat.
 Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `voice_profile` (= `hangprofil`), `recording` (= `felvetel`),
 `utterance` (= `megszolalas`), `medical_care` (= `ellatas`),
-`statement` (= `allitas`), `statement_approval` (= `allitas_jovahagyas`).
+`statement` (= `allitas`), `statement_approval` (= `allitas_jovahagyas`),
+`document` (= `dokumentum`), `document_chunk` (= `doc_chunk`).
 
 ## `app_user` (felhasznalo)
 
@@ -162,12 +163,15 @@ CONSTRAINT model_needs_uncertainty CHECK (type <> 'MODEL_INFERENCE'    OR uncert
   turnIds[]}`, `DOCUMENT {documentId, charStart, charEnd}`, `IMAGE
   {documentId, page, x, y, width, height}` (bbox normált 0–1). AUDIO-nál a
   service ellenőrzi: a felvétel létezik, **ugyanannak a betegnek** a felvétele
-  (409), és a turn_id-k léteznek. **Ismert rés**: DOCUMENT/IMAGE-nél a
-  `documentId` létezése NEM ellenőrizhető, amíg nincs `dokumentum` tábla —
-  csak a szerkezet (tartomány, bbox a lapon belül).
-- **`RETRIEVED_FACT` = szó szerint**: AUDIO forrásnál a szövegnek (kisbetűs,
-  whitespace-normalizált) benne kell lennie a hivatkozott megszólalásokban,
-  különben 400 — átfogalmazott szöveg `MODEL_INFERENCE`.
+  (409), és a turn_id-k léteznek. DOCUMENT/IMAGE-nél (V11 óta): a dokumentum
+  létezik (404), **ugyanannak a betegnek** a dokumentuma (409); DOCUMENT-nél
+  van kinyert szövege (409) és a tartomány belefér (400); IMAGE csak kép/PDF
+  dokumentumra mutathat (400).
+- **`RETRIEVED_FACT` = szó szerint** (kisbetűs, whitespace-normalizált
+  összevetés): AUDIO-nál a szöveg benne van a hivatkozott megszólalásokban;
+  DOCUMENT-nél **egyezik** a `[charStart, charEnd)` szövegrésszel. Különben
+  400 — átfogalmazott szöveg `MODEL_INFERENCE`. IMAGE-nél nem ellenőrizhető
+  (a bbox-hoz nincs OCR-szöveg) — ismert rés.
 - **`producer` (HOGY), JSONB**: `RULE {ruleId, ruleVersion}`, `MODEL
   {modelName, seed, promptHash, asrModel}`, `EXTRACTOR {extractorName,
   extractorVersion, asrModel}`. Az `asrModel`-t AUDIO forrásnál a service a
@@ -175,7 +179,8 @@ CONSTRAINT model_needs_uncertainty CHECK (type <> 'MODEL_INFERENCE'    OR uncert
   kliensét felülírja.
 - **MIKOR**: `created_at` DB `now()`; `clinical_time` NOT NULL — ha a kliens
   nem küldi, AUDIO forrásnál a felvétel `recorded_at`-je, DOCUMENT/IMAGE-nél
-  kötelező (400). Tudatos kompromisszum: pl. „két napja fáj” tünetnél a
+  a dokumentum `clinical_date`-je budapesti éjfélkor; ha az sincs, kötelező
+  (400). Tudatos kompromisszum: pl. „két napja fáj” tünetnél a
   felvétel ideje nem a tünet kezdete — ha fontos, a kinyerő küldje.
 - JSONB ↔ Java: `@JdbcTypeCode(SqlTypes.JSON)` sealed interface + record-ok,
   Hibernate 7.4 Jackson 3 FormatMapperrel.
@@ -189,11 +194,47 @@ import elutasítja a sort. FHIR `Quantity` (value+comparator+unit) a
 "helyes" hosszú távú megoldás, de most nem építjük meg — dokumentált
 tudatos egyszerűsítés.
 
-## `dokumentum.kinyert_szoveg`
+## `document` (dokumentum) — V11
 
-Kötelező mező, ha a dokumentumra bármilyen `allitas` char-offsettel
-hivatkozik. Enélkül a provenance-visszakeresés ("Forrás megtekintése")
-nem tud a pontos szövegrészre ugrani.
+- **A Spring fogadja a fájlt** (multipart), és **maga számolja** az SHA-256-ot,
+  a méretet és a MIME-típust (magic bytes: PDF/PNG/JPEG, különben érvényes
+  UTF-8 → `text/plain`, más → 400). A kliens `Content-Type`-ja nem számít.
+- **Tárolás**: `mediai.storage.documents-dir` alatt
+  `{patientId}/{sha256}.{ext}`; az adatbázisban csak a relatív út. A `data/`
+  **gitignore-olva** — betegdokumentum sosem kerülhet a gitbe.
+- **Duplikátum**: `UNIQUE (patient_id, sha256)` → 409. Más betegnél ugyanaz a
+  fájl feltölthető (külön példányban tárolva).
+- **`extracted_text` egyszer állítható** (`PUT /{id}/text`, NULL → szöveg,
+  atomikus natív UPDATE; másodszor 409). Oka: a `statement.source`
+  karakterpozícióval hivatkozik rá — utólagos módosítás csendben rossz
+  szövegrészre mutatna. CLAUDE.md: char-offsettel csak kinyert szöveggel
+  rendelkező dokumentumra lehet hivatkozni (`StatementService`, 409).
+- **Offszetek Unicode code pointban** (mint Pythonban), nem UTF-16 egységben.
+- `type`: `LAB | AMBULANCE | IMAGING` (diagram: `labor | ambulans | kepalkoto`).
+- **Ismert rés — GDPR**: a beteg törlésekor a `document` sorok CASCADE-del
+  törlődnek, de a **fájlok a lemezen maradnak**. Törlési folyamatnál ezt
+  külön kell kezelni.
+- A code-point alapú kivágás egyetlen helyen van: `Document.textSpan()` —
+  az állítás-forrás és a chunk is ezt használja.
+
+## `document_chunk` (doc_chunk) — V12
+
+RAG-darabok a `document.extracted_text`-ből, a diagram szerint.
+
+- **A Python darabol** (ott van a BGE-M3 tokenizáló) és csak
+  `charStart/charEnd`-et + embeddinget küld; a **`text`-et a Spring vágja
+  ki** a kinyert szövegből (`Document.textSpan`). Így a chunk szövege és
+  pozíciója sosem mondhat ellent egymásnak — egyetlen forrásuk van.
+- **Egyben, egyszer** (`POST /api/documents/{id}/chunks`, második → 409),
+  csak kinyert szöveggel rendelkező dokumentumhoz (409). Átfedés megengedett
+  (csúszóablak), azonos tartomány nem (`UNIQUE`, 400).
+- **`embedding vector(1024) NOT NULL`**, a Spring API-n jön, `float[]` +
+  `@JdbcTypeCode(SqlTypes.VECTOR)` (`hibernate-vector`). Dimenzió és
+  NaN/Infinity ellenőrizve (400). HNSW index `vector_cosine_ops`-szal.
+- **`embedding_model` — a diagramon nincs, tudatos kiegészítés**: különböző
+  modellek vektorai nem összehasonlíthatók; modellváltásnál e nélkül a régi és
+  új vektorok csendben keverednének ugyanabban az indexben.
+- `ON DELETE CASCADE` a `document`-re.
 
 ## `paciens.taj` formátum
 

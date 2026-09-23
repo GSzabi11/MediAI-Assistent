@@ -36,7 +36,8 @@ public record StatementCreateRequest(
     @NotNull(message = "The producer must not be null")
     StatementProducer producer,
 
-    // Ha hiányzik, AUDIO forrásnál a felvétel ideje; DOCUMENT/IMAGE forrásnál kötelező.
+    // Ha hiányzik: AUDIO forrásnál a felvétel ideje, DOCUMENT/IMAGE forrásnál a dokumentum
+    // klinikai dátuma (budapesti éjfél); ha az sincs, kötelező.
     OffsetDateTime clinicalTime
 )
 {}

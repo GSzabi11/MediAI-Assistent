@@ -1,5 +1,8 @@
 package bme.mediai.statement.service;
 
+import bme.mediai.document.exception.DocumentNotFoundException;
+import bme.mediai.document.persistence.Document;
+import bme.mediai.document.persistence.DocumentRepository;
 import bme.mediai.statement.api.StatementCreateRequest;
 import bme.mediai.statement.api.StatementResponse;
 import bme.mediai.statement.exception.StatementNotFoundException;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,15 +41,20 @@ public class StatementService {
     private final RecordingRepository recordingRepository;
     private final UtteranceRepository utteranceRepository;
     private final StatementApprovalRepository approvalRepository;
+    private final DocumentRepository documentRepository;
+
+    // A dokumentum klinikai dátuma (DATE) ebben a zónában éjfélkor lesz clinicalTime
+    private static final ZoneId CLINICAL_ZONE = ZoneId.of("Europe/Budapest");
 
     public StatementService(StatementRepository repository, PatientRepository patientRepository,
             RecordingRepository recordingRepository, UtteranceRepository utteranceRepository,
-            StatementApprovalRepository approvalRepository) {
+            StatementApprovalRepository approvalRepository, DocumentRepository documentRepository) {
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.recordingRepository = recordingRepository;
         this.utteranceRepository = utteranceRepository;
         this.approvalRepository = approvalRepository;
+        this.documentRepository = documentRepository;
     }
 
     // Kívülről (Python, frontend) csak forrás- és modell-állítás jöhet: ha a kliens
@@ -61,20 +70,44 @@ public class StatementService {
         StatementProducer producer = request.producer();
         OffsetDateTime clinicalTime = request.clinicalTime();
 
-        if (request.source() instanceof StatementSource.Audio audio) {
-            audio.validate();
-            Recording recording = requireRecordingOfPatient(audio.recordingId(), request.patientId());
-            List<Utterance> utterances = requireUtterances(audio);
-            if (request.type() == StatementType.RETRIEVED_FACT) {
-                requireVerbatim(request.text(), utterances);
+        request.source().validate();
+        boolean retrievedFact = request.type() == StatementType.RETRIEVED_FACT;
+
+        switch (request.source()) {
+            case StatementSource.Audio audio -> {
+                Recording recording = requireRecordingOfPatient(audio.recordingId(), request.patientId());
+                List<Utterance> utterances = requireUtterances(audio);
+                if (retrievedFact) {
+                    requireVerbatim(request.text(), utterances);
+                }
+                producer = producer.withAsrModel(recording.getAsrModel());
+                if (clinicalTime == null) {
+                    clinicalTime = recording.getRecordedAt();
+                }
             }
-            producer = producer.withAsrModel(recording.getAsrModel());
-            if (clinicalTime == null) {
-                clinicalTime = recording.getRecordedAt();
+            case StatementSource.Document doc -> {
+                Document document = requireDocumentOfPatient(doc.documentId(), request.patientId());
+                // CLAUDE.md: char-offsettel csak kinyert szöveggel rendelkező dokumentumra (különben 409)
+                String span = document.textSpan(doc.charStart(), doc.charEnd());
+                if (retrievedFact && !normalize(span).equals(normalize(request.text()))) {
+                    throw new IllegalArgumentException(
+                            "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"" + span + "\"); "
+                            + "ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni");
+                }
+                if (clinicalTime == null) {
+                    clinicalTime = clinicalTimeOf(document);
+                }
             }
-        } else if (clinicalTime == null) {
-            throw new IllegalArgumentException(
-                    "DOCUMENT/IMAGE forrásnál a clinicalTime kötelező (nincs honnan átvenni)");
+            case StatementSource.Image image -> {
+                Document document = requireDocumentOfPatient(image.documentId(), request.patientId());
+                if (!document.isImageLike()) {
+                    throw new IllegalArgumentException(
+                            "IMAGE forrás csak kép vagy PDF dokumentumra mutathat, ez: " + document.getMimeType());
+                }
+                if (clinicalTime == null) {
+                    clinicalTime = clinicalTimeOf(document);
+                }
+            }
         }
 
         Statement statement = new Statement(
@@ -120,9 +153,28 @@ public class StatementService {
         Recording recording = recordingRepository.findById(recordingId)
                 .orElseThrow(() -> new RecordingNotFoundException(recordingId));
         if (!recording.getPatientId().equals(patientId)) {
-            throw new StatementSourcePatientMismatchException(recordingId, recording.getPatientId(), patientId);
+            throw new StatementSourcePatientMismatchException(
+                    "felvétel " + recordingId, recording.getPatientId(), patientId);
         }
         return recording;
+    }
+
+    private Document requireDocumentOfPatient(Long documentId, Long patientId) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new DocumentNotFoundException(documentId));
+        if (!document.getPatientId().equals(patientId)) {
+            throw new StatementSourcePatientMismatchException(
+                    "dokumentum " + documentId, document.getPatientId(), patientId);
+        }
+        return document;
+    }
+
+    private static OffsetDateTime clinicalTimeOf(Document document) {
+        if (document.getClinicalDate() == null) {
+            throw new IllegalArgumentException("A clinicalTime kötelező: a(z) " + document.getId()
+                    + " dokumentumnak nincs klinikai dátuma, amiből át lehetne venni");
+        }
+        return document.getClinicalDate().atStartOfDay(CLINICAL_ZONE).toOffsetDateTime();
     }
 
     // A source JSONB-n nincs FK (schema-decisions.md), a turn_id-k létezését itt kell ellenőrizni.
