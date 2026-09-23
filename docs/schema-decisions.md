@@ -16,7 +16,7 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `utterance` (= `megszolalas`), `medical_care` (= `ellatas`),
 `statement` (= `allitas`), `statement_approval` (= `allitas_jovahagyas`),
 `document` (= `dokumentum`), `document_chunk` (= `doc_chunk`),
-`lab_result` (= `labor`).
+`lab_result` (= `labor`), `medication` (= `gyogyszer`).
 
 ## `app_user` (felhasznalo)
 
@@ -260,6 +260,26 @@ RAG-darabok a `document.extracted_text`-ből, a diagram szerint.
   modellek vektorai nem összehasonlíthatók; modellváltásnál e nélkül a régi és
   új vektorok csendben keverednének ugyanabban az indexben.
 - `ON DELETE CASCADE` a `document`-re.
+
+## `medication` (gyogyszer) — V14
+
+- Mezők a diagram szerint: `name`, `active_ingredient` (hatóanyag — a
+  majdani DDInter/RxNorm interakció-motor erre épít), `dose NUMERIC(10,3)`,
+  `dose_unit` (= `dozis_tipus`), `route` (= `alkalmazasi_modszer`),
+  `source_statement_id` (= `forras_allitas_id`), `active` (= `aktualis`).
+- **`source_statement_id` nullázható** (kézi rögzítés), DB-identitáskapuval:
+  összetett FK `(source_statement_id, patient_id) → statement(id,
+  patient_id)` (ehhez a V14 `UNIQUE (id, patient_id)`-t tett a
+  `statement`-re), `NO ACTION`.
+- **Csak jóváhagyott állításból** (legfrissebb döntés `ACCEPTED` vagy
+  `MODIFIED`, különben 409): a gyógyszerlista orvosi tényként jelenik meg,
+  PENDING LLM-kinyerés nem kerülhet bele. **Ismert rés**: ha az állítást
+  később elutasítják, a belőle már létrehozott gyógyszer aktív marad.
+- **`active` egyirányú** (`POST /{id}/discontinue`, másodszor 409):
+  újrakezdés = új sor, az előzmény megmarad. Nincs kezdő/leállítási dátum
+  (a diagramon sincs).
+- `dose` > 0, és dózishoz kötelező a `dose_unit` (DB CHECK + entitás);
+  `@Digits(7, 3)` a csendes kerekítés ellen.
 
 ## `paciens.taj` formátum
 

@@ -17,6 +17,9 @@ import bme.mediai.statement.exception.StatementSourcePatientMismatchException;
 import bme.mediai.lab.exception.LabDocumentPatientMismatchException;
 import bme.mediai.lab.exception.LabResultNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCareClosedException;
+import bme.mediai.medication.exception.MedicationAlreadyDiscontinuedException;
+import bme.mediai.medication.exception.MedicationNotFoundException;
+import bme.mediai.medication.exception.SourceStatementNotUsableException;
 import bme.mediai.medicalcare.exception.MedicalCareNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCarePatientMismatchException;
 import bme.mediai.patient.exception.PatientNotFoundException;
@@ -116,6 +119,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(LabDocumentPatientMismatchException.class)
     ProblemDetail handleLabDocumentMismatch(LabDocumentPatientMismatchException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(MedicationNotFoundException.class)
+    ProblemDetail handleMedicationNotFound(MedicationNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler({MedicationAlreadyDiscontinuedException.class, SourceStatementNotUsableException.class})
+    ProblemDetail handleMedicationConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
