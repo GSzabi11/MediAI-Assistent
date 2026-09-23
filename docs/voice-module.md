@@ -37,9 +37,12 @@ integrációnál ezt le kell képezni.
 
 ## Szerepkiosztás: háromértékű, nem bináris
 
-`megszolalas.beszelo`: `orvos | beteg | bizonytalan`. Az SBO-eset explicit
-tartalmaz hozzátartozót — kétértékű felosztásnál a hozzátartozó kijelentése
-kényszerűen a beteghez kerülne, ami anamnézis-hibát okoz.
+`utterance.speaker`: `DOCTOR | PATIENT | OTHER` (a Python `orvos | beteg |
+egyéb` kimenete). Az SBO-eset explicit tartalmaz hozzátartozót — kétértékű
+felosztásnál a hozzátartozó kijelentése kényszerűen a beteghez kerülne, ami
+anamnézis-hibát okoz; ő az `OTHER`. (Korábban `bizonytalan` szerepelt itt;
+a Python-kód valójában `egyéb`-et ad, ahhoz igazodtunk. Bizonytalan
+hozzárendelés jelölésére jelenleg nincs érték.)
 
 ## Amíg nincs integrálva
 

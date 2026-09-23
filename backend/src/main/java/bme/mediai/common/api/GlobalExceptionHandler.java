@@ -10,6 +10,8 @@ import bme.mediai.patient.exception.TajConflictException;
 import bme.mediai.recording.exception.InvalidStatusTransitionException;
 import bme.mediai.recording.exception.RecordingNotFoundException;
 import bme.mediai.user.exception.EmailConflictException;
+import bme.mediai.utterance.exception.RecordingNotProcessingException;
+import bme.mediai.utterance.exception.UtterancesAlreadyExistException;
 import bme.mediai.user.exception.UserNotFoundException;
 import bme.mediai.user.exception.UsernameConflictException;
 import bme.mediai.voiceprofile.exception.VoiceProfileNotFoundException;
@@ -49,6 +51,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidStatusTransitionException.class)
     ProblemDetail handleInvalidTransition(InvalidStatusTransitionException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler({RecordingNotProcessingException.class, UtterancesAlreadyExistException.class})
+    ProblemDetail handleUtteranceConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

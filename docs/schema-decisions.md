@@ -12,7 +12,8 @@ egy diagram nem mutat.
 `doc_chunk`, `iranyelv_chunk`.
 
 Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
-`voice_profile` (= `hangprofil`), `recording` (= `felvetel`).
+`voice_profile` (= `hangprofil`), `recording` (= `felvetel`),
+`utterance` (= `megszolalas`).
 
 ## `app_user` (felhasznalo)
 
@@ -58,6 +59,26 @@ a fiókkal együtt törlendő.
   (a kettő keverése miatt a V5-ös sorok NULL-t kaptak).
 - `asr_model` NOT NULL: a voice-module.md szerint az `eloallito`-ban az
   ASR-modellt is rögzíteni kell, ez a forrása.
+
+## `utterance` (megszolalas)
+
+- **Megváltoztathatatlan.** Az `allitas.forras` `(recording_id, turn_id)`
+  párral hivatkozik rá (`UNIQUE`), egy utólagos módosítás a provenance-t
+  hamisítaná — ezért nincs update/delete végpont és módosító metódus.
+- **Egyben, egyszer töltődik be**: `POST /api/recordings/{id}/utterances`
+  a teljes listával, egy tranzakcióban, csak `PROCESSING` felvételhez;
+  második próbálkozás → 409. (voice-module.md határ: a Spring a kész
+  eredményt kapja, nem élő átiratot.)
+- `speaker`: `DOCTOR | PATIENT | OTHER` — a Python `orvos | beteg | egyéb`
+  kimenetének 1:1 megfelelője. Az `OTHER` a hozzátartozó / harmadik fél.
+  **Tudatos döntés: nincs `UNCERTAIN`** — bizonytalan hozzárendelés most
+  nem jelölhető.
+- `start_ms`/`end_ms` egész ms (a Python másodpercet ad → átváltás az
+  integrációnál). `turn_id` 0-tól indul.
+- `similarity`, `asr_confidence` nullázható: a Python jelenleg egyiket sem
+  adja ki; a hasonlóság ott beszélőnként (klaszterenként) számolódik, nem
+  megszólalásonként.
+- `ON DELETE CASCADE` a `recording`-ra (beteg → felvétel → megszólalás).
 
 ## Miért JSONB az `allitas.forras` és `eloallito`
 
