@@ -14,7 +14,7 @@ public record RecordingCreateRequest(
     @NotNull(message = "The userId must not be null")
     Long userId,
 
-    Long encounterId,
+    Long medicalCareId,
 
     @NotNull(message = "The mode must be SBO or ECHO")
     RecordingMode mode,

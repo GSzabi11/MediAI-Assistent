@@ -13,7 +13,7 @@ egy diagram nem mutat.
 
 Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `voice_profile` (= `hangprofil`), `recording` (= `felvetel`),
-`utterance` (= `megszolalas`).
+`utterance` (= `megszolalas`), `medical_care` (= `ellatas`).
 
 ## `app_user` (felhasznalo)
 
@@ -44,9 +44,8 @@ a fiókkal együtt törlendő.
   `user_id` → `RESTRICT` (orvos nem törölhető, amíg felvételei vannak — a
   betegdokumentáció nem tűnhet el vele); `voice_profile_id` → `SET NULL`
   (a biometrikus profil törölhető, a felvétel megmarad).
-- **`encounter_id` FK nélkül**, nullázható — az `ellatas`/encounter tábla
-  még nem létezik; az FK a vele együtt érkező migrációban kerül rá.
-  Addig az érték nincs ellenőrizve.
+- **`medical_care_id`** nullázható; V5-ben `encounter_id` néven, FK nélkül jött
+  létre — a V8 nevezte át és tette rá az FK-t (ld. `medical_care`).
 - **`voice_profile_id` nem a klienstől jön**: létrehozáskor a service az
   orvos akkor aktív profilját írja be (vagy NULL).
 - **Státusz-állapotgép** (`RecordingStatus.canTransitionTo`, az entitás
@@ -59,6 +58,29 @@ a fiókkal együtt törlendő.
   (a kettő keverése miatt a V5-ös sorok NULL-t kaptak).
 - `asr_model` NOT NULL: a voice-module.md szerint az `eloallito`-ban az
   ASR-modellt is rögzíteni kell, ez a forrása.
+
+## `medical_care` (ellatas)
+
+- **Identitás-kapu DB-szinten** (architecture.md: eltérés = hard fail):
+  összetett FK `recording(medical_care_id, patient_id) → medical_care(id,
+  patient_id)`, ehhez `UNIQUE (id, patient_id)` a medical_care-en. Így egy
+  felvétel betege csak az ellátás betege lehet — közvetlen SQL-ből (pl. a
+  Pythonból) sem kerülhető meg. A `RecordingService` előre ellenőriz, hogy
+  500 helyett 409 legyen belőle.
+- **Életciklus**: `started_at` DB `now()`; zárás `POST /{id}/close`, ami
+  natív `UPDATE ... SET ended_at = now() WHERE ended_at IS NULL` — atomikus,
+  DB-idő, csak egyszer sikerül (második → 409). Lezárt ellátáshoz új
+  felvétel nem rendelhető (409). Az entitáson `ended_at` is
+  `insertable/updatable = false`: csak ez a lekérdezés írja.
+- **Több nyitott ellátás is lehet** betegenként (pl. SBO alatt párhuzamos
+  echo) — tudatosan nincs részleges egyedi index; a felvételnél ezért mindig
+  explicit `medicalCareId` kell.
+- **Törlés**: `patient_id` CASCADE, `user_id` RESTRICT. A felvétel → ellátás
+  FK **`NO ACTION`, nem `RESTRICT`**: közvetlen törlést ugyanúgy tilt, de a
+  beteg törlésekor (CASCADE mindkét táblára) a `RESTRICT` az utasítás
+  közepén, a még ki nem törölt felvételen elhasalna; a `NO ACTION` csak az
+  utasítás végén ellenőriz.
+- `type`: `SBO | OUTPATIENT | ECHO` (diagram: `sbo | ambulans | echo`).
 
 ## `utterance` (megszolalas)
 

@@ -26,7 +26,7 @@ public class Recording {
 
     private Long userId;
 
-    private Long encounterId;
+    private Long medicalCareId;
 
     private Long voiceProfileId;
 
@@ -49,11 +49,11 @@ public class Recording {
     protected Recording() {
     }
 
-    public Recording(Long patientId, Long userId, Long encounterId, Long voiceProfileId,
+    public Recording(Long patientId, Long userId, Long medicalCareId, Long voiceProfileId,
             RecordingMode mode, String audioPath, String asrModel) {
         this.patientId = patientId;
         this.userId = userId;
-        this.encounterId = encounterId;
+        this.medicalCareId = medicalCareId;
         this.voiceProfileId = voiceProfileId;
         this.mode = mode;
         this.audioPath = audioPath;
@@ -86,8 +86,8 @@ public class Recording {
         return userId;
     }
 
-    public Long getEncounterId() {
-        return encounterId;
+    public Long getMedicalCareId() {
+        return medicalCareId;
     }
 
     public Long getVoiceProfileId() {

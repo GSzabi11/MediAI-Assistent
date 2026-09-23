@@ -5,6 +5,9 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import bme.mediai.medicalcare.exception.MedicalCareClosedException;
+import bme.mediai.medicalcare.exception.MedicalCareNotFoundException;
+import bme.mediai.medicalcare.exception.MedicalCarePatientMismatchException;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.patient.exception.TajConflictException;
 import bme.mediai.recording.exception.InvalidStatusTransitionException;
@@ -56,6 +59,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({RecordingNotProcessingException.class, UtterancesAlreadyExistException.class})
     ProblemDetail handleUtteranceConflict(RuntimeException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(MedicalCareNotFoundException.class)
+    ProblemDetail handleMedicalCareNotFound(MedicalCareNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler({MedicalCareClosedException.class, MedicalCarePatientMismatchException.class})
+    ProblemDetail handleMedicalCareConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

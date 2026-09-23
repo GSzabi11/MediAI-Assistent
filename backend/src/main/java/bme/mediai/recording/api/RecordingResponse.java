@@ -10,7 +10,7 @@ public record RecordingResponse(
         Long id,
         Long patientId,
         Long userId,
-        Long encounterId,
+        Long medicalCareId,
         Long voiceProfileId,
         RecordingMode mode,
         RecordingStatus status,
@@ -22,7 +22,7 @@ public record RecordingResponse(
     public static RecordingResponse from(Recording recording) {
         return new RecordingResponse(
                 recording.getId(), recording.getPatientId(), recording.getUserId(),
-                recording.getEncounterId(), recording.getVoiceProfileId(), recording.getMode(),
+                recording.getMedicalCareId(), recording.getVoiceProfileId(), recording.getMode(),
                 recording.getStatus(), recording.getAudioPath(), recording.getDurationSec(),
                 recording.getAsrModel(), recording.getRecordedAt());
     }

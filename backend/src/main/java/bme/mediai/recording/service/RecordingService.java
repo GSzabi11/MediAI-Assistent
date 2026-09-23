@@ -1,5 +1,10 @@
 package bme.mediai.recording.service;
 
+import bme.mediai.medicalcare.exception.MedicalCareClosedException;
+import bme.mediai.medicalcare.exception.MedicalCareNotFoundException;
+import bme.mediai.medicalcare.exception.MedicalCarePatientMismatchException;
+import bme.mediai.medicalcare.persistence.MedicalCare;
+import bme.mediai.medicalcare.persistence.MedicalCareRepository;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.patient.persistence.PatientRepository;
 import bme.mediai.recording.api.RecordingCreateRequest;
@@ -25,13 +30,16 @@ public class RecordingService {
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
     private final VoiceProfileRepository voiceProfileRepository;
+    private final MedicalCareRepository medicalCareRepository;
 
     public RecordingService(RecordingRepository repository, PatientRepository patientRepository,
-            UserRepository userRepository, VoiceProfileRepository voiceProfileRepository) {
+            UserRepository userRepository, VoiceProfileRepository voiceProfileRepository,
+            MedicalCareRepository medicalCareRepository) {
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
         this.voiceProfileRepository = voiceProfileRepository;
+        this.medicalCareRepository = medicalCareRepository;
     }
 
     @Transactional
@@ -39,6 +47,9 @@ public class RecordingService {
         requirePatientExists(request.patientId());
         if (!userRepository.existsById(request.userId())) {
             throw new UserNotFoundException(request.userId());
+        }
+        if (request.medicalCareId() != null) {
+            requireOpenMedicalCareOfPatient(request.medicalCareId(), request.patientId());
         }
 
         // A kliens nem választhat profilt: mindig az orvos aktuálisan aktív profilja,
@@ -50,7 +61,7 @@ public class RecordingService {
         Recording recording = new Recording(
                 request.patientId(),
                 request.userId(),
-                request.encounterId(),
+                request.medicalCareId(),
                 voiceProfileId,
                 request.mode(),
                 request.audioPath(),
@@ -81,6 +92,18 @@ public class RecordingService {
                 .orElseThrow(() -> new RecordingNotFoundException(id));
         recording.changeStatus(status, durationSec);
         return RecordingResponse.from(recording);
+    }
+
+    // Identitás-kapu: a DB összetett FK-ja is kizárja az eltérést, ez csak 500 helyett 409-et ad.
+    private void requireOpenMedicalCareOfPatient(Long medicalCareId, Long patientId) {
+        MedicalCare medicalCare = medicalCareRepository.findById(medicalCareId)
+                .orElseThrow(() -> new MedicalCareNotFoundException(medicalCareId));
+        if (!medicalCare.getPatientId().equals(patientId)) {
+            throw new MedicalCarePatientMismatchException(medicalCareId, medicalCare.getPatientId(), patientId);
+        }
+        if (medicalCare.isClosed()) {
+            throw new MedicalCareClosedException(medicalCareId);
+        }
     }
 
     private void requirePatientExists(Long patientId) {
