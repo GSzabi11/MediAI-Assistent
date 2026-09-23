@@ -4,17 +4,11 @@ import bme.mediai.medication.api.MedicationCreateRequest;
 import bme.mediai.medication.api.MedicationResponse;
 import bme.mediai.medication.exception.MedicationAlreadyDiscontinuedException;
 import bme.mediai.medication.exception.MedicationNotFoundException;
-import bme.mediai.medication.exception.SourceStatementNotUsableException;
 import bme.mediai.medication.persistence.Medication;
 import bme.mediai.medication.persistence.MedicationRepository;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.patient.persistence.PatientRepository;
-import bme.mediai.statement.exception.StatementNotFoundException;
-import bme.mediai.statement.persistence.ApprovalStatus;
-import bme.mediai.statement.persistence.Statement;
-import bme.mediai.statement.persistence.StatementApproval;
-import bme.mediai.statement.persistence.StatementApprovalRepository;
-import bme.mediai.statement.persistence.StatementRepository;
+import bme.mediai.statement.service.StatementApprovalService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,22 +20,21 @@ public class MedicationService {
 
     private final MedicationRepository repository;
     private final PatientRepository patientRepository;
-    private final StatementRepository statementRepository;
-    private final StatementApprovalRepository approvalRepository;
+    private final StatementApprovalService approvalService;
 
     public MedicationService(MedicationRepository repository, PatientRepository patientRepository,
-            StatementRepository statementRepository, StatementApprovalRepository approvalRepository) {
+            StatementApprovalService approvalService) {
         this.repository = repository;
         this.patientRepository = patientRepository;
-        this.statementRepository = statementRepository;
-        this.approvalRepository = approvalRepository;
+        this.approvalService = approvalService;
     }
 
     @Transactional
     public MedicationResponse create(MedicationCreateRequest request) {
         requirePatientExists(request.patientId());
+        // A gyógyszerlista orvosi tényként jelenik meg: csak jóváhagyott állításból
         if (request.sourceStatementId() != null) {
-            requireUsableSourceStatement(request.sourceStatementId(), request.patientId());
+            approvalService.requireApprovedStatementOfPatient(request.sourceStatementId(), request.patientId());
         }
 
         Medication medication = new Medication(
@@ -80,26 +73,6 @@ public class MedicationService {
         }
         medication.discontinue();
         return MedicationResponse.from(medication);
-    }
-
-    // Human-in-the-loop: a gyógyszerlista orvosi tényként jelenik meg, ezért csak olyan
-    // állításból származhat, amit orvos elfogadott (ACCEPTED) vagy javított (MODIFIED).
-    // A beteg-egyezést a DB összetett FK-ja is kikényszeríti; ez csak érthető 409-et ad.
-    private void requireUsableSourceStatement(Long statementId, Long patientId) {
-        Statement statement = statementRepository.findById(statementId)
-                .orElseThrow(() -> new StatementNotFoundException(statementId));
-        if (!statement.getPatientId().equals(patientId)) {
-            throw new SourceStatementNotUsableException("A(z) " + statementId + " állítás a(z) "
-                    + statement.getPatientId() + " beteghez tartozik, nem a(z) " + patientId + " beteghez");
-        }
-        ApprovalStatus status = approvalRepository.findFirstByStatementIdOrderByDecidedAtDescIdDesc(statementId)
-                .map(StatementApproval::getStatus)
-                .orElse(null);
-        if (status != ApprovalStatus.ACCEPTED && status != ApprovalStatus.MODIFIED) {
-            throw new SourceStatementNotUsableException("A(z) " + statementId
-                    + " állítás nincs orvosilag jóváhagyva (állapot: " + (status == null ? "PENDING" : status)
-                    + "); gyógyszer csak elfogadott vagy módosított állításból rögzíthető");
-        }
     }
 
     private Medication getMedication(Long id) {

@@ -4,6 +4,7 @@ import bme.mediai.statement.api.ApprovalCreateRequest;
 import bme.mediai.statement.api.ApprovalResponse;
 import bme.mediai.statement.exception.ApproverNotDoctorException;
 import bme.mediai.statement.exception.RuleStatementNotModifiableException;
+import bme.mediai.statement.exception.SourceStatementNotUsableException;
 import bme.mediai.statement.exception.StatementNotFoundException;
 import bme.mediai.statement.persistence.ApprovalStatus;
 import bme.mediai.statement.persistence.Statement;
@@ -55,6 +56,27 @@ public class StatementApprovalService {
         StatementApproval approval = new StatementApproval(
                 statementId, user.getId(), request.status(), request.modifiedText());
         return ApprovalResponse.from(repository.save(approval));
+    }
+
+    // Human-in-the-loop: orvosi tényként megjelenő rekord (gyógyszer, allergia) csak olyan
+    // állításból származhat, amit orvos elfogadott (ACCEPTED) vagy javított (MODIFIED).
+    // A beteg-egyezést a hívó tábla összetett FK-ja is kikényszeríti; ez csak érthető 409-et ad.
+    @Transactional(readOnly = true)
+    public void requireApprovedStatementOfPatient(Long statementId, Long patientId) {
+        Statement statement = statementRepository.findById(statementId)
+                .orElseThrow(() -> new StatementNotFoundException(statementId));
+        if (!statement.getPatientId().equals(patientId)) {
+            throw new SourceStatementNotUsableException("A(z) " + statementId + " állítás a(z) "
+                    + statement.getPatientId() + " beteghez tartozik, nem a(z) " + patientId + " beteghez");
+        }
+        ApprovalStatus status = repository.findFirstByStatementIdOrderByDecidedAtDescIdDesc(statementId)
+                .map(StatementApproval::getStatus)
+                .orElse(null);
+        if (status != ApprovalStatus.ACCEPTED && status != ApprovalStatus.MODIFIED) {
+            throw new SourceStatementNotUsableException("A(z) " + statementId
+                    + " állítás nincs orvosilag jóváhagyva (állapot: " + (status == null ? "PENDING" : status)
+                    + "); csak elfogadott vagy módosított állítás lehet forrás");
+        }
     }
 
     @Transactional(readOnly = true)

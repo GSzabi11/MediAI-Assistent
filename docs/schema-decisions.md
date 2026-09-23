@@ -16,7 +16,7 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `utterance` (= `megszolalas`), `medical_care` (= `ellatas`),
 `statement` (= `allitas`), `statement_approval` (= `allitas_jovahagyas`),
 `document` (= `dokumentum`), `document_chunk` (= `doc_chunk`),
-`lab_result` (= `labor`), `medication` (= `gyogyszer`).
+`lab_result` (= `labor`), `medication` (= `gyogyszer`), `allergy` (= `allergia`).
 
 ## `app_user` (felhasznalo)
 
@@ -280,6 +280,23 @@ RAG-darabok a `document.extracted_text`-ből, a diagram szerint.
   (a diagramon sincs).
 - `dose` > 0, és dózishoz kötelező a `dose_unit` (DB CHECK + entitás);
   `@Digits(7, 3)` a csendes kerekítés ellen.
+
+## `allergy` (allergia) — V15
+
+- Mezők a diagram szerint: `substance` (= `anyag`), `source_statement_id`
+  (= `forras_allitas_id`).
+- Forrás-állítás: ugyanaz a szabály, mint a `medication`-nél (nullázható,
+  összetett FK, csak `ACCEPTED`/`MODIFIED`). A szabály **egyetlen helyen**
+  él: `StatementApprovalService.requireApprovedStatementOfPatient()`, ezt
+  hívja a gyógyszer és az allergia is.
+- **Egy betegnél egy anyag egyszer**: egyedi index
+  `(patient_id, lower(btrim(substance)))` → a `Latex` és a ` LATEX ` is
+  duplikátum (409). A szélső szóközöket a Java is levágja mentés előtt.
+- Megváltoztathatatlan, nincs törlés/„aktív” flag (a diagramon sincs).
+- **Nincs még gyógyszer–allergia ellenőrzés**: penicillin-allergiás betegnek
+  Amoxicillin rögzíthető. Ez determinisztikus szabály-motor feladata (a
+  `substance` ↔ `medication.active_ingredient` összevetés, hatóanyag-
+  osztályokkal), nem LLM-é.
 
 ## `paciens.taj` formátum
 

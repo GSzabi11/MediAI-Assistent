@@ -5,6 +5,8 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import bme.mediai.allergy.exception.AllergyNotFoundException;
+import bme.mediai.allergy.exception.DuplicateAllergyException;
 import bme.mediai.document.exception.ChunksAlreadyExistException;
 import bme.mediai.document.exception.DocumentNotFoundException;
 import bme.mediai.document.exception.DuplicateDocumentException;
@@ -19,7 +21,7 @@ import bme.mediai.lab.exception.LabResultNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCareClosedException;
 import bme.mediai.medication.exception.MedicationAlreadyDiscontinuedException;
 import bme.mediai.medication.exception.MedicationNotFoundException;
-import bme.mediai.medication.exception.SourceStatementNotUsableException;
+import bme.mediai.statement.exception.SourceStatementNotUsableException;
 import bme.mediai.medicalcare.exception.MedicalCareNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCarePatientMismatchException;
 import bme.mediai.patient.exception.PatientNotFoundException;
@@ -129,6 +131,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({MedicationAlreadyDiscontinuedException.class, SourceStatementNotUsableException.class})
     ProblemDetail handleMedicationConflict(RuntimeException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(AllergyNotFoundException.class)
+    ProblemDetail handleAllergyNotFound(AllergyNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateAllergyException.class)
+    ProblemDetail handleDuplicateAllergy(DuplicateAllergyException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
