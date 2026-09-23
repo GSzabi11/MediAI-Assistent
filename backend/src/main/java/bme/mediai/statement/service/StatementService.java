@@ -5,6 +5,8 @@ import bme.mediai.statement.api.StatementResponse;
 import bme.mediai.statement.exception.StatementNotFoundException;
 import bme.mediai.statement.exception.StatementSourcePatientMismatchException;
 import bme.mediai.statement.persistence.Statement;
+import bme.mediai.statement.persistence.StatementApproval;
+import bme.mediai.statement.persistence.StatementApprovalRepository;
 import bme.mediai.statement.persistence.StatementProducer;
 import bme.mediai.statement.persistence.StatementRepository;
 import bme.mediai.statement.persistence.StatementSource;
@@ -23,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,13 +36,16 @@ public class StatementService {
     private final PatientRepository patientRepository;
     private final RecordingRepository recordingRepository;
     private final UtteranceRepository utteranceRepository;
+    private final StatementApprovalRepository approvalRepository;
 
     public StatementService(StatementRepository repository, PatientRepository patientRepository,
-            RecordingRepository recordingRepository, UtteranceRepository utteranceRepository) {
+            RecordingRepository recordingRepository, UtteranceRepository utteranceRepository,
+            StatementApprovalRepository approvalRepository) {
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.recordingRepository = recordingRepository;
         this.utteranceRepository = utteranceRepository;
+        this.approvalRepository = approvalRepository;
     }
 
     // Kívülről (Python, frontend) csak forrás- és modell-állítás jöhet: ha a kliens
@@ -81,22 +88,31 @@ public class StatementService {
                 producer,
                 clinicalTime);
 
-        return StatementResponse.from(repository.save(statement));
+        return StatementResponse.from(repository.save(statement), null);
     }
 
     @Transactional(readOnly = true)
     public StatementResponse findById(Long id) {
-        return repository.findById(id)
-                .map(StatementResponse::from)
+        Statement statement = repository.findById(id)
                 .orElseThrow(() -> new StatementNotFoundException(id));
+        StatementApproval latest = approvalRepository.findFirstByStatementIdOrderByDecidedAtDescIdDesc(id)
+                .orElse(null);
+        return StatementResponse.from(statement, latest);
     }
 
     @Transactional(readOnly = true)
     public List<StatementResponse> findByPatient(Long patientId) {
         requirePatientExists(patientId);
-        return repository.findByPatientIdOrderByClinicalTimeDesc(patientId)
+        List<Statement> statements = repository.findByPatientIdOrderByClinicalTimeDesc(patientId);
+        if (statements.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, StatementApproval> latestByStatement = approvalRepository
+                .findLatestForStatements(statements.stream().map(Statement::getId).toList())
                 .stream()
-                .map(StatementResponse::from)
+                .collect(Collectors.toMap(StatementApproval::getStatementId, Function.identity()));
+        return statements.stream()
+                .map(s -> StatementResponse.from(s, latestByStatement.get(s.getId())))
                 .toList();
     }
 

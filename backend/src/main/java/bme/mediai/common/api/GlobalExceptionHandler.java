@@ -5,6 +5,8 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import bme.mediai.statement.exception.ApproverNotDoctorException;
+import bme.mediai.statement.exception.RuleStatementNotModifiableException;
 import bme.mediai.statement.exception.StatementNotFoundException;
 import bme.mediai.statement.exception.StatementSourcePatientMismatchException;
 import bme.mediai.medicalcare.exception.MedicalCareClosedException;
@@ -81,6 +83,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(StatementSourcePatientMismatchException.class)
     ProblemDetail handleStatementSourceMismatch(StatementSourcePatientMismatchException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler({ApproverNotDoctorException.class, RuleStatementNotModifiableException.class})
+    ProblemDetail handleApprovalConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

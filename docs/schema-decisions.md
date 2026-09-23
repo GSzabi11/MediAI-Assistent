@@ -14,7 +14,7 @@ egy diagram nem mutat.
 Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `voice_profile` (= `hangprofil`), `recording` (= `felvetel`),
 `utterance` (= `megszolalas`), `medical_care` (= `ellatas`),
-`statement` (= `allitas`).
+`statement` (= `allitas`), `statement_approval` (= `allitas_jovahagyas`).
 
 ## `app_user` (felhasznalo)
 
@@ -116,11 +116,27 @@ Szándékos. A beteg törlése után is meg kell maradnia az audit-nyomnak,
 hogy ki nézte meg korábban — egy `ON DELETE CASCADE` pont a bizonyítékot
 törölné.
 
-## `allitas` / `allitas_jovahagyas` viszonya
+## `statement` / `statement_approval` viszonya (allitas / allitas_jovahagyas) — V10
 
 1:N, nem 1:1 — megőrzi a jóváhagyási előzményt, ha az orvos meggondolja
-magát. **Konvenció**: mindig a legfrissebb `idopont` az érvényes állapot;
-ezt minden lekérdezésnél következetesen kell alkalmazni.
+magát. **Konvenció**: mindig a legfrissebb döntés az érvényes állapot,
+rendezés `decided_at DESC, id DESC` (az id dönt azonos időpontnál). Ez a
+szabály **egyetlen helyen** él: a `StatementApprovalRepository`
+lekérdezéseiben — a kliens nem számolja, a `StatementResponse`
+`reviewStatus` (`PENDING`, ha nincs döntés) és `effectiveText` mezőt kap.
+
+- `status`: `ACCEPTED | REJECTED | MODIFIED`. `modified_text` akkor és csak
+  akkor, ha `MODIFIED` (DB CHECK + entitás). Az eredeti állítás szövege
+  sosem változik — a modell kimenete és az orvos javítása is visszakereshető.
+- **Csak `DOCTOR` hagyhat jóvá** (409). Bejelentkezés még nincs, a `userId`
+  a kérésből jön — autentikáció után a bejelentkezett felhasználóból kell.
+- **Szabály-állítás nem `MODIFIED`-olható** (409), csak elfogadható /
+  elutasítható: a szabály kimenete reprodukálható tény. Ezt csak a service
+  kényszeríti ki (DB-ben tábla-közi CHECK trigger kellene).
+- Törlés: `statement_id` CASCADE, `user_id` RESTRICT.
+- A jóváhagyás a `statement` modulon belül van (nem külön modul): a
+  `StatementResponse` az állapotot, a jóváhagyás a szabály-típust igényli —
+  két modul kölcsönösen függene egymástól.
 
 ## `statement` (allitas) — V9
 
