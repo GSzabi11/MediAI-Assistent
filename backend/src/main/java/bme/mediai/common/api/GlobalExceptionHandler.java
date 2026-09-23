@@ -14,6 +14,8 @@ import bme.mediai.statement.exception.ApproverNotDoctorException;
 import bme.mediai.statement.exception.RuleStatementNotModifiableException;
 import bme.mediai.statement.exception.StatementNotFoundException;
 import bme.mediai.statement.exception.StatementSourcePatientMismatchException;
+import bme.mediai.lab.exception.LabDocumentPatientMismatchException;
+import bme.mediai.lab.exception.LabResultNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCareClosedException;
 import bme.mediai.medicalcare.exception.MedicalCareNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCarePatientMismatchException;
@@ -104,6 +106,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({DuplicateDocumentException.class, ExtractedTextAlreadySetException.class,
             ExtractedTextMissingException.class, ChunksAlreadyExistException.class})
     ProblemDetail handleDocumentConflict(RuntimeException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(LabResultNotFoundException.class)
+    ProblemDetail handleLabResultNotFound(LabResultNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(LabDocumentPatientMismatchException.class)
+    ProblemDetail handleLabDocumentMismatch(LabDocumentPatientMismatchException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

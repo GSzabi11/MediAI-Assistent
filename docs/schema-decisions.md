@@ -15,7 +15,8 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `voice_profile` (= `hangprofil`), `recording` (= `felvetel`),
 `utterance` (= `megszolalas`), `medical_care` (= `ellatas`),
 `statement` (= `allitas`), `statement_approval` (= `allitas_jovahagyas`),
-`document` (= `dokumentum`), `document_chunk` (= `doc_chunk`).
+`document` (= `dokumentum`), `document_chunk` (= `doc_chunk`),
+`lab_result` (= `labor`).
 
 ## `app_user` (felhasznalo)
 
@@ -185,14 +186,38 @@ CONSTRAINT model_needs_uncertainty CHECK (type <> 'MODEL_INFERENCE'    OR uncert
 - JSONB ↔ Java: `@JdbcTypeCode(SqlTypes.JSON)` sealed interface + record-ok,
   Hibernate 7.4 Jackson 3 FormatMapperrel.
 
-## `labor.ertek_num` vs `ertek_szoveg`
+## `lab_result` (labor) — V13
 
-`ertek_num NUMERIC` a motoroknak (összehasonlítás referencia-
+`value_num NUMERIC(12,4) NOT NULL` a motoroknak (összehasonlítás referencia-
 tartománnyal). Cenzorált (`<0,5`) vagy kvalitatív (`negatív`) eredményt
-NEM kerekítünk bele csendben — vagy `ertek_szoveg`-be kerül, vagy az
-import elutasítja a sort. FHIR `Quantity` (value+comparator+unit) a
-"helyes" hosszú távú megoldás, de most nem építjük meg — dokumentált
-tudatos egyszerűsítés.
+NEM kerekítünk bele csendben — **az import elutasítja** (nincs
+`ertek_szoveg` oszlop). FHIR `Quantity` (value+comparator+unit) a "helyes"
+hosszú távú megoldás, de most nem építjük meg — dokumentált tudatos
+egyszerűsítés.
+
+- **Az érték JSON számként jön** (a kliens értelmezi a leletet). Ezért a
+  `<0,5`/`negatív` szöveg JSON-parse hibán bukik el (400). Mellékhatás: a
+  számot tartalmazó szöveget (`"139"`) a Jackson elfogadja.
+- **Csendes kerekítés ellen**: `@Digits(integer = 8, fraction = 4)` a
+  kérésben — a `NUMERIC(12,4)` a több tizedesjegyet szó nélkül kerekítené,
+  ezt 400-zal elutasítjuk.
+- **Egy panel = egy kérés, egy tranzakció** (`POST /api/lab-results`): ha
+  egy sor hibás, egyik sem kerül be. Megváltoztathatatlan.
+- **`document_id` nullázható, DB-identitáskapuval**: összetett FK
+  `(document_id, patient_id) → document(id, patient_id)` (ehhez a V13
+  `UNIQUE (id, patient_id)`-t tett a `document`-re). `NO ACTION`: a
+  dokumentum nem törölhető, amíg laborsor hivatkozik rá; a beteg törlése
+  mindent visz (CASCADE).
+- `ref_low`/`ref_high` külön-külön nullázható (egyoldalú tartomány), CHECK
+  `ref_low <= ref_high`. `unit` nullázható (pl. pH, INR).
+- `measured_at`: ha hiányzik, a dokumentum `clinical_date`-je budapesti
+  éjfélkor; ha az sincs, 400.
+- Trend: `GET /api/lab-results?patientId=&name=` időrendben, index
+  `(patient_id, name, measured_at)`. **Nincs egységkonverzió** — azonos
+  `name` más `unit`-tal a trendben keveredhet.
+- **Következő lépés**: a referencia-tartomány szabály (első determinisztikus
+  motor) → `DETERMINISTIC_RULE` állítások; ehhez `LAB` forrástípus kell a
+  `statement.source`-ba.
 
 ## `document` (dokumentum) — V11
 
