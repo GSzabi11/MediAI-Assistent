@@ -1,0 +1,69 @@
+/*
+ * MediAI design tokens — egyetlen forrás a vizuális értékekhez.
+ * Komponensben ne legyen nyers hex: mindig ezekre a változókra hivatkozz.
+ */
+:root {
+  /* Felületek */
+  --c-ground: #f4f5f3;
+  --c-surface: #ffffff;
+  --c-surface-muted: #f1f2ef;
+  --c-surface-sunken: #fbfbfa;
+
+  /* Tinta (szöveg) */
+  --c-ink: #17212b;
+  --c-ink-2: #2e3945;
+  --c-ink-muted: #4a5561; /* >= 4.5:1 fehéren */
+  --c-ink-disabled: #5e6873;
+  --c-ink-inverse: #ffffff;
+  --c-ink-inverse-muted: #b7c2cc;
+
+  /* Vonalak */
+  --c-line: #d5d9dd;
+  --c-line-strong: #9aa4ae;
+  --c-line-input: #8894a0;
+  --c-line-soft: #c7cdd3;
+
+  /* Akcent: az emberi döntést és az AI-t jelöli (jóváhagyás, modell-állítás) */
+  --c-accent: #1f5a8c;
+  --c-accent-strong: #123e63;
+  --c-accent-tint: #e4edf6;
+  --c-accent-tint-2: #eff4fa;
+
+  /* Súlyosság — mindig ikonnal + felirattal együtt */
+  --c-critical: #a3261b;
+  --c-warning: #f2c44f;
+  --c-warning-ink: #7a4800;
+  --c-warning-tint: #fff6dc;
+
+  /* Dokumentum-kiemelés */
+  --c-highlight: #ffe39a;
+
+  /* Labor-diagram */
+  --c-ref-band: #e6eaec;
+
+  /* Tipográfia */
+  --font-body: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, Menlo, monospace;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-base: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+
+  /* Méretek */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --touch: 44px; /* minimális érintési célméret */
+  --gap: 20px;
+  --rail-w: 56px;
+  --sources-w: 264px;
+  --claims-w: 520px;
+  --chat-w: 440px;
+
+  /* Szegélytípusok (állítás-típus jelzői) */
+  --border-szabaly: 2.5px solid var(--c-ink);
+  --border-forras: 1.5px solid var(--c-line-strong);
+  --border-modell: 2.5px dashed var(--c-accent);
+}

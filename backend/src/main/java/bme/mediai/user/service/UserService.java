@@ -3,6 +3,7 @@ package bme.mediai.user.service;
 import bme.mediai.user.api.UserCreateRequest;
 import bme.mediai.user.api.UserResponse;
 import bme.mediai.user.exception.EmailConflictException;
+import bme.mediai.user.exception.InvalidCredentialsException;
 import bme.mediai.user.exception.UserNotFoundException;
 import bme.mediai.user.exception.UsernameConflictException;
 import bme.mediai.user.persistence.Role;
@@ -21,10 +22,27 @@ public class UserService {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    // Nem létező felhasználónál is lefut egy BCrypt-összevetés, így a válaszidő
+    // nem árulja el, hogy a felhasználónév létezik-e.
+    private final String dummyHash;
 
     public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.dummyHash = passwordEncoder.encode("dummy-password-for-timing");
+    }
+
+    // Jelszó-ellenőrzés. Hibánál mindig ugyanaz a kivétel (401), akár a név, akár
+    // a jelszó rossz — különben kitapogatható lenne, mely felhasználónevek léteznek.
+    @Transactional(readOnly = true)
+    public UserResponse authenticate(String username, String password) {
+        User user = repository.findByUsername(username).orElse(null);
+        String hash = user != null ? user.getPasswordHash() : dummyHash;
+        boolean matches = passwordEncoder.matches(password, hash);
+        if (user == null || !matches) {
+            throw new InvalidCredentialsException();
+        }
+        return UserResponse.from(user);
     }
 
     @Transactional
