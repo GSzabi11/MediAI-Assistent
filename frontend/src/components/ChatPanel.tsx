@@ -32,7 +32,11 @@ export function ChatPanel({ onCollapse }: { onCollapse: () => void }) {
   const inputId = useId();
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }), [uzenetek.length, busy]);
+  // Kapcsos zárójel kell: az újabb böngészőkben a scrollIntoView Promise-t ad vissza, és
+  // ha az effect ezt visszaadná, a React takarítófüggvénynek hinné → „destroy is not a function”.
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  }, [uzenetek.length, busy]);
 
   async function kuld(szoveg: string) {
     const q = szoveg.trim();
