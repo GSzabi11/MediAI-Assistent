@@ -12,6 +12,16 @@ export interface PatientResponse {
   taj: string | null;
   szuletesiDatum: string; // ISO: YYYY-MM-DD
   anyjaNeve: string | null;
+  lakcim: string | null;
+}
+
+/** Új beteg felvétele. TAJ nélkül: azonosítatlan / külföldi beteg (SBO). */
+export interface UjBeteg {
+  nev: string;
+  taj: string | null;
+  anyjaNeve: string;
+  szuletesiDatum: string;
+  lakcim: string | null;
 }
 
 export type PatientSearch =

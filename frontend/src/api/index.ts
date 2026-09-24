@@ -10,6 +10,7 @@ import type {
   DocumentDto,
   LabResultDto,
   LoginDto,
+  PatientCreateDto,
   UserCreateDto,
   PatientDto,
   PatientSearchDto,
@@ -38,6 +39,7 @@ import {
   type MegszolalasResponse,
   type PatientResponse,
   type PatientSearch,
+  type UjBeteg,
 } from './types';
 
 export interface Api {
@@ -45,6 +47,7 @@ export interface Api {
   regisztral(req: UserCreateDto): Promise<CurrentUser>;
 
   listPatients(): Promise<PatientResponse[]>;
+  createPatient(req: UjBeteg): Promise<PatientResponse>;
   searchPatients(q: PatientSearch): Promise<PatientResponse[]>;
   getPatient(id: number): Promise<PatientResponse>;
 
@@ -87,6 +90,15 @@ const toPatient = (p: PatientDto): PatientResponse => ({
   taj: p.taj,
   szuletesiDatum: p.birthDate,
   anyjaNeve: p.motherName,
+  lakcim: p.address,
+});
+
+const toCreateDto = (b: UjBeteg): PatientCreateDto => ({
+  name: b.nev.trim(),
+  taj: b.taj,
+  motherName: b.anyjaNeve.trim(),
+  birthDate: b.szuletesiDatum,
+  address: b.lakcim?.trim() || null,
 });
 
 const claimType: Record<StatementDto['type'], ClaimType> = {
@@ -234,6 +246,7 @@ export const api: Api = {
   },
 
   listPatients: async () => (await http.get<PatientDto[]>('/patients')).map(toPatient),
+  createPatient: async (req) => toPatient(await http.post<PatientDto>('/patients', toCreateDto(req))),
   // Érzékeny keresés: POST + törzs, sosem query string (CLAUDE.md)
   searchPatients: async (q) => (await http.post<PatientDto[]>('/patients/search', toSearchDto(q))).map(toPatient),
   getPatient: async (id) => toPatient(await http.get<PatientDto>(`/patients/${id}`)),

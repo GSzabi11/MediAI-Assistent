@@ -18,7 +18,7 @@ export function AuthPage() {
   const navigate = useNavigate();
   const [mod, setMod] = useState<Mod>('belepes');
   // Ahonnan a belépésre irányítottak (pl. egy megosztott betegoldal-link)
-  const vissza = (location.state as { from?: string } | null)?.from ?? '/dashboard';
+  const vissza = (location.state as { from?: string } | null)?.from ?? '/patients';
 
   if (user) return <Navigate to={vissza} replace />;
 

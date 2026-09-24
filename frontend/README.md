@@ -48,7 +48,7 @@ src/
     ChatPanel.tsx        klinikai asszisztens (még nincs végpont)
   pages/
     AuthPage.tsx         belépés + új profil (orvos / admin)
-    PatientListPage.tsx  /dashboard — keresés TAJ vagy név+anyja neve+szül. dátum
+    PatientListPage.tsx  /patients — keresés TAJ vagy név+anyja neve+szül. dátum
     PatientPage.tsx      négyoszlopos munkaterület, összecsukható panelek
 ```
 
@@ -58,6 +58,7 @@ src/
 |---|---|
 | Belépés / új profil | `POST /auth/login`, `POST /users`; jóváhagyó neve: `GET /users` |
 | Beteglista / keresés | `GET /patients`, `POST /patients/search` (törzsben — TAJ nem mehet URL-be) |
+| Új beteg | `POST /patients` (TAJ nélkül is: „Nincs TAJ” jelölővel) |
 | Beteg | `GET /patients/{id}` |
 | Állítások | `GET /statements?patientId=`, `POST /statements/{id}/approvals` |
 | Dokumentumok | `GET /documents?patientId=`, `GET /documents/{id}`, `…/text`, `…/file` |

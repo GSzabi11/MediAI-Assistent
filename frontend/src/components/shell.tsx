@@ -8,13 +8,13 @@ export function AppBar() {
   const user = useCurrentUser();
   return (
     <header className="appbar">
-      <Link to="/dashboard" className="appbar__brand">
+      <Link to="/patients" className="appbar__brand">
         <Icon name="plusBox" size={22} />
         MediAI
       </Link>
       {user && (
         <nav className="appbar__nav" aria-label="Fő navigáció">
-          <Link to="/dashboard">Betegek</Link>
+          <Link to="/patients">Betegek</Link>
         </nav>
       )}
       <div className="appbar__right">
@@ -89,7 +89,13 @@ export function PatientBand({ patient }: { patient: PatientResponse | null }) {
         <span className="pband__label">ANYJA NEVE</span>
         <span>{patient.anyjaNeve ?? '—'}</span>
       </div>
-      <Link to="/dashboard" className="btn btn--on-dark pband__switch">
+      {patient.lakcim && (
+        <div className="pband__field">
+          <span className="pband__label">LAKCÍM</span>
+          <span>{patient.lakcim}</span>
+        </div>
+      )}
+      <Link to="/patients" className="btn btn--on-dark pband__switch">
         Beteg váltása
       </Link>
     </section>

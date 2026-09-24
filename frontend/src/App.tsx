@@ -23,11 +23,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* A kezdőoldal a belépés; belépett felhasználót az AuthPage a dashboardra visz */}
+        {/* A kezdőoldal a belépés; belépett felhasználót az AuthPage a beteglistára visz */}
         <Route path="/" element={<AuthPage />} />
         <Route path="/belepes" element={<Navigate to="/" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/patients" replace />} />
         <Route
-          path="/dashboard"
+          path="/patients"
           element={
             <RequireUser>
               <PatientListPage />
@@ -42,7 +43,7 @@ export default function App() {
             </RequireUser>
           }
         />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/patients" replace />} />
       </Routes>
     </BrowserRouter>
   );

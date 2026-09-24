@@ -16,6 +16,15 @@ export interface PatientDto {
   letrehozva: string;
 }
 
+/** backend PatientCreateRequest: name, motherName, birthDate kötelező; taj opcionális (9 számjegy) */
+export interface PatientCreateDto {
+  name: string;
+  taj: string | null;
+  motherName: string;
+  birthDate: string;
+  address: string | null;
+}
+
 export interface PatientSearchDto {
   taj?: string;
   name?: string;

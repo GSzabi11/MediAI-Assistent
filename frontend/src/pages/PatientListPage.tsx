@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import type { PatientResponse, PatientSearch } from '../api/types';
 import { Icon } from '../components/Icon';
+import { NewPatientForm } from '../components/NewPatientForm';
 import { AppBar, ErrorState, Loading, PatientBand } from '../components/shell';
 import { formatDatum, formatTaj } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
@@ -24,6 +25,9 @@ export function PatientListPage() {
   const [anyja, setAnyja] = useState('');
   const [szul, setSzul] = useState('');
 
+  const [ujBeteg, setUjBeteg] = useState(false);
+  const navigate = useNavigate();
+
   const tajOk = taj.replace(/\D/g, '').length === 9;
   const termOk = nev.trim() && anyja.trim() && szul;
 
@@ -32,7 +36,22 @@ export function PatientListPage() {
       <AppBar />
       <PatientBand patient={null} />
       <main className="listpage">
-        <h1 className="h1">Beteg keresése</h1>
+        <div className="row-baseline">
+          <h1 className="h1">Beteg keresése</h1>
+          {!ujBeteg && (
+            <button type="button" className="btn btn--primary push-right" onClick={() => setUjBeteg(true)}>
+              <Icon name="plus" size={16} strokeWidth={2.4} />
+              Új beteg
+            </button>
+          )}
+        </div>
+
+        {ujBeteg && (
+          <NewPatientForm
+            onCancel={() => setUjBeteg(false)}
+            onCreated={(p) => navigate(`/betegek/${p.id}`)}
+          />
+        )}
 
         <div className="searchcard">
           <form

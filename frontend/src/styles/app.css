@@ -1365,6 +1365,56 @@ mark {
   }
 }
 
+/* ============ új beteg ============ */
+.formcard {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+}
+.formcard__head {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--c-line);
+}
+.formcard__grid {
+  padding: 20px 24px 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px 20px;
+  align-items: start;
+}
+.formcard__wide {
+  grid-column: 1 / -1;
+}
+.formcard__error {
+  padding: 0 24px;
+}
+.formcard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 24px 24px;
+}
+.checkrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  font-weight: 400 !important;
+  color: var(--c-ink-muted);
+  cursor: pointer;
+}
+.checkrow input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--c-accent);
+}
+.input:disabled {
+  background: var(--c-surface-muted);
+  color: var(--c-ink-muted);
+}
+
 /* ============ beteglista ============ */
 .listpage {
   width: min(1100px, 100% - 32px);
