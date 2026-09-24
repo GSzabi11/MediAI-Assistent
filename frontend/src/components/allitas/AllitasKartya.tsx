@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import type { ClaimResponse, Forras, JovahagyasResponse } from '../../api/types';
+import type { ClaimResponse, Forras } from '../../api/types';
+import { formatDatumIdo } from '../../lib/format';
 import { Icon } from '../Icon';
 import { ApprovalBar } from './ApprovalBar';
+import { JovahagyasElozmeny } from './JovahagyasElozmeny';
 import { SeverityBand, SeverityInline, SourceChip, TypeTag, UncertaintyMeter } from './parts';
 
 /**
@@ -10,6 +12,7 @@ import { SeverityBand, SeverityInline, SourceChip, TypeTag, UncertaintyMeter } f
  *  - súlyosság: sáv (critical/warning) vagy felirat (info)
  *  - modell: kötelező bizonytalanság + jóváhagyási sáv
  *  - critical nem csukható össze
+ *  - HOGY és MIKOR: az előállító és a klinikai idő mindig olvasható
  */
 export function AllitasKartya({
   allitas,
@@ -19,12 +22,13 @@ export function AllitasKartya({
 }: {
   allitas: ClaimResponse;
   activeForras?: (f: Forras) => boolean;
-  onDecided: (id: number, j: JovahagyasResponse) => void;
+  onDecided: (id: number) => Promise<void>;
   defaultCollapsed?: boolean;
 }) {
   const a = allitas;
   const collapsible = a.sulyossag !== 'critical';
   const [collapsed, setCollapsed] = useState(collapsible && defaultCollapsed);
+  const [elozmeny, setElozmeny] = useState(false);
   const isSelected = !!activeForras && a.forrasok.some(activeForras);
   const rejected = a.jovahagyas?.dontes === 'elutasitva';
   const modified = a.jovahagyas?.dontes === 'modositva' ? a.jovahagyas.modositottSzoveg : null;
@@ -97,6 +101,23 @@ export function AllitasKartya({
             ))}
           </div>
         )}
+        <p className="meta claim__prov">
+          #{a.id} · klinikai idő: {formatDatumIdo(a.klinikaiIdo)} · {a.eloallito}
+        </p>
+        {a.jovahagyas && (
+          <div>
+            <button
+              type="button"
+              className="linkbtn"
+              aria-expanded={elozmeny}
+              onClick={() => setElozmeny((e) => !e)}
+            >
+              <Icon name="history" size={14} />
+              Döntési előzmény
+            </button>
+            {elozmeny && <JovahagyasElozmeny key={a.jovahagyas.idopont} allitasId={a.id} />}
+          </div>
+        )}
       </div>
       {a.claimType === 'szabaly' && (
         <div className="foot foot--szabaly">
@@ -104,7 +125,7 @@ export function AllitasKartya({
           Reprodukálható szabály — nincs jóváhagyandó következtetés
         </div>
       )}
-      <ApprovalBar allitas={a} onDecided={(j) => onDecided(a.id, j)} />
+      <ApprovalBar allitas={a} onDecided={() => onDecided(a.id)} />
     </article>
   );
 }

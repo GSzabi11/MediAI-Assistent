@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import type { ClaimResponse, ClaimType, Forras, JovahagyasResponse, Sulyossag } from '../../api/types';
+import type { ClaimResponse, ClaimType, Forras, Sulyossag } from '../../api/types';
 import { Icon } from '../Icon';
+import { AllitasImport } from './AllitasImport';
 import { AllitasKartya } from './AllitasKartya';
 
 type Szuro = 'mind' | ClaimType | 'labor';
@@ -19,11 +20,12 @@ export function AllitasLista({
 }: {
   allitasok: ClaimResponse[];
   activeForras?: (f: Forras) => boolean;
-  onDecided: (id: number, j: JovahagyasResponse) => void;
+  onDecided: (id: number) => Promise<void>;
   laborDokIds?: Set<number>;
   defaultSzuro?: Szuro;
 }) {
   const [szuro, setSzuro] = useState<Szuro>(defaultSzuro);
+  const [importNyitva, setImportNyitva] = useState(false);
 
   const isLabor = (a: ClaimResponse) =>
     !!laborDokIds && a.forrasok.some((f) => f.tipus === 'dokumentum' && laborDokIds.has(f.dokumentumId));
@@ -65,7 +67,14 @@ export function AllitasLista({
             </>
           )}
         </span>
+        {!importNyitva && (
+          <button type="button" className="btn btn--sm push-right" onClick={() => setImportNyitva(true)}>
+            <Icon name="upload" size={14} />
+            Import
+          </button>
+        )}
       </div>
+      {importNyitva && <AllitasImport onClose={() => setImportNyitva(false)} />}
       <div className="chips" role="group" aria-label="Szűrés típus szerint">
         {chips.map((c) => (
           <button

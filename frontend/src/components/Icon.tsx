@@ -103,6 +103,34 @@ const paths = {
       <path d="M12 7v10M7 12h10" />
     </>
   ),
+  pill: (
+    <>
+      <path d="M10.5 20.5a4.95 4.95 0 0 1-7-7l6-6a4.95 4.95 0 0 1 7 7z" />
+      <path d="M8.5 8.5l7 7" />
+    </>
+  ),
+  list: <path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01" />,
+  upload: (
+    <>
+      <path d="M12 16V4M7 9l5-5 5 5" />
+      <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+    </>
+  ),
+  download: (
+    <>
+      <path d="M12 4v12M7 11l5 5 5-5" />
+      <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+    </>
+  ),
+  history: (
+    <>
+      <path d="M3.5 12a8.5 8.5 0 1 0 2.5-6L3.5 8.5" />
+      <path d="M3.5 3.5v5h5M12 8v4l3 2" />
+    </>
+  ),
+  quote: <path d="M6 17c2-1 3-3 3-6V7H5v4h4M16 17c2-1 3-3 3-6V7h-4v4h4" />,
+  stop: <rect x="6" y="6" width="12" height="12" rx="1.5" />,
+  folder: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
 } as const;
 
 export type IconName = keyof typeof paths;

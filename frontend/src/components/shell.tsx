@@ -15,6 +15,8 @@ export function AppBar() {
       {user && (
         <nav className="appbar__nav" aria-label="Fő navigáció">
           <Link to="/patients">Betegek</Link>
+          <Link to="/profil">Profilom</Link>
+          {user.role === 'ADMIN' && <Link to="/admin">Felhasználók</Link>}
         </nav>
       )}
       <div className="appbar__right">

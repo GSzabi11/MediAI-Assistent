@@ -1,9 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api';
-import type { Beszelo } from '../api/types';
-import { formatMp } from '../lib/format';
+import { readJsonFile } from '../api/importok';
+import type { Beszelo, FelvetelAllapot, FelvetelResponse } from '../api/types';
+import { allapotFelirat } from '../lib/feliratok';
+import { formatDatumIdo, formatMp } from '../lib/format';
+import { kijeloltMegszolalas } from '../lib/kijeles';
+import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
+import { IdezetForm } from './allitas/IdezetForm';
 import { Icon, type IconName } from './Icon';
 import { ErrorState, Loading, PatientMatch } from './shell';
 
@@ -17,39 +22,68 @@ const beszeloMeta: Record<Beszelo, { label: string; icon: IconName }> = {
  * Hangfelvétel-átirat. A beszélő háromértékű: orvos / beteg / egyéb (hozzátartozó) —
  * mindhárom más buborékstílus + felirat. A hozzátartozó kijelentése nem a betegé
  * (anamnézis-hiba lenne összemosni). A kiemelés a turn-sorszámra (backend turnId) megy.
+ *
+ * A felvétel állapotát frissen kéri le (GET /recordings/{id}), és csak az
+ * állapotgép szerint megengedett lépést kínálja fel.
  */
 export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: number; kiemeltTurnIds: number[] }) {
-  const { patient, felvetelek } = usePatient();
-  const felvetel = felvetelek.find((f) => f.id === felvetelId);
-  const { state, reload } = useAsync(() => api.listMegszolalasok(felvetelId), [felvetelId]);
+  const { patient, frissit } = usePatient();
+  const felvetelAllapot = useAsync(() => api.getFelvetel(felvetelId), [felvetelId]);
+  const { state, reload, refresh } = useAsync(() => api.listMegszolalasok(felvetelId), [felvetelId]);
   const firstRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+  const [kijeloles, setKijeloles] = useState<{ turn: number; szoveg: string } | null>(null);
+  const [idezet, setIdezet] = useState<{ turn: number; szoveg: string } | null>(null);
+  const kiemeltKulcs = kiemeltTurnIds.join(',');
 
   useEffect(() => {
     firstRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  }, [state.status, kiemeltTurnIds.join(',')]);
+  }, [state.status, kiemeltKulcs]);
 
-  if (!felvetel) {
-    return (
-      <div className="docview">
-        <PatientMatch active={patient} contentPatientId={-1} what="Felvétel" />
-      </div>
-    );
+  if (felvetelAllapot.state.status === 'loading') return <Loading what="Felvétel" />;
+  if (felvetelAllapot.state.status === 'error') {
+    return <ErrorState error={felvetelAllapot.state.error} onRetry={felvetelAllapot.reload} />;
   }
-
+  const felvetel = felvetelAllapot.state.data;
+  const sameP = felvetel.patientId === patient.id;
   const beszelok = new Set(state.status === 'ok' ? state.data.map((m) => m.beszelo) : []);
+
+  // Csendes frissítés: a nézet nem ugrik vissza „betöltés…”-re, a lépés üzenete megmarad
+  const valtozott = async () => {
+    await Promise.all([felvetelAllapot.refresh(), refresh()]);
+    await frissit();
+  };
+
+  const figyelKijelolest = () => {
+    if (idezet || !listRef.current) return;
+    setKijeloles(kijeloltMegszolalas(listRef.current));
+  };
 
   return (
     <div className="docview">
       <div className="panel__head">
         <div className="row-baseline">
           <h2 className="h2 h2--sm">Felvétel #{felvetel.id}</h2>
+          <span className={`stat stat--${felvetel.allapot}`}>{allapotFelirat[felvetel.allapot]}</span>
           <span className="meta">
             {felvetel.mod === 'surgossegi' ? 'Sürgősségi felvétel' : 'Echokardiográfia diktálás'} ·{' '}
-            {formatMp(felvetel.hosszMp)}
+            {formatDatumIdo(felvetel.kezdes)}
+            {felvetel.hosszMp > 0 && ` · ${formatMp(felvetel.hosszMp)}`}
             {beszelok.size > 0 && ` · ${beszelok.size} beszélő`}
+            {felvetel.ellatasId !== null && ` · ellátás #${felvetel.ellatasId}`}
           </span>
         </div>
+        <span className="meta mono">
+          {felvetel.hangfajl} · ASR: {felvetel.asrModell}
+        </span>
         <PatientMatch active={patient} contentPatientId={felvetel.patientId} what="Felvétel" />
+        {sameP && (
+          <AllapotLepesek
+            felvetel={felvetel}
+            vanAtirat={state.status === 'ok' && state.data.length > 0}
+            onValtozott={valtozott}
+          />
+        )}
         <div className="legend" aria-label="Beszélők jelmagyarázata">
           {(Object.keys(beszeloMeta) as Beszelo[]).map((b) => (
             <span key={b} className="legend__item">
@@ -61,33 +95,202 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
       </div>
       {state.status === 'loading' && <Loading what="Átirat" />}
       {state.status === 'error' && <ErrorState error={state.error} onRetry={reload} />}
-      {state.status === 'ok' && felvetel.patientId === patient.id && (
-        <ol className="transcript">
-          {state.data
-            .slice()
-            .sort((a, b) => a.sorszam - b.sorszam)
-            .map((m) => {
-              const kiemelt = kiemeltTurnIds.includes(m.sorszam);
-              const first =
-                kiemelt && m.sorszam === kiemeltTurnIds.find((t) => state.data.some((x) => x.sorszam === t));
-              const meta = beszeloMeta[m.beszelo];
-              return (
-                <li key={m.id} className={`turn turn--${m.beszelo}`}>
-                  <div ref={first ? firstRef : undefined} className="turn__inner">
-                    <span className="turn__who">
-                      <Icon name={meta.icon} size={14} />
-                      {meta.label}
-                      <span className="mono turn__time">
-                        #{String(m.sorszam).padStart(2, '0')} · {formatMp(m.kezdetMp)}
+      {state.status === 'ok' && sameP && state.data.length === 0 && (
+        <p className="empty docview__hint">
+          Még nincs átirat. Feldolgozás alatti felvételhez a Python hangmodul kimenete importálható.
+        </p>
+      )}
+      {state.status === 'ok' && sameP && state.data.length > 0 && (
+        <>
+          <ol className="transcript" ref={listRef} onMouseUp={figyelKijelolest} onKeyUp={figyelKijelolest}>
+            {state.data
+              .slice()
+              .sort((a, b) => a.sorszam - b.sorszam)
+              .map((m) => {
+                const kiemelt = kiemeltTurnIds.includes(m.sorszam);
+                const first =
+                  kiemelt && m.sorszam === kiemeltTurnIds.find((t) => state.data.some((x) => x.sorszam === t));
+                const meta = beszeloMeta[m.beszelo];
+                return (
+                  <li key={m.id} className={`turn turn--${m.beszelo}`}>
+                    <div ref={first ? firstRef : undefined} className="turn__inner">
+                      <span className="turn__who">
+                        <Icon name={meta.icon} size={14} />
+                        {meta.label}
+                        <span className="mono turn__time">
+                          #{String(m.sorszam).padStart(2, '0')} · {formatMp(m.kezdetMp)}
+                        </span>
+                        {kiemelt && <span className="turn__ref">hivatkozott megszólalás</span>}
                       </span>
-                      {kiemelt && <span className="turn__ref">hivatkozott megszólalás</span>}
-                    </span>
-                    <p className={`bubble bubble--${m.beszelo}${kiemelt ? ' bubble--ref' : ''}`}>{m.szoveg}</p>
-                  </div>
-                </li>
-              );
-            })}
-        </ol>
+                      <p
+                        data-turn={m.sorszam}
+                        className={`bubble bubble--${m.beszelo}${kiemelt ? ' bubble--ref' : ''}`}
+                      >
+                        {m.szoveg}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+          </ol>
+          {kijeloles && !idezet && (
+            <div className="quotebar" role="status">
+              <span className="meta">
+                Kijelölve a <span className="mono">#{String(kijeloles.turn).padStart(2, '0')}</span> megszólalásból
+              </span>
+              <button type="button" className="btn btn--sm btn--primary" onClick={() => setIdezet(kijeloles)}>
+                <Icon name="quote" size={14} />
+                Idézet állításként…
+              </button>
+              <button type="button" className="btn btn--sm" onClick={() => setKijeloles(null)}>
+                Mégse
+              </button>
+            </div>
+          )}
+          {idezet && (
+            <IdezetForm
+              forras={{ tipus: 'megszolalas', felvetelId: felvetel.id, turnIds: [idezet.turn] }}
+              szoveg={idezet.szoveg}
+              helyLeiras={`Felvétel #${felvetel.id}, megsz. #${String(idezet.turn).padStart(2, '0')}`}
+              onDone={() => {
+                setIdezet(null);
+                setKijeloles(null);
+                window.getSelection()?.removeAllRanges();
+              }}
+              onCancel={() => setIdezet(null)}
+            />
+          )}
+          {!kijeloles && !idezet && (
+            <p className="meta docview__hint">
+              Jelölj ki szöveget egy megszólaláson belül, hogy szó szerinti idézet-állításként rögzítsd.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A felvétel állapotgépe (backend RecordingStatus): RECORDING → PROCESSING | FAILED,
+ * PROCESSING → DONE | FAILED. Csak a megengedett lépés jelenik meg; a
+ * PROCESSING-hez kötelező a hossz, az átirat csak PROCESSING-ben importálható.
+ */
+function AllapotLepesek({
+  felvetel,
+  vanAtirat,
+  onValtozott,
+}: {
+  felvetel: FelvetelResponse;
+  vanAtirat: boolean;
+  onValtozott: () => Promise<void>;
+}) {
+  const [hossz, setHossz] = useState('');
+  const { busy, error, run } = useAkcio();
+  const [uzenet, setUzenet] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const hosszId = useId();
+
+  const lep = async (allapot: FelvetelAllapot, hosszMp?: number) => {
+    setUzenet(null);
+    const ok = await run(async () => {
+      await api.setFelvetelAllapot(felvetel.id, allapot, hosszMp);
+      await onValtozott();
+      return true;
+    });
+    if (ok) setUzenet(`Új állapot: ${allapotFelirat[allapot]}.`);
+  };
+
+  async function feldolgozasra(e: FormEvent) {
+    e.preventDefault();
+    const mp = Number(hossz);
+    if (!Number.isInteger(mp) || mp < 0) return;
+    await lep('feldolgozas', mp);
+  }
+
+  async function importal(fajl: File) {
+    setUzenet(null);
+    const db = await run(async () => {
+      const n = await api.importMegszolalasok(felvetel.id, await readJsonFile(fajl));
+      await onValtozott();
+      return n;
+    });
+    if (db !== undefined) setUzenet(`${db} megszólalás importálva.`);
+  }
+
+  if (felvetel.allapot === 'kesz' || felvetel.allapot === 'hiba') return null;
+  const hosszOk = hossz !== '' && Number.isInteger(Number(hossz)) && Number(hossz) >= 0;
+
+  return (
+    <div className="stepbar">
+      {felvetel.allapot === 'rogzites' && (
+        <form className="row-end" onSubmit={feldolgozasra}>
+          <div className="field">
+            <label htmlFor={hosszId}>Felvétel hossza (mp)</label>
+            <input
+              id={hosszId}
+              className="input mono input--narrow"
+              inputMode="numeric"
+              value={hossz}
+              onChange={(e) => setHossz(e.target.value.replace(/\D/g, ''))}
+            />
+          </div>
+          <button type="submit" className="btn btn--primary" disabled={busy || !hosszOk}>
+            Feldolgozásra küldés
+          </button>
+          <button type="button" className="btn" onClick={() => void lep('hiba')} disabled={busy}>
+            <Icon name="x" strokeWidth={2.4} />
+            Sikertelen
+          </button>
+        </form>
+      )}
+      {felvetel.allapot === 'feldolgozas' && (
+        <div className="actions">
+          {!vanAtirat && (
+            <>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".json,application/json"
+                className="sr-only"
+                aria-label="Átirat JSON-fájlja"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (f) void importal(f);
+                }}
+              />
+              <button type="button" className="btn" onClick={() => fileRef.current?.click()} disabled={busy}>
+                <Icon name="upload" size={16} />
+                Átirat importálása (JSON)
+              </button>
+            </>
+          )}
+          <button type="button" className="btn btn--primary" onClick={() => void lep('kesz')} disabled={busy}>
+            <Icon name="check" strokeWidth={2.6} />
+            Kész
+          </button>
+          <button type="button" className="btn" onClick={() => void lep('hiba')} disabled={busy}>
+            <Icon name="x" strokeWidth={2.4} />
+            Sikertelen
+          </button>
+        </div>
+      )}
+      {felvetel.allapot === 'feldolgozas' && !vanAtirat && (
+        <span className="meta">
+          Elfogadott formátum: a Python <span className="mono">beszed_pipeline.py</span> kimenete (
+          <span className="mono">chat</span>) vagy a backend <span className="mono">utterances</span> tömbje.
+        </span>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      {uzenet && (
+        <p className="meta" role="status">
+          {uzenet}
+        </p>
       )}
     </div>
   );

@@ -1,8 +1,9 @@
 /**
  * Nézet-típusok — ezt látják a komponensek. A backend DTO-k (dto.ts) ezekre
- * képeződnek le az api-rétegben (index.ts); a komponensek a backend
+ * képeződnek le az api-rétegben (mappers.ts); a komponensek a backend
  * mezőneveit nem ismerik.
  */
+import type { Szerepkor } from './currentUser';
 
 // ---------- patient ----------
 export interface PatientResponse {
@@ -26,6 +27,51 @@ export interface UjBeteg {
 
 export type PatientSearch =
   { mod: 'taj'; taj: string } | { mod: 'termeszetes'; nev: string; anyjaNeve: string; szuletesiDatum: string };
+
+// ---------- felhasználó + hangprofil ----------
+export interface Felhasznalo {
+  id: number;
+  felhasznalonev: string;
+  email: string;
+  szerepkor: Szerepkor;
+  letrehozva: string;
+}
+
+export interface Hangprofil {
+  id: number;
+  felhasznaloId: number;
+  wavUt: string;
+  embeddingModell: string;
+  kuszob: number | null;
+  aktiv: boolean;
+  nettoBeszedMp: number | null;
+  mikrofon: string | null;
+  rogzitve: string;
+  letrehozva: string;
+}
+
+export interface UjHangprofil {
+  felhasznaloId: number;
+  wavUt: string;
+  embeddingModell: string;
+  kuszob: number | null;
+  nettoBeszedMp: number | null;
+  mikrofon: string | null;
+  rogzitve: string; // ISO időpont
+}
+
+// ---------- ellátás ----------
+export type EllatasTipus = 'sbo' | 'ambulans' | 'echo';
+
+export interface Ellatas {
+  id: number;
+  patientId: number;
+  orvosId: number;
+  tipus: EllatasTipus;
+  kezdet: string;
+  /** null: még nyitott */
+  veg: string | null;
+}
 
 // ---------- allitas + allitas_jovahagyas ----------
 export type ClaimType = 'szabaly' | 'forras' | 'modell';
@@ -53,6 +99,11 @@ export interface JovahagyasResponse {
   idopont: string; // ISO datetime
 }
 
+/** Egy döntés az előzményből (a legfrissebb az érvényes) */
+export interface JovahagyasElozmeny extends JovahagyasResponse {
+  id: number;
+}
+
 export interface JovahagyasRequest {
   dontes: Dontes;
   modositottSzoveg?: string;
@@ -71,11 +122,25 @@ export interface ClaimResponse {
   idezet: string | null;
   /** `szabaly` típusnál a szabály azonosítója és verziója */
   szabalyEredet: string | null;
+  /** HOGY: az előállító olvasható leírása (modell/kinyerő/szabály) */
+  eloallito: string;
+  /** a legfrissebb döntés utáni érvényes szöveg (módosításnál az orvosé) */
+  ervenyesSzoveg: string;
+  klinikaiIdo: string;
   forrasok: Forras[];
   jovahagyas: JovahagyasResponse | null;
 }
 
-// ---------- dokumentum ----------
+/** Kézzel kijelölt, szó szerinti idézet állításként (RETRIEVED_FACT) */
+export interface UjIdezet {
+  patientId: number;
+  szoveg: string;
+  cimke: string | null;
+  sulyossag: Sulyossag;
+  forras: Forras;
+}
+
+// ---------- dokumentum + RAG-darab ----------
 export type DokumentumTipus = 'labor' | 'ambulans' | 'kepalkotas';
 
 export interface DokumentumListItem {
@@ -84,28 +149,60 @@ export interface DokumentumListItem {
   tipus: DokumentumTipus;
   cim: string;
   osztaly: string | null;
+  /** megjelenítéshez: a klinikai dátum, ha nincs, a feltöltés ideje */
   datum: string;
+  /** a lelet klinikai dátuma — ebből pótolja a backend a hiányzó mérési/klinikai időt */
+  klinikaiDatum: string | null;
   mimeTipus: string;
+  meretBajt: number;
   vanSzoveg: boolean;
 }
 
 export interface DokumentumResponse extends DokumentumListItem {
   /** a kinyert szöveg; null, ha még nincs (OCR/kinyerés nem futott) */
   szoveg: string | null;
-  /** a nyers fájl letöltési útja (a naplóban EXPORT) */
-  fajlUrl: string;
+}
+
+export interface UjDokumentum {
+  patientId: number;
+  fajl: File;
+  tipus: DokumentumTipus;
+  klinikaiDatum: string | null;
+}
+
+export interface RagDarab {
+  id: number;
+  dokumentumId: number;
+  szoveg: string;
+  kezdet: number;
+  veg: number;
+  embeddingModell: string;
 }
 
 // ---------- felvetel + megszolalas ----------
 /** egyeb: hozzátartozó vagy harmadik fél (a Python `egyéb`, a backend `OTHER`) */
 export type Beszelo = 'orvos' | 'beteg' | 'egyeb';
+export type FelvetelAllapot = 'rogzites' | 'feldolgozas' | 'kesz' | 'hiba';
 
 export interface FelvetelResponse {
   id: number;
   patientId: number;
+  orvosId: number;
+  ellatasId: number | null;
   mod: 'surgossegi' | 'echo_diktalas';
+  allapot: FelvetelAllapot;
+  hangfajl: string;
+  asrModell: string;
   kezdes: string; // ISO datetime
   hosszMp: number;
+}
+
+export interface UjFelvetel {
+  patientId: number;
+  ellatasId: number | null;
+  mod: FelvetelResponse['mod'];
+  hangfajl: string;
+  asrModell: string;
 }
 
 export interface MegszolalasResponse {
@@ -120,6 +217,7 @@ export interface MegszolalasResponse {
 
 // ---------- labor ----------
 export interface LaborMeres {
+  id: number;
   datum: string;
   ertek: number;
   /** a lelet, amelyből a mérés származik; null: dokumentum nélkül rögzítve */
@@ -141,6 +239,75 @@ export interface LaborParameter {
 export interface LaborIdosor {
   patientId: number;
   parameterek: LaborParameter[];
+}
+
+/** Egy mérés minden adata (GET /lab-results/{id}) */
+export interface LaborReszlet {
+  id: number;
+  patientId: number;
+  dokumentumId: number | null;
+  csoport: string | null;
+  nev: string;
+  ertek: number;
+  mertekegyseg: string | null;
+  refAlso: number | null;
+  refFelso: number | null;
+  idopont: string;
+  kod: string | null;
+}
+
+export interface UjLaborSor {
+  csoport: string | null;
+  nev: string;
+  ertek: number;
+  mertekegyseg: string | null;
+  refAlso: number | null;
+  refFelso: number | null;
+  /** null: a dokumentum klinikai dátuma */
+  idopont: string | null;
+  kod: string | null;
+}
+
+export interface UjLaborPanel {
+  patientId: number;
+  dokumentumId: number | null;
+  sorok: UjLaborSor[];
+}
+
+// ---------- gyógyszer + allergia ----------
+export interface Gyogyszer {
+  id: number;
+  patientId: number;
+  nev: string;
+  hatoanyag: string | null;
+  dozis: number | null;
+  dozisEgyseg: string | null;
+  alkalmazas: string | null;
+  forrasAllitasId: number | null;
+  aktiv: boolean;
+}
+
+export type UjGyogyszer = Omit<Gyogyszer, 'id' | 'aktiv'>;
+
+export interface Allergia {
+  id: number;
+  patientId: number;
+  anyag: string;
+  forrasAllitasId: number | null;
+}
+
+export type UjAllergia = Omit<Allergia, 'id'>;
+
+// ---------- hozzáférési napló ----------
+export interface NaploBejegyzes {
+  id: number;
+  felhasznaloId: number | null;
+  patientId: number | null;
+  muvelet: 'READ' | 'WRITE' | 'EXPORT';
+  eroforras: string;
+  httpStatus: number;
+  idopont: string;
+  ip: string | null;
 }
 
 // ---------- chat (NINCS még backend-végpont) ----------

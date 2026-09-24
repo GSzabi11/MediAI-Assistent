@@ -1,9 +1,17 @@
 package bme.mediai.common.api;
 
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import bme.mediai.allergy.exception.AllergyNotFoundException;
 import bme.mediai.allergy.exception.DuplicateAllergyException;
@@ -153,5 +161,51 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     ProblemDetail handleBadRequest(IllegalArgumentException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    // --- A Spring saját hibái is ProblemDetail-t adjanak, olvasható `detail`-lel: különben a
+    // --- kliens csak annyit lát, hogy „400”, és nem tudja megmondani, melyik mező a hibás.
+
+    // @Valid bukás: mezőnként a validációs üzenet (pl. "results[1].value: ...")
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
+        String detail = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                detail.isEmpty() ? "Érvénytelen kérés" : detail);
+    }
+
+    // Nem értelmezhető törzs: hibás JSON, rossz típus (pl. "<0,5" szám helyett), ismeretlen enum-érték
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ProblemDetail handleUnreadable(HttpMessageNotReadableException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "A kérés törzse nem értelmezhető (hibás JSON, rossz mezőtípus vagy ismeretlen érték)");
+    }
+
+    // Rossz URL-paraméter-típus, pl. ?patientId=abc vagy ?role=NURSE
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Érvénytelen paraméterérték: " + ex.getName());
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    ProblemDetail handleMissingParam(MissingServletRequestParameterException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Hiányzó paraméter: " + ex.getParameterName());
+    }
+
+    // Multipart feltöltés fájl nélkül
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    ProblemDetail handleMissingPart(MissingServletRequestPartException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Hiányzó rész a feltöltésből: " + ex.getRequestPartName());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ProblemDetail handleTooLarge(MaxUploadSizeExceededException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONTENT_TOO_LARGE,
+                "A fájl túl nagy (legfeljebb 20 MB)");
     }
 }

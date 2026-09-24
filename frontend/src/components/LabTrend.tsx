@@ -1,17 +1,37 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import { NotAvailableError, type LaborMeres, type LaborParameter } from '../api/types';
-import { formatDatum, formatHonap, formatSzam } from '../lib/format';
+import type { LaborMeres, LaborParameter, UjLaborSor } from '../api/types';
+import { formatDatum, formatDatumIdo, formatHonap, formatSzam, helyiToIso, parseSzam } from '../lib/format';
+import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
 import { Icon } from './Icon';
+import { Segmented } from './Segmented';
 import { ErrorState, Loading } from './shell';
 
 type Idoszak = '6ho' | '1ev' | 'mind';
 const napok: Record<Idoszak, number> = { '6ho': 183, '1ev': 366, mind: Infinity };
 
-const tizedes = (p: LaborParameter) => (p.meresek.some((m) => !Number.isInteger(m.ertek)) ? 1 : 0);
+/** Egy érték tizedesjegyei (a backend legfeljebb 4-et tárol) */
+const tizedesOf = (v: number) => {
+  const s = String(v);
+  const i = s.indexOf('.');
+  return i < 0 ? 0 : Math.min(4, s.length - i - 1);
+};
+
+/**
+ * A megjelenítés annyi tizedesjegyet mutat, amennyi a mért értékekben és a
+ * határokban ténylegesen van — egy 0,123-as TSH nem jelenhet meg „0,1”-ként
+ * (CLAUDE.md: nem kerekítünk csendben, a megjelenítésben sem).
+ */
+const tizedes = (p: LaborParameter) =>
+  Math.max(
+    0,
+    ...p.meresek.map((m) => tizedesOf(m.ertek)),
+    ...(p.refAlso !== null ? [tizedesOf(p.refAlso)] : []),
+    ...(p.refFelso !== null ? [tizedesOf(p.refFelso)] : []),
+  );
 const kivul = (p: LaborParameter, v: number) =>
   (p.refAlso !== null && v < p.refAlso) || (p.refFelso !== null && v > p.refFelso);
 
@@ -34,37 +54,46 @@ function refSzoveg(p: LaborParameter) {
 /**
  * Labor-idősor: kis diagramok paraméterenként (egy tengely, egy sorozat),
  * referenciasávval. A tartományon kívüli pont alakban is más (teli + gyűrű),
- * nem csak színben. Pontra kattintva a lelet adott sora nyílik meg.
+ * nem csak színben. Pontra kattintva a mérés részletei nyílnak meg.
+ *
+ * Egy vizsgálatra szűrve a backend szűr (GET /lab-results?patientId=&name=).
  */
 export function LabTrend() {
-  const { patient } = usePatient();
-  const { state, reload } = useAsync(() => api.getLaborIdosor(patient.id), [patient.id]);
+  const { patient, frissit } = usePatient();
+  const [nevSzuro, setNevSzuro] = useState('');
+  const osszes = useAsync(() => api.getLaborIdosor(patient.id), [patient.id]);
+  const szurt = useAsync(
+    () => (nevSzuro ? api.getLaborIdosor(patient.id, nevSzuro) : Promise.resolve(null)),
+    [patient.id, nevSzuro],
+  );
   const [idoszak, setIdoszak] = useState<Idoszak>('mind');
   const [nezet, setNezet] = useState<'diagram' | 'tablazat'>('diagram');
+  const [rogzites, setRogzites] = useState(false);
+  const [reszletId, setReszletId] = useState<number | null>(null);
+  const szuroId = useId();
 
-  if (state.status === 'loading') return <Loading what="Labor-idősor" />;
-  if (state.status === 'error') {
-    if (state.error instanceof NotAvailableError) {
-      return (
-        <div className="state">
-          <Icon name="info" />A labor-idősorhoz még nincs backend-végpont.
-        </div>
-      );
-    }
-    return <ErrorState error={state.error} onRetry={reload} />;
-  }
-  if (state.data.patientId !== patient.id) {
+  const rogzitve = async () => {
+    setRogzites(false);
+    await Promise.all([osszes.refresh(), szurt.refresh(), frissit()]);
+  };
+
+  if (osszes.state.status === 'loading') return <Loading what="Labor-idősor" />;
+  if (osszes.state.status === 'error') return <ErrorState error={osszes.state.error} onRetry={osszes.reload} />;
+  if (osszes.state.data.patientId !== patient.id) {
     return <ErrorState error={new Error('A labor-adat nem az aktív beteghez tartozik — rejtve.')} />;
   }
 
-  const minden = state.data.parameterek.flatMap((p) => p.meresek.map((m) => m.datum)).sort();
+  const nevek = [...new Set(osszes.state.data.parameterek.map((p) => p.nev))].sort((a, b) => a.localeCompare(b, 'hu'));
+  const adat = nevSzuro ? (szurt.state.status === 'ok' ? szurt.state.data : null) : osszes.state.data;
+
+  const minden = (adat?.parameterek ?? []).flatMap((p) => p.meresek.map((m) => m.datum)).sort();
   const utolso = minden.at(-1);
   const hatar = utolso && idoszak !== 'mind' ? new Date(new Date(utolso).getTime() - napok[idoszak] * 864e5) : null;
-  const params = state.data.parameterek.map((p) => ({
+  const params = (adat?.parameterek ?? []).map((p) => ({
     ...p,
     meresek: p.meresek
       .filter((m) => !hatar || new Date(m.datum) >= hatar)
-      .sort((a, b) => a.datum.localeCompare(b.datum)),
+      .sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime()),
   }));
   const leletSzam = new Set(
     params.flatMap((p) => p.meresek.map((m) => m.dokumentumId)).filter((id): id is number => id !== null),
@@ -81,7 +110,18 @@ export function LabTrend() {
             {meresSzam} mért érték{leletSzam > 0 && `, ${leletSzam} laborleletből`} — nem AI-következtetés
           </span>
         </div>
-        <div className="row-gap-10 push-right">
+        <div className="row-gap-10 push-right labtrend__controls">
+          <label className="sr-only" htmlFor={szuroId}>
+            Vizsgálat
+          </label>
+          <select id={szuroId} className="input input--sm" value={nevSzuro} onChange={(e) => setNevSzuro(e.target.value)}>
+            <option value="">Minden vizsgálat</option>
+            {nevek.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
           <Segmented
             label="Időszak"
             value={idoszak}
@@ -101,71 +141,314 @@ export function LabTrend() {
               ['tablazat', 'Táblázat'],
             ]}
           />
+          {!rogzites && (
+            <button type="button" className="btn btn--sm" onClick={() => setRogzites(true)}>
+              <Icon name="plus" size={14} strokeWidth={2.4} />
+              Labor rögzítése
+            </button>
+          )}
         </div>
       </div>
 
-      {params.length === 0 && <p className="empty">Nincs laboradat.</p>}
+      {rogzites && <LaborRogzites onDone={() => void rogzitve()} onCancel={() => setRogzites(false)} />}
+      {reszletId !== null && <LaborReszletDoboz id={reszletId} onClose={() => setReszletId(null)} />}
 
-      {nezet === 'diagram' ? (
-        <>
-          <div className="labgrid">
-            {params.map((p) => (
-              <LabChart key={p.kod} p={p} />
-            ))}
-          </div>
-          <div className="lablegend">
-            <span className="row-inline">
-              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                <circle cx="8" cy="8" r="5" fill="var(--c-surface)" stroke="var(--c-ink)" strokeWidth="2" />
-              </svg>
-              tartományon belül
-            </span>
-            <span className="row-inline">
-              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-                <circle cx="9" cy="9" r="5" fill="var(--c-ink)" />
-                <circle cx="9" cy="9" r="7.5" fill="none" stroke="var(--c-ink)" strokeWidth="1.5" />
-              </svg>
-              tartományon kívül
-            </span>
-            <span className="row-inline">
-              <span className="lablegend__band" />
-              referencia- / céltartomány
-            </span>
-            <span className="push-right">Pontra kattintva a lelet adott sora nyílik meg.</span>
-          </div>
-        </>
-      ) : (
-        <LabTable params={params} />
+      {nevSzuro && szurt.state.status === 'loading' && <Loading what={nevSzuro} />}
+      {nevSzuro && szurt.state.status === 'error' && (
+        <ErrorState error={szurt.state.error} onRetry={szurt.reload} />
       )}
+      {adat && params.length === 0 && <p className="empty docview__hint">Nincs laboradat.</p>}
+
+      {adat &&
+        params.length > 0 &&
+        (nezet === 'diagram' ? (
+          <>
+            <div className="labgrid">
+              {params.map((p) => (
+                <LabChart key={p.kod} p={p} onValaszt={setReszletId} />
+              ))}
+            </div>
+            <div className="lablegend">
+              <span className="row-inline">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                  <circle cx="8" cy="8" r="5" fill="var(--c-surface)" stroke="var(--c-ink)" strokeWidth="2" />
+                </svg>
+                tartományon belül
+              </span>
+              <span className="row-inline">
+                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                  <circle cx="9" cy="9" r="5" fill="var(--c-ink)" />
+                  <circle cx="9" cy="9" r="7.5" fill="none" stroke="var(--c-ink)" strokeWidth="1.5" />
+                </svg>
+                tartományon kívül
+              </span>
+              <span className="row-inline">
+                <span className="lablegend__band" />
+                referencia- / céltartomány
+              </span>
+              <span className="push-right">Pontra kattintva a mérés részletei nyílnak meg.</span>
+            </div>
+          </>
+        ) : (
+          <LabTable params={params} onValaszt={setReszletId} />
+        ))}
     </div>
   );
 }
 
-function Segmented<T extends string>({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: T;
-  onChange: (v: T) => void;
-  options: [T, string][];
-}) {
+/** GET /api/lab-results/{id} — egy mérés minden adata, a lelet megnyitásával. */
+function LaborReszletDoboz({ id, onClose }: { id: number; onClose: () => void }) {
+  const { patient } = usePatient();
+  const navigate = useNavigate();
+  const { state, reload } = useAsync(() => api.getLaborMeres(id), [id]);
+
   return (
-    <div className="seg2" role="group" aria-label={label}>
-      {options.map(([v, l]) => (
+    <section className="detailbox" aria-label="Mérés részletei">
+      <div className="row-baseline">
+        <strong>Mérés részletei</strong>
         <button
-          key={v}
           type="button"
-          className={value === v ? 'on' : ''}
-          aria-pressed={value === v}
-          onClick={() => onChange(v)}
+          className="iconbtn iconbtn--ghost iconbtn--sm push-right"
+          aria-label="Részletek bezárása"
+          onClick={onClose}
         >
-          {l}
+          <Icon name="x" size={16} />
         </button>
-      ))}
-    </div>
+      </div>
+      {state.status === 'loading' && <Loading what="Mérés" />}
+      {state.status === 'error' && <ErrorState error={state.error} onRetry={reload} />}
+      {state.status === 'ok' && state.data.patientId !== patient.id && (
+        <ErrorState error={new Error('A mérés nem az aktív beteghez tartozik — rejtve.')} />
+      )}
+      {state.status === 'ok' && state.data.patientId === patient.id && (
+        <dl className="deflist">
+          <dt>Vizsgálat</dt>
+          <dd>
+            {state.data.nev}
+            {state.data.csoport && <span className="meta"> · {state.data.csoport}</span>}
+          </dd>
+          <dt>Érték</dt>
+          <dd className="mono">
+            {formatSzam(state.data.ertek, tizedesOf(state.data.ertek))} {state.data.mertekegyseg ?? ''}
+          </dd>
+          <dt>Referencia</dt>
+          <dd className="mono">
+            {state.data.refAlso === null && state.data.refFelso === null
+              ? '—'
+              : `${state.data.refAlso === null ? '' : formatSzam(state.data.refAlso, tizedesOf(state.data.refAlso))}–${
+                  state.data.refFelso === null ? '' : formatSzam(state.data.refFelso, tizedesOf(state.data.refFelso))
+                }`}
+          </dd>
+          <dt>Mérés ideje</dt>
+          <dd className="mono">{formatDatumIdo(state.data.idopont)}</dd>
+          <dt>Kód</dt>
+          <dd className="mono">{state.data.kod ?? '—'}</dd>
+          <dt>Lelet</dt>
+          <dd>
+            {state.data.dokumentumId !== null ? (
+              <button
+                type="button"
+                className="linkbtn"
+                onClick={() => navigate(`/betegek/${patient.id}?nezet=dokumentum&dok=${state.data.dokumentumId}`)}
+              >
+                Dokumentum #{state.data.dokumentumId} megnyitása →
+              </button>
+            ) : (
+              <span className="meta">dokumentum nélkül rögzítve</span>
+            )}
+          </dd>
+        </dl>
+      )}
+    </section>
+  );
+}
+
+interface SorBevitel {
+  csoport: string;
+  nev: string;
+  ertek: string;
+  egyseg: string;
+  refAlso: string;
+  refFelso: string;
+  kod: string;
+}
+
+const uresSor = (): SorBevitel => ({ csoport: '', nev: '', ertek: '', egyseg: '', refAlso: '', refFelso: '', kod: '' });
+
+/** Egy sor hibája a backend LabResultRequest szabályai szerint (null: rendben) */
+function sorHiba(s: SorBevitel): string | null {
+  if (!s.nev.trim()) return 'hiányzik a vizsgálat neve';
+  if (s.nev.trim().length > 255) return 'a név legfeljebb 255 karakter';
+  const e = parseSzam(s.ertek, 4);
+  if (e === null) return 'az érték szám legyen (legfeljebb 4 tizedes) — cenzorált/kvalitatív eredmény nem rögzíthető';
+  if (Math.abs(e) >= 1e8) return 'az érték túl nagy';
+  const also = s.refAlso.trim() ? parseSzam(s.refAlso, 4) : null;
+  const felso = s.refFelso.trim() ? parseSzam(s.refFelso, 4) : null;
+  if (s.refAlso.trim() && also === null) return 'a ref. alsó határ nem szám';
+  if (s.refFelso.trim() && felso === null) return 'a ref. felső határ nem szám';
+  if (also !== null && felso !== null && also > felso) return 'az alsó határ nagyobb a felsőnél';
+  if (s.egyseg.length > 32) return 'a mértékegység legfeljebb 32 karakter';
+  if (s.csoport.length > 128) return 'a csoport legfeljebb 128 karakter';
+  if (s.kod.length > 64) return 'a kód legfeljebb 64 karakter';
+  return null;
+}
+
+/**
+ * POST /api/lab-results — egy panel egy kérésben, egy tranzakcióban: ha egy sor hibás,
+ * egyik sem kerül be. Dokumentum megadásakor a backend a beteg-egyezést is ellenőrzi.
+ */
+function LaborRogzites({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
+  const { patient, dokumentumok } = usePatient();
+  const leletek = dokumentumok.filter((d) => d.tipus === 'labor');
+  const [dokId, setDokId] = useState('');
+  const [ido, setIdo] = useState('');
+  const [sorok, setSorok] = useState<SorBevitel[]>([uresSor()]);
+  const [tried, setTried] = useState(false);
+  const { busy, error, run } = useAkcio();
+  const ids = { dok: useId(), ido: useId() };
+
+  const lelet = leletek.find((d) => String(d.id) === dokId);
+  // A backend csak a lelet KLINIKAI dátumából pótolja a mérési időt
+  const idoKell = !lelet?.klinikaiDatum;
+  const hibak = sorok.map(sorHiba);
+  const idoHiba = idoKell && !ido ? 'Add meg a mintavétel idejét (a leletnek nincs klinikai dátuma).' : null;
+  const ok = hibak.every((h) => h === null) && !idoHiba;
+
+  const frissitSor = (i: number, mezo: keyof SorBevitel, ertek: string) =>
+    setSorok((s) => s.map((sor, j) => (j === i ? { ...sor, [mezo]: ertek } : sor)));
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setTried(true);
+    if (!ok) return;
+    const idopont = ido ? helyiToIso(ido) : null;
+    const ujSorok: UjLaborSor[] = sorok.map((s) => ({
+      csoport: s.csoport.trim() || null,
+      nev: s.nev.trim(),
+      ertek: parseSzam(s.ertek, 4)!,
+      mertekegyseg: s.egyseg.trim() || null,
+      refAlso: s.refAlso.trim() ? parseSzam(s.refAlso, 4) : null,
+      refFelso: s.refFelso.trim() ? parseSzam(s.refFelso, 4) : null,
+      idopont,
+      kod: s.kod.trim() || null,
+    }));
+    const db = await run(() =>
+      api.createLaborPanel({ patientId: patient.id, dokumentumId: dokId ? Number(dokId) : null, sorok: ujSorok }),
+    );
+    if (db !== undefined) onDone();
+  }
+
+  return (
+    <form className="tabform" onSubmit={submit} noValidate aria-label="Labor rögzítése">
+      <div className="row-baseline">
+        <h2 className="h2 h2--sm">Labor-panel rögzítése</h2>
+        <span className="meta">egy panel = egy mentés; hibás sornál egyik sem kerül be</span>
+      </div>
+      <div className="row-end">
+        <div className="field grow">
+          <label htmlFor={ids.dok}>
+            Lelet <span className="meta">(nem kötelező)</span>
+          </label>
+          <select id={ids.dok} className="input" value={dokId} onChange={(e) => setDokId(e.target.value)}>
+            <option value="">— dokumentum nélkül —</option>
+            {leletek.map((d) => (
+              <option key={d.id} value={d.id}>
+                #{d.id} · {d.cim} · {formatDatum(d.datum)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor={ids.ido}>
+            Mintavétel ideje {!idoKell && <span className="meta">(üresen: a lelet dátuma)</span>}
+          </label>
+          <input
+            id={ids.ido}
+            type="datetime-local"
+            className="input mono"
+            value={ido}
+            onChange={(e) => setIdo(e.target.value)}
+            aria-invalid={tried && !!idoHiba}
+          />
+        </div>
+      </div>
+      {tried && idoHiba && <p className="form-error">{idoHiba}</p>}
+
+      <div className="labtable-wrap labtable-wrap--form">
+        <table className="labtable labtable--form">
+          <thead>
+            <tr>
+              <th scope="col">Vizsgálat*</th>
+              <th scope="col">Érték*</th>
+              <th scope="col">Egység</th>
+              <th scope="col">Ref. alsó</th>
+              <th scope="col">Ref. felső</th>
+              <th scope="col">Csoport</th>
+              <th scope="col">Kód</th>
+              <th scope="col">
+                <span className="sr-only">Sor törlése</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorok.map((s, i) => (
+              <tr key={i}>
+                {(['nev', 'ertek', 'egyseg', 'refAlso', 'refFelso', 'csoport', 'kod'] as const).map((m) => (
+                  <td key={m}>
+                    <input
+                      className={`input input--sm${m === 'nev' || m === 'csoport' ? '' : ' mono'}`}
+                      aria-label={`${i + 1}. sor: ${m}`}
+                      inputMode={m === 'ertek' || m === 'refAlso' || m === 'refFelso' ? 'decimal' : undefined}
+                      value={s[m]}
+                      onChange={(e) => frissitSor(i, m, e.target.value)}
+                      aria-invalid={tried && !!hibak[i]}
+                    />
+                  </td>
+                ))}
+                <td>
+                  <button
+                    type="button"
+                    className="iconbtn iconbtn--ghost iconbtn--sm"
+                    aria-label={`${i + 1}. sor törlése`}
+                    onClick={() => setSorok((all) => all.filter((_, j) => j !== i))}
+                    disabled={sorok.length === 1}
+                  >
+                    <Icon name="x" size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {tried &&
+        hibak.map(
+          (h, i) =>
+            h && (
+              <p key={i} className="form-error">
+                {i + 1}. sor: {h}
+              </p>
+            ),
+        )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="actions">
+        <button type="button" className="btn btn--sm" onClick={() => setSorok((s) => [...s, uresSor()])}>
+          <Icon name="plus" size={14} strokeWidth={2.4} />
+          Új sor
+        </button>
+        <button type="submit" className="btn btn--primary" disabled={busy}>
+          <Icon name="check" strokeWidth={2.6} />
+          {busy ? 'Mentés…' : `Panel mentése (${sorok.length} sor)`}
+        </button>
+        <button type="button" className="btn" onClick={onCancel} disabled={busy}>
+          Mégse
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -187,9 +470,7 @@ function useWidth<T extends HTMLElement>() {
   return [ref, w] as const;
 }
 
-function LabChart({ p }: { p: LaborParameter }) {
-  const { patient } = usePatient();
-  const navigate = useNavigate();
+function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number) => void }) {
   const [hover, setHover] = useState<number | null>(null);
   const [wrapRef, W] = useWidth<HTMLDivElement>();
   const X0 = 60,
@@ -225,11 +506,6 @@ function LabChart({ p }: { p: LaborParameter }) {
   const bandBot = y(Math.max(p.refAlso ?? lo, lo));
   const ticks = [p.refAlso, p.refFelso].filter((v): v is number => v !== null);
 
-  // A laborsornak nincs karaktertartománya a leleten belül: a lelet egészét nyitjuk meg
-  const open = (m: LaborMeres) => {
-    if (m.dokumentumId !== null) navigate(`/betegek/${patient.id}?nezet=dokumentum&dok=${m.dokumentumId}`);
-  };
-
   const h = hover !== null ? ms[hover] : null;
   const tipX = h ? Math.min(Math.max(x(h) - 172, 48), W - 170) : 0;
 
@@ -244,7 +520,7 @@ function LabChart({ p }: { p: LaborParameter }) {
         <span className="big">{formatSzam(last.ertek, d)}</span>
         {st && <span className="flag">{st}</span>}
         <span className="meta push-right">
-          {formatSzam(first.ertek, d)} → {formatSzam(last.ertek, d)} · {ms.length} lelet
+          {formatSzam(first.ertek, d)} → {formatSzam(last.ertek, d)} · {ms.length} mérés
         </span>
       </div>
       <div ref={wrapRef}>
@@ -275,7 +551,7 @@ function LabChart({ p }: { p: LaborParameter }) {
           <line x1={L} x2={R} y1={Y1} y2={Y1} stroke="var(--c-line-input)" />
           {ms.map((m) => (
             <text
-              key={m.datum}
+              key={m.id}
               x={x(m)}
               y={Y1 + 20}
               fontSize={11}
@@ -297,7 +573,7 @@ function LabChart({ p }: { p: LaborParameter }) {
           {ms.map((m, i) => {
             const out = kivul(p, m.ertek);
             return (
-              <g key={m.datum}>
+              <g key={m.id}>
                 <circle
                   cx={x(m)}
                   cy={y(m.ertek)}
@@ -315,13 +591,13 @@ function LabChart({ p }: { p: LaborParameter }) {
                   fill="transparent"
                   className="hit"
                   tabIndex={0}
-                  role="link"
-                  aria-label={`${formatDatum(m.datum)}: ${p.nev} ${formatSzam(m.ertek, d)}${statusz(p, m.ertek) ? ', ' + statusz(p, m.ertek) : ''}. Lelet megnyitása.`}
+                  role="button"
+                  aria-label={`${formatDatum(m.datum)}: ${p.nev} ${formatSzam(m.ertek, d)}${statusz(p, m.ertek) ? ', ' + statusz(p, m.ertek) : ''}. Részletek.`}
                   onMouseEnter={() => setHover(i)}
                   onFocus={() => setHover(i)}
                   onBlur={() => setHover(null)}
-                  onClick={() => open(m)}
-                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), open(m))}
+                  onClick={() => onValaszt(m.id)}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onValaszt(m.id))}
                 />
               </g>
             );
@@ -351,13 +627,13 @@ function LabChart({ p }: { p: LaborParameter }) {
                 strokeWidth={1.5}
               />
               <text x={tipX + 10} y={28} fontSize={11} fill="var(--c-ink-muted)">
-                {formatDatum(h.datum)} · Laborlelet
+                {formatDatum(h.datum)} · {h.dokumentumId !== null ? 'Laborlelet' : 'kézi rögzítés'}
               </text>
               <text x={tipX + 10} y={46} fontSize={14} fontWeight={700} fill="var(--c-ink)">
                 {p.nev} {formatSzam(h.ertek, d)} {statusz(p, h.ertek) ?? ''}
               </text>
               <text x={tipX + 10} y={60} fontSize={11} fontWeight={700} fill="var(--c-accent)">
-                {h.dokumentumId !== null ? 'Lelet megnyitása →' : 'nincs csatolt lelet'}
+                Részletek →
               </text>
             </g>
           )}
@@ -367,8 +643,10 @@ function LabChart({ p }: { p: LaborParameter }) {
   );
 }
 
-function LabTable({ params }: { params: LaborParameter[] }) {
-  const datumok = [...new Set(params.flatMap((p) => p.meresek.map((m) => m.datum)))].sort();
+function LabTable({ params, onValaszt }: { params: LaborParameter[]; onValaszt: (id: number) => void }) {
+  const datumok = [...new Set(params.flatMap((p) => p.meresek.map((m) => m.datum)))].sort(
+    (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+  );
   return (
     <div className="labtable-wrap">
       <table className="labtable">
@@ -396,7 +674,13 @@ function LabTable({ params }: { params: LaborParameter[] }) {
                 const st = m ? statusz(p, m.ertek) : null;
                 return (
                   <td key={d} className={`mono${st ? ' labtable__out' : ''}`}>
-                    {m ? formatSzam(m.ertek, tizedes(p)) : '—'} {st && <span aria-label={st}>{st.slice(0, 1)}</span>}
+                    {m ? (
+                      <button type="button" className="linkbtn mono" onClick={() => onValaszt(m.id)}>
+                        {formatSzam(m.ertek, tizedes(p))} {st && <span aria-label={st}>{st.slice(0, 1)}</span>}
+                      </button>
+                    ) : (
+                      '—'
+                    )}
                   </td>
                 );
               })}

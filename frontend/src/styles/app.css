@@ -1282,6 +1282,336 @@ mark {
   gap: 6px;
 }
 
+/* ============ fülek tartalma: űrlapok, listák, részletek ============ */
+.appbar__nav {
+  display: flex;
+  gap: 20px;
+}
+.ptabs--wrap {
+  flex-wrap: wrap;
+}
+.tabbar {
+  padding: 12px 28px 0;
+  display: flex;
+  gap: 8px;
+}
+.tabbody {
+  padding: 20px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.tabform {
+  margin: 16px 28px 0;
+  padding: 20px;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tabform--inset {
+  margin: 0;
+}
+.formgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 14px 18px;
+  align-items: start;
+}
+.formcard--pad {
+  padding: 20px 24px;
+}
+.subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.docview .subsection {
+  padding: 16px 28px 24px;
+  border-top: 1px solid var(--c-line);
+}
+.subsection__more summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  padding: 4px 0;
+}
+.docview__hint {
+  padding: 0 28px 16px;
+}
+.input--sm {
+  height: 36px;
+  font-size: var(--fs-sm);
+  padding: 4px 8px;
+}
+.input--narrow {
+  width: 120px;
+}
+.input--file {
+  height: auto;
+  padding: 9px 10px;
+  font-size: var(--fs-sm);
+}
+select.input {
+  cursor: pointer;
+}
+.linkbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-accent-strong);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.linkbtn:hover {
+  color: var(--c-ink);
+}
+
+/* állapotcímke (felvétel, ellátás, hangprofil) — felirat + szegély, nem csak szín */
+.stat {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1.5px solid var(--c-ink);
+  white-space: nowrap;
+}
+.stat--rogzites,
+.stat--feldolgozas,
+.stat--nyitott {
+  background: var(--c-accent-tint);
+  border-color: var(--c-accent);
+  color: var(--c-accent-strong);
+}
+.stat--kesz {
+  background: var(--c-surface-muted);
+  border-color: var(--c-line-strong);
+  color: var(--c-ink-2);
+}
+.stat--hiba {
+  border: 2px dashed var(--c-critical);
+  color: var(--c-critical);
+}
+.stepbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-md);
+}
+
+/* kijelölés → idézet */
+.quotebar {
+  position: sticky;
+  bottom: 0;
+  margin: 0 28px 16px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-ink);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px rgba(23, 33, 43, 0.12);
+}
+.quoteform {
+  margin: 0 28px 20px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--c-surface);
+  border: var(--border-forras);
+  border-radius: var(--radius-lg);
+}
+
+/* részletek, definíciós lista */
+.detailbox {
+  margin: 16px 24px 0;
+  padding: 14px 18px;
+  border: 1.5px solid var(--c-ink);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.deflist {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 0;
+  font-size: var(--fs-md);
+}
+.deflist dt {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-ink-muted);
+  padding-top: 2px;
+}
+.deflist dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* tétel-listák (ellátás, gyógyszer, allergia, hangprofil) */
+.itemlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.item {
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.item--open {
+  border-color: var(--c-accent);
+}
+.item--off {
+  background: var(--c-surface-muted);
+  color: var(--c-ink-2);
+}
+.item--critical {
+  border: 1.5px solid var(--c-ink);
+}
+.item__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.item__sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.warnchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: var(--c-warning-tint);
+  border: 1.5px solid var(--c-warning-ink);
+  border-radius: var(--radius-sm);
+  color: var(--c-warning-ink);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.navitem--add {
+  flex-direction: row;
+  color: var(--c-accent-strong);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+/* RAG-darabok */
+.chunklist {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+
+/* állítás: provenance-sor, előzmény, import */
+.claim__prov {
+  font-size: var(--fs-xs);
+}
+.history {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-sm);
+}
+.history__current {
+  font-weight: 700;
+}
+.history__text {
+  display: block;
+  font-weight: 400;
+  color: var(--c-ink-2);
+}
+.foot__done-row {
+  width: 100%;
+}
+.btn--ghost-inv {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+}
+.btn--ghost-inv:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+}
+.importbox {
+  padding: 14px 16px;
+  border: 1.5px dashed var(--c-line-strong);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.importlog {
+  margin: 0;
+  padding-left: 18px;
+  font-size: var(--fs-sm);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* táblázatok kiegészítése */
+.labtable td.wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.labtable-wrap--form {
+  padding: 0;
+}
+.labtable--form td {
+  padding: 4px 6px;
+}
+.labtable--form .input--sm {
+  width: 100%;
+  min-width: 90px;
+}
+.ptable__row--on {
+  background: var(--c-accent-tint-2);
+}
+.labtrend__controls {
+  flex-wrap: wrap;
+}
+
 /* ============ belépés / új profil ============ */
 .authpage {
   width: min(480px, 100% - 32px);

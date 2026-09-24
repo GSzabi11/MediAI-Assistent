@@ -1,5 +1,11 @@
 import { createContext, useContext } from 'react';
-import type { DokumentumListItem, FelvetelResponse, MegszolalasResponse, PatientResponse } from '../api/types';
+import type {
+  ClaimResponse,
+  DokumentumListItem,
+  FelvetelResponse,
+  MegszolalasResponse,
+  PatientResponse,
+} from '../api/types';
 
 /**
  * Az aktív beteg és a hozzá tartozó forrás-metaadat. Minden betegoldali
@@ -12,6 +18,12 @@ export interface PatientCtx {
   felvetelek: FelvetelResponse[];
   /** `${felvetelId}:${turn-sorszám}` → megszólalás (a forrás-chipekhez); kulcs: megszolalasKulcs() */
   megszolalasByTurn: Map<string, MegszolalasResponse>;
+  allitasok: ClaimResponse[];
+  /**
+   * Csendes újratöltés mentés után (dokumentum, felvétel, állítás): a képernyő nem
+   * ugrik vissza „betöltés…”-re. Hibánál kivételt dob — a hívó jelzi.
+   */
+  frissit: () => Promise<void>;
 }
 
 /** A turn-sorszám csak felvételen belül egyedi, ezért a kulcs a felvételt is tartalmazza. */
