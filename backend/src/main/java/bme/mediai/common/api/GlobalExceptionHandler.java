@@ -20,28 +20,28 @@ import bme.mediai.document.exception.DocumentNotFoundException;
 import bme.mediai.document.exception.DuplicateDocumentException;
 import bme.mediai.document.exception.ExtractedTextAlreadySetException;
 import bme.mediai.document.exception.ExtractedTextMissingException;
-import bme.mediai.statement.exception.ApproverNotDoctorException;
-import bme.mediai.statement.exception.RuleStatementNotModifiableException;
-import bme.mediai.statement.exception.StatementNotFoundException;
-import bme.mediai.statement.exception.StatementSourcePatientMismatchException;
 import bme.mediai.lab.exception.LabDocumentPatientMismatchException;
 import bme.mediai.lab.exception.LabResultNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCareClosedException;
-import bme.mediai.medication.exception.MedicationAlreadyDiscontinuedException;
-import bme.mediai.medication.exception.MedicationNotFoundException;
-import bme.mediai.statement.exception.SourceStatementNotUsableException;
 import bme.mediai.medicalcare.exception.MedicalCareNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCarePatientMismatchException;
+import bme.mediai.medication.exception.MedicationAlreadyDiscontinuedException;
+import bme.mediai.medication.exception.MedicationNotFoundException;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.patient.exception.TajConflictException;
 import bme.mediai.recording.exception.InvalidStatusTransitionException;
 import bme.mediai.recording.exception.RecordingNotFoundException;
+import bme.mediai.statement.exception.ApproverNotDoctorException;
+import bme.mediai.statement.exception.RuleStatementNotModifiableException;
+import bme.mediai.statement.exception.SourceStatementNotUsableException;
+import bme.mediai.statement.exception.StatementNotFoundException;
+import bme.mediai.statement.exception.StatementSourcePatientMismatchException;
 import bme.mediai.user.exception.EmailConflictException;
 import bme.mediai.user.exception.InvalidCredentialsException;
-import bme.mediai.utterance.exception.RecordingNotProcessingException;
-import bme.mediai.utterance.exception.UtterancesAlreadyExistException;
 import bme.mediai.user.exception.UserNotFoundException;
 import bme.mediai.user.exception.UsernameConflictException;
+import bme.mediai.utterance.exception.RecordingNotProcessingException;
+import bme.mediai.utterance.exception.UtterancesAlreadyExistException;
 import bme.mediai.voiceprofile.exception.VoiceProfileNotFoundException;
 
 @RestControllerAdvice
@@ -165,7 +165,6 @@ public class GlobalExceptionHandler {
 
     // --- A Spring saját hibái is ProblemDetail-t adjanak, olvasható `detail`-lel: különben a
     // --- kliens csak annyit lát, hogy „400”, és nem tudja megmondani, melyik mező a hibás.
-
     // @Valid bukás: mezőnként a validációs üzenet (pl. "results[1].value: ...")
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
