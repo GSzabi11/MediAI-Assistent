@@ -13,6 +13,7 @@ import bme.mediai.lab.persistence.LabResultRepository;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.patient.persistence.PatientRepository;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,12 +30,14 @@ public class LabResultService {
     private final LabResultRepository repository;
     private final PatientRepository patientRepository;
     private final DocumentRepository documentRepository;
+    private final ApplicationEventPublisher events;
 
     public LabResultService(LabResultRepository repository, PatientRepository patientRepository,
-            DocumentRepository documentRepository) {
+            DocumentRepository documentRepository, ApplicationEventPublisher events) {
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.documentRepository = documentRepository;
+        this.events = events;
     }
 
     // Egy panel egy tranzakcióban: ha bármelyik sor hibás, egyik sem kerül be.
@@ -67,10 +70,13 @@ public class LabResultService {
                         r.sourceBox() == null ? null : r.sourceBox().height()))
                 .toList();
 
-        return repository.saveAll(results)
+        List<LabResultResponse> saved = repository.saveAll(results)
                 .stream()
                 .map(LabResultResponse::from)
                 .toList();
+        // Szinkron, ugyanebben a tranzakcióban: a szabály-állítások a laborsorokkal együtt jönnek létre
+        events.publishEvent(new LabResultsSavedEvent(request.patientId()));
+        return saved;
     }
 
     @Transactional(readOnly = true)

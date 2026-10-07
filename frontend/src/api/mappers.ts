@@ -134,6 +134,8 @@ export function toForras(s: StatementSourceDto): Forras {
       return { tipus: 'dokumentum', dokumentumId: s.documentId, kezdet: s.charStart, veg: s.charEnd };
     case 'IMAGE':
       return { tipus: 'kep', dokumentumId: s.documentId, oldal: s.page };
+    case 'LAB':
+      return { tipus: 'labor', laborId: s.labResultId };
   }
 }
 
@@ -145,6 +147,8 @@ export function toSourceDto(f: Forras): StatementSourceDto {
       return { type: 'DOCUMENT', documentId: f.dokumentumId, charStart: f.kezdet, charEnd: f.veg };
     case 'kep':
       throw new Error('Képforrású idézet kézzel nem rögzíthető (nincs kijelölt terület)');
+    case 'labor':
+      throw new Error('Laborsor-forrású állítást csak a szabálymotor hoz létre');
   }
 }
 

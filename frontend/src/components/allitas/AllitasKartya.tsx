@@ -106,12 +106,7 @@ export function AllitasKartya({
         </p>
         {a.jovahagyas && (
           <div>
-            <button
-              type="button"
-              className="linkbtn"
-              aria-expanded={elozmeny}
-              onClick={() => setElozmeny((e) => !e)}
-            >
+            <button type="button" className="linkbtn" aria-expanded={elozmeny} onClick={() => setElozmeny((e) => !e)}>
               <Icon name="history" size={14} />
               Döntési előzmény
             </button>

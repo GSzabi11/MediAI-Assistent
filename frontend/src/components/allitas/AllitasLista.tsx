@@ -26,7 +26,9 @@ export function AllitasLista({
   const [szuro, setSzuro] = useState<Szuro>(defaultSzuro);
 
   const isLabor = (a: ClaimResponse) =>
-    !!laborDokIds && a.forrasok.some((f) => f.tipus === 'dokumentum' && laborDokIds.has(f.dokumentumId));
+    a.forrasok.some(
+      (f) => f.tipus === 'labor' || (!!laborDokIds && f.tipus === 'dokumentum' && laborDokIds.has(f.dokumentumId)),
+    );
 
   const count = (s: Szuro) =>
     s === 'mind'

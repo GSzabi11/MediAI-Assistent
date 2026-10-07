@@ -87,7 +87,8 @@ export type Bizonytalansag = 'low' | 'medium' | 'high';
 export type Forras =
   | { tipus: 'dokumentum'; dokumentumId: number; kezdet: number; veg: number }
   | { tipus: 'megszolalas'; felvetelId: number; turnIds: number[] }
-  | { tipus: 'kep'; dokumentumId: number; oldal: number };
+  | { tipus: 'kep'; dokumentumId: number; oldal: number }
+  | { tipus: 'labor'; laborId: number };
 
 export type Dontes = 'jovahagyva' | 'elutasitva' | 'modositva';
 

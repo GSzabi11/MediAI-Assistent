@@ -11,7 +11,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = StatementSource.Audio.class, name = "AUDIO"),
         @JsonSubTypes.Type(value = StatementSource.Document.class, name = "DOCUMENT"),
-        @JsonSubTypes.Type(value = StatementSource.Image.class, name = "IMAGE")
+        @JsonSubTypes.Type(value = StatementSource.Image.class, name = "IMAGE"),
+        @JsonSubTypes.Type(value = StatementSource.Lab.class, name = "LAB")
 })
 public sealed interface StatementSource {
 
@@ -49,6 +50,14 @@ public sealed interface StatementSource {
                     "Az IMAGE forráshoz kell x, y, width, height");
             require(x >= 0 && y >= 0 && width > 0 && height > 0 && x + width <= 1 && y + height <= 1,
                     "A bbox a lapon belül legyen (normált 0–1 koordináták)");
+        }
+    }
+
+    // Egy laborsor (mérés) — csak a szabálymotor állításai hivatkozhatnak így (DB CHECK is)
+    record Lab(Long labResultId) implements StatementSource {
+        @Override
+        public void validate() {
+            require(labResultId != null, "A LAB forráshoz kell labResultId");
         }
     }
 

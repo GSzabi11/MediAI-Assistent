@@ -269,9 +269,19 @@ a jelből biztosan következik).
   dolgozik. Tudatosan nem heurisztika („egy szóval hosszabb név + azonos referencia”): a
   referencia laboronként eltér, és két különböző vizsgálat egy trendbe vonása hamis trendet
   mutatna. Új pár = új sor a táblában.
-- **Következő lépés**: a referencia-tartomány szabály (első determinisztikus
-  motor) → `DETERMINISTIC_RULE` állítások; ehhez `LAB` forrástípus kell a
-  `statement.source`-ba.
+- **Referencia-tartomány szabály (V22) — az első determinisztikus motor**
+  (`rule/service/LabReferenceRangeRule`, `ruleId = lab-reference-range`, v1): a
+  tartományon kívüli mérésről `DETERMINISTIC_RULE` állítás, `WARNING`, `LAB
+  {labResultId}` forrással (új forrástípus; DB CHECK: csak szabály-állításé lehet, az API
+  400-zal elutasítja). Kiértékelés: szám a `ref_low/ref_high`-hoz; cenzorált értéknél
+  csak ha a jelből biztosan következik; szöveges eredmény ≠ `ref_text` → „eltér".
+  **Egyeztetés vizsgálatonként** (egységes név + mértékegység): állítás azokhoz a
+  tartományon kívüli mérésekhez, amelyek az utolsó tartományon belüli mérés UTÁN jöttek;
+  ha újabb mérés visszakerül a tartományba, a korábbiak állításai **törlődnek** (a
+  jóváhagyásaikkal együtt — CASCADE; a mérés megmarad, az állítás újraszámolható). Fut
+  minden labormentéskor ugyanabban a tranzakcióban (`LabResultsSavedEvent`), és
+  induláskor egyszer minden betegre (`RuleBackfill`). Idempotens; egyedi index:
+  `(producer->>'ruleId', source->>'labResultId')`.
 
 ## `document` (dokumentum) — V11
 

@@ -113,7 +113,9 @@ export type ApprovalStatusDto = 'ACCEPTED' | 'REJECTED' | 'MODIFIED';
 export type StatementSourceDto =
   | { type: 'AUDIO'; recordingId: number; turnIds: number[] }
   | { type: 'DOCUMENT'; documentId: number; charStart: number; charEnd: number }
-  | { type: 'IMAGE'; documentId: number; page: number; x: number; y: number; width: number; height: number };
+  | { type: 'IMAGE'; documentId: number; page: number; x: number; y: number; width: number; height: number }
+  /** egy laborsor — csak a szabálymotor (referencia-tartomány) állításai hivatkoznak így */
+  | { type: 'LAB'; labResultId: number };
 
 export type StatementProducerDto =
   | { type: 'RULE'; ruleId: string; ruleVersion: string }

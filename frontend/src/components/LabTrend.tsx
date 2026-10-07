@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import type { LaborJel, LaborMeres, LaborParameter, LaborSzovegesParameter, UjLaborSor } from '../api/types';
 import { formatDatum, formatDatumIdo, formatHonap, formatSzam, helyiToIso, parseSzam } from '../lib/format';
@@ -88,7 +88,12 @@ export function LabTrend() {
   const [idoszak, setIdoszak] = useState<Idoszak>('mind');
   const [nezet, setNezet] = useState<'diagram' | 'tablazat'>('diagram');
   const [rogzites, setRogzites] = useState(false);
-  const [reszletId, setReszletId] = useState<number | null>(null);
+  // Szabály-állítás forrásáról (?meres=) érkezve a mérés részletei rögtön nyitva
+  const [urlParams] = useSearchParams();
+  const meresParam = Number(urlParams.get('meres'));
+  const [reszletId, setReszletId] = useState<number | null>(meresParam > 0 ? meresParam : null);
+  // Csak azok a vizsgálatok, amelyek LEGUTÓBBI mérése a referenciatartományon kívül esik
+  const [csakEltero, setCsakEltero] = useState(false);
   const szuroId = useId();
 
   const rogzitve = async () => {
@@ -112,12 +117,17 @@ export function LabTrend() {
     .sort();
   const utolso = minden.at(-1);
   const hatar = utolso && idoszak !== 'mind' ? new Date(new Date(utolso).getTime() - napok[idoszak] * 864e5) : null;
-  const params = (adat?.parameterek ?? []).map((p) => ({
+  const minden_params = (adat?.parameterek ?? []).map((p) => ({
     ...p,
     meresek: p.meresek
       .filter((m) => !hatar || new Date(m.datum) >= hatar)
       .sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime()),
   }));
+  const params = minden_params.filter((p) => {
+    if (!csakEltero) return true;
+    const utolso = p.meresek[p.meresek.length - 1];
+    return !!utolso && statusz(p, utolso.ertek, utolso.jel) !== null;
+  });
   const szovegesek = (adat?.szovegesek ?? [])
     .map((p) => ({
       ...p,
@@ -125,7 +135,8 @@ export function LabTrend() {
         .filter((m) => !hatar || new Date(m.datum) >= hatar)
         .sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime()),
     }))
-    .filter((p) => p.meresek.length > 0);
+    .filter((p) => p.meresek.length > 0)
+    .filter((p) => !csakEltero || szovegEltér(p, p.meresek[p.meresek.length - 1].szoveg));
   const leletSzam = new Set(
     [...params, ...szovegesek]
       .flatMap((p) => p.meresek.map((m) => m.dokumentumId))
@@ -163,6 +174,10 @@ export function LabTrend() {
               </option>
             ))}
           </select>
+          <label className="row-inline checkline">
+            <input type="checkbox" checked={csakEltero} onChange={(e) => setCsakEltero(e.target.checked)} />
+            Csak tartományon kívüli
+          </label>
           <Segmented
             label="Időszak"
             value={idoszak}

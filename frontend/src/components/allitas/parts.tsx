@@ -88,6 +88,9 @@ export function useForrasCimke() {
       const hely = f.tipus === 'kep' ? `${f.oldal}. oldal, kijelölt terület` : `kar. ${f.kezdet}–${f.veg}`;
       return { cim, hely, icon: d?.tipus === 'labor' ? 'flask' : 'doc' };
     }
+    if (f.tipus === 'labor') {
+      return { cim: 'Labormérés', hely: `#${f.laborId}`, icon: 'flask' };
+    }
     const fv = felvetelek.find((x) => x.id === f.felvetelId);
     // A turnIds a felvétel turn-sorszámai; ha valamelyik nincs meg, látszódjon, ne tűnjön el csendben
     const sorszamok = f.turnIds.map((turn) =>

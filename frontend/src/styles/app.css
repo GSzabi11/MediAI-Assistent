@@ -1930,3 +1930,11 @@ select.input {
   outline: 2px solid var(--c-accent);
   outline-offset: 2px;
 }
+
+/* Labor-idősor: "Csak tartományon kívüli" szűrő */
+.checkline {
+  gap: 6px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
