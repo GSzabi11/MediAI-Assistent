@@ -38,7 +38,7 @@ után a nem létező vagy más felhasználóra mutató belépés kiléptet.
 |---|---|
 | `/` | belépés + új profil (orvos / admin) |
 | `/patients` | beteglista, keresés (TAJ vagy név + anyja neve + szül. dátum), új beteg |
-| `/betegek/:id` | betegoldal — fülek: Dokumentum, Labor-idősor, Átirat, Ellátások, Gyógyszer és allergia; mellette az állítások és a chat |
+| `/betegek/:id` | betegoldal — fülek: Klinikai státusz (alapértelmezett), Labor-idősor, Átirat, Ellátások, Gyógyszer és allergia; a dokumentumok a bal oldali (összecsukható) forráslistából nyílnak; mellette az állítások és a chat |
 | `/profil` | saját adatok, hangprofil (aktív, előzmény, új), saját hozzáférési napló |
 | `/admin` | csak adminnak: felhasználók szerepkör szerint, keresés névre/emailre, kiválasztott felhasználó hangprofilja és naplója |
 

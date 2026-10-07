@@ -160,7 +160,7 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
 
   const fulek: { n: Nezet; icon: IconName; label: string }[] = [
     { n: 'statusz', icon: 'spark', label: 'Klinikai státusz' },
-    { n: 'dokumentum', icon: 'doc', label: 'Dokumentum' },
+    // A Dokumentum nézet nincs a fülsorban: a bal oldali (összecsukható) forráslistából nyílik
     { n: 'labor', icon: 'trend', label: 'Labor-idősor' },
     { n: 'atirat', icon: 'mic', label: 'Átirat' },
     { n: 'ellatas', icon: 'stetho', label: 'Ellátások' },
