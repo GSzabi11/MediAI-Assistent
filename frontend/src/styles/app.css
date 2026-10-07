@@ -1119,6 +1119,12 @@ mark {
   background: var(--c-ink);
   color: var(--c-ink-inverse);
 }
+/* a grafikonok és a táblázat 24 px-es margójához igazítva */
+.labtrend__subhead {
+  margin: 0;
+  padding: 12px 24px 0;
+  border-top: 1px solid var(--c-line);
+}
 .lablegend {
   padding: 0 24px 20px;
   display: flex;
@@ -1761,6 +1767,12 @@ select.input {
   overflow-y: auto;
   position: relative; /* görgető konténer: ld. .workspace > * */
 }
+/* A görgető flex-oszlop elemei ne zsugorodjanak: különben a betegek kártyája (overflow: hidden)
+   a látható magasságra nyomódott össze, a sorok egy része levágódott, és nem volt mit görgetni */
+.listpage > *,
+.authpage > * {
+  flex-shrink: 0;
+}
 .searchcard {
   display: grid;
   grid-template-columns: minmax(240px, 320px) 48px minmax(0, 1fr);
@@ -1783,6 +1795,24 @@ select.input {
   border: 1px solid var(--c-line);
   border-radius: var(--radius-lg);
   overflow: hidden;
+}
+/* Beteglista: a keresőrész fix, csak a "Betegek" kártya görget (fejléce és az oszlopnevek
+   a helyükön maradnak); a kártya kitölti a maradék magasságot, de legalább néhány sornyi */
+.listpage--fixed > .results {
+  flex: 1 1 auto;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+}
+.results__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.results__body .ptable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 .results__head {
   padding: 16px 20px;

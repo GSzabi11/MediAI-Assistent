@@ -468,6 +468,10 @@ def lab_results(data: dict, text: str, warnings: list[str]) -> list[dict]:
 
         unit = row.get("mertekegyseg")
         unit_clean = _clean(unit, 32)
+        # a minősítés-oszlop ("magas", "+") vagy a státusz nem mértékegység — a modell néha annak adja
+        if unit_clean and (fold(unit_clean) in _FLAG_CELLS or set(unit_clean) <= set("+-")
+                           or fold(unit_clean).startswith("validalt")):
+            unit, unit_clean = None, None
         if unit_clean is None and not (isinstance(unit, str) and unit.strip()) and row_line is not None:
             unit_clean = _unit_from_row(lines[row_line], name, None if value_text is not None else number_raw,
                                         tuple(x for x in (value_text, row.get("referencia"),

@@ -73,7 +73,7 @@ function refSzoveg(p: LaborParameter) {
 /**
  * Labor-idősor: kis diagramok paraméterenként (egy tengely, egy sorozat),
  * referenciasávval. A tartományon kívüli pont alakban is más (teli + gyűrű),
- * nem csak színben. Pontra kattintva a mérés részletei nyílnak meg.
+ * nem csak színben. Pontra kattintva az érték rögzül; a részleteket a tooltip „Részletek →” gombja nyitja.
  *
  * Egy vizsgálatra szűrve a backend szűr (GET /lab-results?patientId=&name=).
  */
@@ -242,11 +242,11 @@ export function LabTrend() {
                 <span className="lablegend__band" />
                 referencia- / céltartomány
               </span>
-              <span className="push-right">Pontra kattintva a mérés részletei nyílnak meg.</span>
+              <span className="push-right">Pontra kattintva rögzül az érték; a részleteket a „Részletek →” nyitja meg.</span>
             </div>
             {szovegesek.length > 0 && (
               <>
-                <h3 className="h3">Szöveges eredmények</h3>
+                <h3 className="h3 labtrend__subhead">Szöveges eredmények</h3>
                 <LabTable params={[]} szovegesek={szovegesek} onValaszt={setReszletId} />
               </>
             )}

@@ -35,7 +35,7 @@ export function PatientListPage() {
     <div className="app">
       <AppBar />
       <PatientBand patient={null} />
-      <main className="listpage">
+      <main className="listpage listpage--fixed">
         <div className="row-baseline">
           <h1 className="h1">Beteg keresése</h1>
           {!ujBeteg && (
@@ -47,10 +47,7 @@ export function PatientListPage() {
         </div>
 
         {ujBeteg && (
-          <NewPatientForm
-            onCancel={() => setUjBeteg(false)}
-            onCreated={(p) => navigate(`/betegek/${p.id}`)}
-          />
+          <NewPatientForm onCancel={() => setUjBeteg(false)} onCreated={(p) => navigate(`/betegek/${p.id}`)} />
         )}
 
         <div className="searchcard">
@@ -131,7 +128,11 @@ export function PatientListPage() {
           </div>
           {state.status === 'loading' && <Loading what="Betegek" />}
           {state.status === 'error' && <ErrorState error={state.error} onRetry={reload} />}
-          {state.status === 'ok' && <PatientTable patients={state.data} />}
+          {state.status === 'ok' && (
+            <div className="results__body">
+              <PatientTable patients={state.data} />
+            </div>
+          )}
         </section>
       </main>
     </div>
