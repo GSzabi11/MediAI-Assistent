@@ -1872,15 +1872,61 @@ select.input {
   pointer-events: none;
 }
 
-/* a grafikon tooltipjének "Részletek →" gombja */
-.chart__more {
+/* a grafikon tooltipje (foreignObject-ben HTML, hogy a hosszú név tördelhető legyen) */
+.charttip {
+  pointer-events: none;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px 7px;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-ink);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  color: var(--c-ink);
+}
+.charttip--pinned {
+  border-width: 2.5px;
+}
+.charttip__meta {
+  font-size: 11px;
+  color: var(--c-ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* legfeljebb 3 sor, utána "…" */
+.charttip__title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+.charttip__more {
+  pointer-events: auto;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-accent);
   cursor: pointer;
 }
-.chart__more:hover text,
-.chart__more:focus-visible text {
+.charttip__more:hover,
+.charttip__more:focus-visible {
   text-decoration: underline;
 }
-.chart__more:focus-visible {
+.charttip__more:focus-visible {
   outline: 2px solid var(--c-accent);
   outline-offset: 2px;
 }

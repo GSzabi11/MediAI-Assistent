@@ -520,6 +520,7 @@ function LaborRogzites({ onDone, onCancel }: { onDone: () => void; onCancel: () 
   );
 }
 
+const TIP_W = 200;
 const H = 170,
   Y0 = 16,
   Y1 = 136;
@@ -580,7 +581,9 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
 
   const aktiv = kijelolt ?? hover;
   const h = aktiv !== null ? (ms[aktiv] ?? null) : null;
-  const tipX = h ? Math.min(Math.max(x(h) - 172, 48), W - 170) : 0;
+  // Tooltip a pont MELLETT — sosem takarhatja a saját pontját (különben a pontra kattintás a
+  // tooltip "Részletek →" gombjára esne): balra, ha ott elfér, különben jobbra; a grafikonon belül
+  const tipX = h ? (x(h) - TIP_W - 10 >= L ? x(h) - TIP_W - 10 : Math.min(x(h) + 10, W - TIP_W - 2)) : 0;
 
   return (
     <article className="chart" aria-label={`${p.nev} idősor`}>
@@ -690,40 +693,29 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
             </text>
           )}
           {h && (
-            <g>
-              <rect
-                x={tipX}
-                y={10}
-                width={164}
-                height={56}
-                rx={4}
-                fill="var(--c-surface)"
-                stroke="var(--c-ink)"
-                strokeWidth={kijelolt !== null ? 2.5 : 1.5}
-                pointerEvents="none"
-              />
-              <text x={tipX + 10} y={28} fontSize={11} fill="var(--c-ink-muted)" pointerEvents="none">
-                {formatDatum(h.datum)} · {h.dokumentumId !== null ? 'Laborlelet' : 'kézi rögzítés'}
-              </text>
-              <text x={tipX + 10} y={46} fontSize={14} fontWeight={700} fill="var(--c-ink)" pointerEvents="none">
-                {p.nev} {ertekSzoveg(h.ertek, d, h.jel)} {statusz(p, h.ertek, h.jel) ?? ''}
-              </text>
-              {/* csak ez nyitja meg a Mérés részleteit */}
-              <g
-                className="chart__more"
-                role="button"
-                tabIndex={0}
-                aria-label={`${p.nev} ${formatDatum(h.datum)}: mérés részletei`}
-                onMouseEnter={() => aktiv !== null && setHover(aktiv)}
-                onClick={() => onValaszt(h.id)}
-                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onValaszt(h.id))}
-              >
-                <rect x={tipX + 6} y={50} width={84} height={14} fill="transparent" />
-                <text x={tipX + 10} y={60} fontSize={11} fontWeight={700} fill="var(--c-accent)">
+            /* HTML-tooltip (foreignObject): a hosszú név több sorba törik, ami 3 sorba sem fér,
+               azt "…" helyettesíti — az SVG <text> nem tud tördelni. A foreignObject átlátszó és
+               nem fogja el a kattintást (a mögötte lévő pontok elérhetők), csak a gomb. */
+            <foreignObject x={tipX} y={10} width={TIP_W} height={Hh - 14} pointerEvents="none">
+              <div className={`charttip${kijelolt !== null ? ' charttip--pinned' : ''}`}>
+                <div className="charttip__meta">
+                  {formatDatum(h.datum)} · {h.dokumentumId !== null ? 'Laborlelet' : 'kézi rögzítés'}
+                </div>
+                <div className="charttip__title" title={`${p.nev} ${ertekSzoveg(h.ertek, d, h.jel)}`}>
+                  {p.nev} {ertekSzoveg(h.ertek, d, h.jel)} {statusz(p, h.ertek, h.jel) ?? ''}
+                </div>
+                {/* csak ez nyitja meg a Mérés részleteit */}
+                <button
+                  type="button"
+                  className="charttip__more"
+                  aria-label={`${p.nev} ${formatDatum(h.datum)}: mérés részletei`}
+                  onMouseEnter={() => aktiv !== null && setHover(aktiv)}
+                  onClick={() => onValaszt(h.id)}
+                >
                   Részletek →
-                </text>
-              </g>
-            </g>
+                </button>
+              </div>
+            </foreignObject>
           )}
         </svg>
       </div>
