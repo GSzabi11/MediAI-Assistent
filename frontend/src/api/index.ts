@@ -435,10 +435,6 @@ export const api = {
 
   // ======================= hozzáférési napló =======================
 
-  /** GET /access-logs?patientId= — ki nézte a beteget */
-  listNaploBetegre: async (patientId: number) =>
-    (await http.get<AccessLogDto[]>(`/access-logs?patientId=${patientId}`)).map(toNaplo),
-
   /** GET /access-logs?userId= — mit nézett a felhasználó */
   listNaploFelhasznalora: async (userId: number) =>
     (await http.get<AccessLogDto[]>(`/access-logs?userId=${userId}`)).map(toNaplo),

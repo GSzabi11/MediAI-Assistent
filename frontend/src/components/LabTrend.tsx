@@ -132,6 +132,8 @@ export function LabTrend() {
       .filter((id): id is number => id !== null),
   ).size;
   const meresSzam = [...params, ...szovegesek].reduce((n, p) => n + p.meresek.length, 0);
+  // Számos vizsgálat = egy grafikon (a kiválasztott időszakban mérttel); szöveges csak táblázatban
+  const grafikonSzam = params.filter((p) => p.meresek.length > 0).length;
 
   return (
     <div className="labtrend">
@@ -140,7 +142,8 @@ export function LabTrend() {
           <h2 className="h2 h2--sm">Laboreredmények időben</h2>
           <span className="meta row-inline">
             <Icon name="doc" />
-            {meresSzam} mért érték{leletSzam > 0 && `, ${leletSzam} laborleletből`} — nem AI-következtetés
+            {meresSzam} mért érték{leletSzam > 0 && `, ${leletSzam} laborleletből`}, {grafikonSzam + szovegesek.length}{' '}
+            különböző vizsgálat
           </span>
         </div>
         <div className="row-gap-10 push-right labtrend__controls">

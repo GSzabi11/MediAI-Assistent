@@ -380,6 +380,11 @@ a:hover {
 .workspace > * {
   min-height: 0;
   overflow-y: auto;
+  /* Görgető konténer = pozicionált ős: a benne lévő position:absolute elemek (pl. a táblázat
+     .sr-only felirata) hozzá igazodnak és a vágása alatt maradnak. Enélkül a viewporthoz
+     igazodtak, és egy hosszú panel (Labor fül) alján az egész oldalt megnyújtották — üres
+     görgethető terület lett a lap alján. */
+  position: relative;
 }
 
 .rail {
@@ -1167,6 +1172,7 @@ mark {
   flex-direction: column;
   gap: 16px;
   background: var(--c-surface-sunken);
+  position: relative; /* görgető konténer: ld. .workspace > * */
 }
 .chat-q {
   align-self: flex-end;
@@ -1604,6 +1610,7 @@ select.input {
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  position: relative; /* görgető konténer: ld. .workspace > * */
 }
 .authcard {
   background: var(--c-surface);
@@ -1737,6 +1744,7 @@ select.input {
   flex-direction: column;
   gap: 24px;
   overflow-y: auto;
+  position: relative; /* görgető konténer: ld. .workspace > * */
 }
 .searchcard {
   display: grid;

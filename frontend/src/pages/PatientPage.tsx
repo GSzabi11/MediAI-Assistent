@@ -4,7 +4,6 @@ import { api } from '../api';
 import type { ClaimResponse, DokumentumListItem, Forras } from '../api/types';
 import { AllitasLista } from '../components/allitas/AllitasLista';
 import { AtiratFul } from '../components/AtiratFul';
-import { BetegNaplo } from '../components/BetegNaplo';
 import { ChatPanel } from '../components/ChatPanel';
 import { DokumentumFul } from '../components/DokumentumFul';
 import { EllatasPanel } from '../components/EllatasPanel';
@@ -17,7 +16,7 @@ import { formatDatum, formatIdo } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 import { megszolalasKulcs, PatientContext, usePatient, type PatientCtx } from '../patient/PatientContext';
 
-const NEZETEK = ['dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer', 'naplo'] as const;
+const NEZETEK = ['dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer'] as const;
 type Nezet = (typeof NEZETEK)[number];
 
 /** Becsukott/kinyitott panel állapot — kényelmi, böngészőnként tárolva. */
@@ -155,7 +154,6 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
     { n: 'atirat', icon: 'mic', label: 'Átirat' },
     { n: 'ellatas', icon: 'stetho', label: 'Ellátások' },
     { n: 'gyogyszer', icon: 'pill', label: 'Gyógyszer és allergia' },
-    { n: 'naplo', icon: 'list', label: 'Napló' },
   ];
 
   return (
@@ -196,7 +194,6 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
           {nezet === 'atirat' && <AtiratFul felvetelId={felvetelId} turnIds={turnIds} />}
           {nezet === 'ellatas' && <EllatasPanel />}
           {nezet === 'gyogyszer' && <GyogyszerAllergiaPanel />}
-          {nezet === 'naplo' && <BetegNaplo />}
         </section>
 
         <AllitasLista

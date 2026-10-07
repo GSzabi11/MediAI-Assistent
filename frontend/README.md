@@ -38,7 +38,7 @@ után a nem létező vagy más felhasználóra mutató belépés kiléptet.
 |---|---|
 | `/` | belépés + új profil (orvos / admin) |
 | `/patients` | beteglista, keresés (TAJ vagy név + anyja neve + szül. dátum), új beteg |
-| `/betegek/:id` | betegoldal — fülek: Dokumentum, Labor-idősor, Átirat, Ellátások, Gyógyszer és allergia, Napló; mellette az állítások és a chat |
+| `/betegek/:id` | betegoldal — fülek: Dokumentum, Labor-idősor, Átirat, Ellátások, Gyógyszer és allergia; mellette az állítások és a chat |
 | `/profil` | saját adatok, hangprofil (aktív, előzmény, új), saját hozzáférési napló |
 | `/admin` | csak adminnak: felhasználók szerepkör szerint, keresés névre/emailre, kiválasztott felhasználó hangprofilja és naplója |
 
@@ -85,7 +85,7 @@ src/
 | Állítás | `GET /statements?patientId=`, `GET /statements/{id}`, `POST /statements` (kijelölt idézet), `GET`/`POST …/{id}/approvals` |
 | Labor | `GET /lab-results?patientId=` (`&name=`), `GET /lab-results/{id}`, `POST /lab-results` |
 | Gyógyszer, allergia | `GET /medications?patientId=&activeOnly=`, `GET /medications/{id}`, `POST /medications`, `POST …/{id}/discontinue` · `GET /allergies?patientId=`, `GET /allergies/{id}`, `POST /allergies` |
-| Napló | `GET /access-logs?patientId=` (beteg Napló fül), `GET /access-logs?userId=` (profil, admin) |
+| Napló | `GET /access-logs?userId=` (profil, admin) · a `?patientId=` változat nincs bekötve (a betegoldal Napló füle törölve) |
 | Klinikai asszisztens | nincs végpont — a panel ezt jelzi |
 
 **Gépi formátumok** (a felületről importálhatók, a kliens előbb ellenőrzi):
