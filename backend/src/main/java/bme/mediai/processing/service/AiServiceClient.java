@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import bme.mediai.processing.api.ProcessingJobRequest;
+import bme.mediai.summary.api.SummaryFacts;
+import bme.mediai.summary.api.SummaryJobRequest;
 
 // Spring → Python. A Spring sosem hívja az Ollamát: a modellt, a promptot és a GPU-sort
 // a Python szolgáltatás kezeli, a Spring csak a feladatot adja át.
@@ -34,6 +36,19 @@ public class AiServiceClient {
         this.restClient = RestClient.builder().baseUrl(baseUrl).requestFactory(factory).build();
         this.token = token;
         this.callbackBaseUrl = callbackBaseUrl.replaceAll("/+$", "");
+    }
+
+    // Klinikai összefoglaló: a beteg tényei mennek (fájl nincs), ugyanabba a Python-sorba
+    public void submitSummary(Long summaryId, SummaryFacts facts) {
+        SummaryJobRequest job = new SummaryJobRequest(summaryId,
+                callbackBaseUrl + "/api/clinical-summaries/" + summaryId + "/result", facts);
+        restClient.post()
+                .uri("/summaries")
+                .header(InternalTokenVerifier.HEADER, token.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(job)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     // RestClientException, ha a szolgáltatás nem érhető el vagy nem 2xx-et ad

@@ -24,7 +24,8 @@ class PatientResolver {
             "medical-cares", "medical_care",
             "lab-results", "lab_result",
             "medications", "medication",
-            "allergies", "allergy");
+            "allergies", "allergy",
+            "clinical-summaries", "clinical_summary");
 
     private final JdbcTemplate jdbc;
 

@@ -23,6 +23,7 @@ import type {
   UserDto,
   UtteranceDto,
   VoiceProfileDto,
+  ClinicalSummaryDto,
 } from './dto';
 import type {
   Allergia,
@@ -49,6 +50,7 @@ import type {
   NaploBejegyzes,
   PatientResponse,
   RagDarab,
+  KlinikaiOsszefoglalo,
 } from './types';
 
 // ---------- beteg + felhasználó ----------
@@ -436,4 +438,27 @@ export const toNaplo = (l: AccessLogDto): NaploBejegyzes => ({
   httpStatus: l.httpStatus,
   idopont: l.accessedAt,
   ip: l.ip,
+});
+
+const osszefoglaloAllapot = { PROCESSING: 'keszul', DONE: 'kesz', FAILED: 'hiba' } as const;
+
+export const toOsszefoglalo = (s: ClinicalSummaryDto): KlinikaiOsszefoglalo => ({
+  id: s.id,
+  allapot: osszefoglaloAllapot[s.status],
+  kerve: s.requestedAt,
+  elkeszult: s.completedAt,
+  hiba: s.error,
+  idoszakKezdete: s.periodStart,
+  idoszakVege: s.periodEnd,
+  osszefoglalo: s.summary,
+  javaslatok: s.recommendations ?? [],
+  figyelmeztetesek: s.warnings ?? [],
+  modell: s.model && {
+    nev: s.model.modelName,
+    seed: s.model.seed,
+    promptHash: s.model.promptHash,
+    verzio: s.model.extractorVersion,
+  },
+  bemenet: s.inputCounts ?? {},
+  elavult: s.stale,
 });

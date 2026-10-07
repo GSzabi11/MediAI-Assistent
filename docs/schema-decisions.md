@@ -19,6 +19,9 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `lab_result` (= `labor`), `medication` (= `gyogyszer`), `allergy` (= `allergia`),
 `access_log` (= `hozzaferes_naplo`).
 
+V23: `clinical_summary` — a Klinikai státusz AI-összefoglalója; **tudatosan külön tábla, nem
+`statement`** (a felhasználó döntése), részletek: `docs/clinical-summary.md`.
+
 V17: automatikus dokumentum-feldolgozás (`document.status`, `extraction_*`,
 `medication/allergy.origin`) — részletek: `docs/document-processing.md`.
 

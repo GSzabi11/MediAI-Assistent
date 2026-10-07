@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
-import type { LaborJel, LaborMeres, LaborParameter, LaborSzovegesParameter, UjLaborSor } from '../api/types';
+import type { LaborMeres, LaborParameter, LaborSzovegesParameter, UjLaborSor } from '../api/types';
 import { formatDatum, formatDatumIdo, formatHonap, formatSzam, helyiToIso, parseSzam } from '../lib/format';
+import { ertekSzoveg, kivul, statusz, tizedes, tizedesOf } from '../lib/laborErtek';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
@@ -12,53 +13,6 @@ import { ErrorState, Loading } from './shell';
 
 type Idoszak = '6ho' | '1ev' | 'mind';
 const napok: Record<Idoszak, number> = { '6ho': 183, '1ev': 366, mind: Infinity };
-
-/** Egy érték tizedesjegyei (a backend legfeljebb 4-et tárol) */
-const tizedesOf = (v: number) => {
-  const s = String(v);
-  const i = s.indexOf('.');
-  return i < 0 ? 0 : Math.min(4, s.length - i - 1);
-};
-
-/**
- * A megjelenítés annyi tizedesjegyet mutat, amennyi a mért értékekben és a
- * határokban ténylegesen van — egy 0,123-as TSH nem jelenhet meg „0,1”-ként
- * (CLAUDE.md: nem kerekítünk csendben, a megjelenítésben sem).
- */
-const tizedes = (p: LaborParameter) =>
-  Math.max(
-    0,
-    ...p.meresek.map((m) => tizedesOf(m.ertek)),
-    ...(p.refAlso !== null ? [tizedesOf(p.refAlso)] : []),
-    ...(p.refFelso !== null ? [tizedesOf(p.refFelso)] : []),
-  );
-/**
- * Tartományon kívül? Cenzorált eredménynél (">90") csak akkor jelzünk, ha a jelből biztosan
- * következik — pl. ">90" és ref. felső 60 → felett; ">90" és ref. felső 120 → nem tudható.
- */
-function irany(p: LaborParameter, v: number, jel: LaborJel | null = null): 'alatt' | 'felett' | null {
-  const alatt =
-    p.refAlso !== null &&
-    (jel === null ? v < p.refAlso : jel === '<' ? v <= p.refAlso : jel === '<=' ? v < p.refAlso : false);
-  const felett =
-    p.refFelso !== null &&
-    (jel === null ? v > p.refFelso : jel === '>' ? v >= p.refFelso : jel === '>=' ? v > p.refFelso : false);
-  return alatt ? 'alatt' : felett ? 'felett' : null;
-}
-
-const kivul = (p: LaborParameter, v: number, jel: LaborJel | null = null) => irany(p, v, jel) !== null;
-
-function statusz(p: LaborParameter, v: number, jel: LaborJel | null = null) {
-  const i = irany(p, v, jel);
-  if (i === 'alatt') return p.celtartomany ? '↓ cél alatt' : '↓ ref. alatt';
-  if (i === 'felett') return p.celtartomany ? '↑ cél felett' : '↑ ref. felett';
-  return null;
-}
-
-const JEL: Record<LaborJel, string> = { '<': '<', '<=': '≤', '>': '>', '>=': '≥' };
-
-/** Megjelenített érték: cenzoráltnál a jellel együtt (">90"), hogy ne tűnjön pontos mérésnek */
-const ertekSzoveg = (v: number, d: number, jel: LaborJel | null) => `${jel ? JEL[jel] : ''}${formatSzam(v, d)}`;
 
 function refSzoveg(p: LaborParameter) {
   const d = tizedes(p);
@@ -242,7 +196,9 @@ export function LabTrend() {
                 <span className="lablegend__band" />
                 referencia- / céltartomány
               </span>
-              <span className="push-right">Pontra kattintva rögzül az érték; a részleteket a „Részletek →” nyitja meg.</span>
+              <span className="push-right">
+                Pontra kattintva rögzül az érték; a részleteket a „Részletek →” nyitja meg.
+              </span>
             </div>
             {szovegesek.length > 0 && (
               <>

@@ -1968,3 +1968,111 @@ select.input {
   cursor: pointer;
   white-space: nowrap;
 }
+
+/* ============ Klinikai státusz (AI-összefoglaló) ============ */
+.klinstatus__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-left: 4px solid var(--c-accent);
+  border-radius: var(--radius-lg);
+}
+.klinstatus__head {
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.klinstatus__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px dashed var(--c-accent);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--c-accent);
+}
+.klinstatus__text {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: 1.6;
+}
+.klinstatus__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-ink-muted);
+}
+.klinstatus__label--rec {
+  color: #1f7a4d;
+}
+.klinstatus__recs {
+  padding-top: 12px;
+  border-top: 1px dashed var(--c-line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.klinstatus__recs ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.klinstatus__recs li {
+  display: flex;
+  gap: 8px;
+  line-height: 1.5;
+}
+.klinstatus__arrow {
+  color: #1f9d5c;
+  font-weight: 700;
+}
+.klinstatus__warn {
+  margin: 0;
+  padding: 8px 12px;
+  list-style: none;
+  border-radius: var(--radius-md);
+  background: var(--c-highlight);
+  font-size: var(--fs-sm);
+}
+.klinstatus__disclaimer {
+  margin: 0;
+}
+.klinstatus__dev {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-line);
+}
+.klinstatus__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.devchip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #f3b4b4;
+  background: #fdecec;
+  color: #b42318;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+.devchip:hover,
+.devchip:focus-visible {
+  text-decoration: underline;
+}

@@ -15,7 +15,9 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
   Még NEM kötött be a backendbe.
 - **ai-service/docproc/** — Python (FastAPI) dokumentum-feldolgozó: PDF → labor /
   ambuláns adatok, Ollama-val. A Spring REST-en adja át, a Python callbackkel válaszol;
-  a Spring sosem hívja az Ollamát. Ld. `docs/document-processing.md`.
+  a Spring sosem hívja az Ollamát. Ld. `docs/document-processing.md`. Ugyanez a szolgáltatás
+  készíti a Klinikai státusz összefoglalóját (`docs/clinical-summary.md`) — ez a felhasználó
+  döntése szerint külön táblában él, NEM `allitas`-ként (tudatos kivétel a lenti elv alól).
 - **frontend/** — React (Figma-terv alapján, még nincs kód).
 
 ## A rendszer központi elve: az Allitas (Statement)

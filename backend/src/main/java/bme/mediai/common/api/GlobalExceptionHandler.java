@@ -31,6 +31,8 @@ import bme.mediai.medication.exception.MedicationAlreadyDiscontinuedException;
 import bme.mediai.medication.exception.MedicationNotFoundException;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.processing.exception.InvalidCallbackTokenException;
+import bme.mediai.summary.exception.ClinicalSummaryNotFoundException;
+import bme.mediai.summary.exception.SummaryConflictException;
 import bme.mediai.patient.exception.TajConflictException;
 import bme.mediai.recording.exception.InvalidStatusTransitionException;
 import bme.mediai.recording.exception.RecordingNotFoundException;
@@ -129,6 +131,16 @@ public class GlobalExceptionHandler {
             ExtractedTextMissingException.class, ChunksAlreadyExistException.class,
             DocumentProcessingException.class, DocumentNotProcessingException.class})
     ProblemDetail handleDocumentConflict(RuntimeException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ClinicalSummaryNotFoundException.class)
+    ProblemDetail handleSummaryNotFound(ClinicalSummaryNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(SummaryConflictException.class)
+    ProblemDetail handleSummaryConflict(SummaryConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

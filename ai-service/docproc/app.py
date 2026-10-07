@@ -1,6 +1,7 @@
 """MediAI dokumentum-feldolgozó szolgáltatás (FastAPI).
 
-    POST /jobs     Spring → Python: feldolgozás-kérés (sorba áll, 202)
+    POST /jobs       Spring → Python: dokumentum-feldolgozás (sorba áll, 202)
+    POST /summaries  Spring → Python: klinikai összefoglaló (ugyanabba a sorba, 202)
     GET  /health   sor állapota
 
 Indítás: python app.py   (ld. README.md)
@@ -14,7 +15,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import config
-from worker import Job, JobQueue
+from worker import Job, JobQueue, SummaryJob
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -48,9 +49,24 @@ def submit(req: JobRequest, x_internal_token: str | None = Header(default=None))
     return {"documentId": req.documentId, "queuePosition": position}
 
 
+class SummaryRequest(BaseModel):
+    summaryId: int = Field(gt=0)
+    callbackUrl: str = Field(pattern=r"^https?://")
+    facts: dict
+
+
+@app.post("/summaries", status_code=202)
+def submit_summary(req: SummaryRequest, x_internal_token: str | None = Header(default=None)):
+    _check_token(x_internal_token)
+    position = jobs.submit(SummaryJob(req.summaryId, req.callbackUrl, req.facts))
+    if position is None:
+        return JSONResponse(status_code=202, content={"summaryId": req.summaryId, "alreadyQueued": True})
+    return {"summaryId": req.summaryId, "queuePosition": position}
+
+
 @app.get("/health")
 def health():
-    return {"status": "UP", "model": config.LLM_MODEL, **jobs.status()}
+    return {"status": "UP", "version": config.EXTRACTOR_VERSION, "model": config.LLM_MODEL, **jobs.status()}
 
 
 if __name__ == "__main__":

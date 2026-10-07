@@ -34,7 +34,7 @@ CHUNK_TARGET_CHARS = int(os.environ.get("CHUNK_TARGET_CHARS", "800"))
 CHUNK_OVERLAP_CHARS = int(os.environ.get("CHUNK_OVERLAP_CHARS", "150"))
 
 # A dokumentum extractor_version oszlopába kerül: a feldolgozó kód (prompt, utófeldolgozás) verziója
-EXTRACTOR_VERSION = "docproc-12"
+EXTRACTOR_VERSION = "docproc-13"
 
 CALLBACK_TIMEOUT_SEC = 60
 CALLBACK_RETRY_DELAYS_SEC = (2, 10, 30, 60)

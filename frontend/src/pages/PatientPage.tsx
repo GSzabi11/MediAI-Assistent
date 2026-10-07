@@ -8,6 +8,7 @@ import { ChatPanel } from '../components/ChatPanel';
 import { DokumentumFul } from '../components/DokumentumFul';
 import { EllatasPanel } from '../components/EllatasPanel';
 import { GyogyszerAllergiaPanel } from '../components/GyogyszerAllergiaPanel';
+import { KlinikaiStatusz } from '../components/KlinikaiStatusz';
 import { Icon, type IconName } from '../components/Icon';
 import { LabTrend } from '../components/LabTrend';
 import { AppBar, ErrorState, Loading, PatientBand, PlannedFeatures } from '../components/shell';
@@ -16,7 +17,7 @@ import { formatDatum, formatIdo } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 import { megszolalasKulcs, PatientContext, usePatient, type PatientCtx } from '../patient/PatientContext';
 
-const NEZETEK = ['dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer'] as const;
+const NEZETEK = ['statusz', 'dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer'] as const;
 type Nezet = (typeof NEZETEK)[number];
 
 /** Becsukott/kinyitott panel állapot — kényelmi, böngészőnként tárolva. */
@@ -114,7 +115,8 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
   const { patient, dokumentumok, felvetelek } = usePatient();
   useScrollToAllitas();
   const nezetParam = params.get('nezet');
-  const nezet: Nezet = NEZETEK.includes(nezetParam as Nezet) ? (nezetParam as Nezet) : 'dokumentum';
+  // alapértelmezés: a Klinikai státusz (az első fül)
+  const nezet: Nezet = NEZETEK.includes(nezetParam as Nezet) ? (nezetParam as Nezet) : 'statusz';
   const alapDok = dokumentumok.find((d) => d.tipus !== 'labor') ?? dokumentumok[0];
   const dokParam = Number(params.get('dok'));
   // Csak az aktív beteg dokumentuma nyitható meg URL-ből (a nézet maga is ellenőrzi)
@@ -157,6 +159,7 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
   ].join(' ');
 
   const fulek: { n: Nezet; icon: IconName; label: string }[] = [
+    { n: 'statusz', icon: 'spark', label: 'Klinikai státusz' },
     { n: 'dokumentum', icon: 'doc', label: 'Dokumentum' },
     { n: 'labor', icon: 'trend', label: 'Labor-idősor' },
     { n: 'atirat', icon: 'mic', label: 'Átirat' },
@@ -197,6 +200,7 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
               </Tab>
             ))}
           </div>
+          {nezet === 'statusz' && <KlinikaiStatusz />}
           {nezet === 'dokumentum' && (
             <DokumentumFul dokId={dokId} kiemeles={kiemeles} pdfNezet={pdfNezet} pdfKiemeles={pdfKiemeles} />
           )}

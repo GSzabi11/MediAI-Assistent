@@ -404,3 +404,20 @@ export class NotAvailableError extends Error {
     super(`${feature}: ehhez még nincs backend-végpont`);
   }
 }
+
+// ---------- klinikai státusz (AI-összefoglaló) ----------
+export interface KlinikaiOsszefoglalo {
+  id: number;
+  allapot: 'keszul' | 'kesz' | 'hiba';
+  kerve: string;
+  elkeszult: string | null;
+  hiba: string | null;
+  idoszakKezdete: string;
+  idoszakVege: string;
+  osszefoglalo: string | null;
+  javaslatok: string[];
+  figyelmeztetesek: string[];
+  modell: { nev: string; seed: number; promptHash: string; verzio: string } | null;
+  bemenet: Record<string, number>;
+  elavult: boolean;
+}

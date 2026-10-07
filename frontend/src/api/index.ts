@@ -23,6 +23,7 @@ import type {
   UserDto,
   UtteranceDto,
   VoiceProfileDto,
+  ClinicalSummaryDto,
 } from './dto';
 import { http } from './http';
 import { parseMegszolalasok, parseRagDarabok } from './importok';
@@ -47,6 +48,7 @@ import {
   toPatient,
   toRagDarab,
   toSourceDto,
+  toOsszefoglalo,
 } from './mappers';
 import {
   ApiError,
@@ -370,6 +372,16 @@ export const api = {
 
   /** GET /lab-results/{id} */
   getLaborMeres: async (id: number) => toLaborReszlet(await http.get<LabResultDto>(`/lab-results/${id}`)),
+
+  // ======================= klinikai státusz =======================
+
+  /** GET /clinical-summaries?patientId= — a legfrissebb elöl */
+  listOsszefoglalok: async (patientId: number) =>
+    (await http.get<ClinicalSummaryDto[]>(`/clinical-summaries?patientId=${patientId}`)).map(toOsszefoglalo),
+
+  /** POST /clinical-summaries — a belépett orvos nevében; 202, a háttérben készül */
+  keszitOsszefoglalot: async (patientId: number) =>
+    toOsszefoglalo(await http.post<ClinicalSummaryDto>('/clinical-summaries', { patientId, userId: requireUser().id })),
 
   /** POST /lab-results — egy panel egy tranzakcióban: hibás sornál egyik sem kerül be */
   createLaborPanel: async (p: UjLaborPanel) =>

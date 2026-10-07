@@ -367,3 +367,24 @@ export interface ProblemDetailDto {
   title?: string;
   detail?: string;
 }
+
+/** GET /clinical-summaries?patientId= — AI-összefoglaló (külön tábla, nem állítás) */
+export interface ClinicalSummaryDto {
+  id: number;
+  patientId: number;
+  status: 'PROCESSING' | 'DONE' | 'FAILED';
+  requestedBy: number | null;
+  requestedAt: string;
+  completedAt: string | null;
+  error: string | null;
+  periodStart: string;
+  periodEnd: string;
+  summary: string | null;
+  recommendations: string[];
+  /** a szövegben a beteg adatai között nem szereplő szám */
+  warnings: string[];
+  model: { modelName: string; seed: number; promptHash: string; extractorVersion: string } | null;
+  inputCounts: Record<string, number>;
+  /** az összefoglaló óta új dokumentum/állítás jött */
+  stale: boolean;
+}

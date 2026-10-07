@@ -1,0 +1,284 @@
+"""Klinikai státusz: rövid összefoglaló + proaktív javaslatok a beteg elmúlt 6 hónapjáról.
+
+A bemenet a Spring által összegyűjtött, már strukturált tények (laborsorok a szabálymotor
+kiértékelésével, a leletekből kinyert állítások, gyógyszer, allergia) — nem nyers lelet-szöveg.
+A "Fő eltérések" NEM a modelltől jön (a frontend a szabálymotor állításaiból mutatja).
+
+Ellenőrzés (determinisztikus): a kimenetben szereplő minden "érdemi" szám (tizedes, vagy ≥ 10)
+benne kell legyen a bemenetben — ha nincs, figyelmeztetésként kiírjuk (kitalált laborérték ellen).
+"""
+import hashlib
+import json
+import re
+from collections import OrderedDict
+
+import requests
+
+import config
+
+# Két külön, rövid, egyszerű szöveges hívás (nem kötött JSON): a 4B-s modell a közös JSON-kimenetben
+# az összefoglaló mondatait tagmondatonként hurokban ismételte.
+SYSTEM_SUMMARY = """Magyar klinikus asszisztens vagy. Egy beteg elmúlt 6 hónapjának tényeiből rövid
+klinikai státusz-összefoglalót írsz egy orvosnak.
+Szabályok:
+- KIZÁRÓLAG a megadott tényeket használd. Ne találj ki diagnózist, értéket, gyógyszert.
+- Számot (laborértéket, dátumot) csak a tényekből idézz, pontosan; ne számolj új értéket.
+- Legfeljebb 4 mondat, folyó szöveg, felsorolás nélkül. A legfontosabb aggállyal kezdd (a
+  tartományon kívüli értékek, ha több mérés van, az alakulásuk), utána a releváns diagnózisok,
+  gyógyszerek, allergiák. A referenciatartományon belüli vizsgálatokat NE említsd eltérésként.
+- Csak az összefoglaló szövegét írd, bevezetés és cím nélkül."""
+
+SYSTEM_RECOMMENDATIONS = """Magyar klinikus asszisztens vagy. Egy beteg elmúlt 6 hónapjának tényei alapján
+proaktív javaslatokat adsz egy orvosnak: konkrét következő lépéseket (kontroll-labor, konzílium,
+vizsgálat, terápia felülvizsgálata).
+Szabályok:
+- Legfeljebb 5 javaslat, mindegyik külön sorban, "- " kezdettel, egy mondatban.
+- Mindegyik egy megadott tényre (tartományon kívüli értékre, diagnózisra, gyógyszerre) épüljön.
+- Feltételes mód ("javasolt", "mérlegelendő") — a döntés az orvosé.
+- Ha nincs indokolt teendő, írd: "- Nincs sürgős teendő; rutin kontroll javasolt."
+- Csak a felsorolást írd, bevezetés nélkül."""
+
+# Ismétlés-büntetés szélesebb ablakon: a hurok ciklusa (~45 token) rövidebb volt az alapértelmezett
+# 64 tokenes ablaknál is, mégis ismételt
+_OPTIONS = {"temperature": 0, "repeat_penalty": 1.2, "repeat_last_n": 256}
+
+MAX_RECOMMENDATIONS = 5
+_NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def prompt_hash() -> str:
+    payload = json.dumps({"kind": "clinical-summary", "summary": SYSTEM_SUMMARY,
+                          "recommendations": SYSTEM_RECOMMENDATIONS, "options": _OPTIONS,
+                          "extractor": config.EXTRACTOR_VERSION}, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def render_facts(facts: dict) -> str:
+    """A tények tömör, ember- és modell-olvasható szövegként (vizsgálatonként időrendben)."""
+    lines = [f"Időszak: {facts.get('periodStart')} – {facts.get('periodEnd')}"]
+    if facts.get("ageYears") is not None:
+        lines.append(f"Életkor: {facts['ageYears']} év")
+
+    labs = sorted(facts.get("labs") or [], key=lambda l: (l["name"].casefold(), l["date"]))
+    by_test: "OrderedDict[str, list]" = OrderedDict()
+    for lab in labs:
+        by_test.setdefault((lab["name"], lab.get("unit") or ""), []).append(lab)
+    # A kis modell 30–40 laborérték között elveszett ("a CRP emelkedett", holott normál): a
+    # részletes idősort csak azok a vizsgálatok kapják, amelyeknek van tartományon kívüli mérése;
+    # a többi csak névvel szerepel, a "normál" minősítéssel együtt.
+    elteres = OrderedDict((k, v) for k, v in by_test.items() if any(s.get("status") for s in v))
+    normal = [name for (name, _), v in by_test.items() if not any(s.get("status") for s in v)]
+    if elteres:
+        lines.append("\nTartományon kívüli laboreredmények (vizsgálatonként időrendben; [felett/alatt/eltér] a "
+                     "referencia-szabály szerint):")
+        for (name, unit), series in elteres.items():
+            ref = next((s["reference"] for s in reversed(series) if s.get("reference")), None)
+            meta = ", ".join(p for p in (unit, f"ref {ref}" if ref else None) if p)
+            head = f"- {name}" + (f" ({meta})" if meta else "")
+            values = "; ".join(f"{s['date']} {s['value']}" + (f" [{s['status']}]" if s.get("status") else "")
+                               for s in series)
+            lines.append(f"{head}: {values}")
+    if by_test and not elteres:
+        lines.append("\nNincs tartományon kívüli laboreredmény.")
+    if normal:
+        lines.append("\nReferenciatartományon BELÜLI vizsgálatok (normál, nem kell kiemelni): " + ", ".join(normal))
+
+    statements = facts.get("statements") or []
+    if statements:
+        lines.append("\nLeletekből kinyert adatok:")
+        status_hu = {"ACCEPTED": "orvos elfogadta", "MODIFIED": "orvos javította", "PENDING": "jóváhagyásra vár"}
+        for s in statements:
+            label = f"[{s['label']}] " if s.get("label") else ""
+            lines.append(f"- {label}{s['text']} ({s['date']}; {status_hu.get(s.get('reviewStatus'), '')})")
+
+    meds = facts.get("medications") or []
+    if meds:
+        lines.append("\nAktív gyógyszerek:")
+        for m in meds:
+            parts = [m["name"]] + [p for p in (m.get("activeIngredient"), m.get("dose"), m.get("route")) if p]
+            lines.append("- " + ", ".join(parts) + ("" if m.get("verified") else " (nem ellenőrzött)"))
+
+    allergies = facts.get("allergies") or []
+    if allergies:
+        lines.append("\nAllergiák: " + ", ".join(a["substance"] for a in allergies))
+
+    docs = facts.get("documents") or []
+    if docs:
+        kinds = {"LAB": "laborlelet", "AMBULANCE": "ambuláns lap", "IMAGING": "képalkotó"}
+        counts: dict[str, int] = {}
+        for d in docs:
+            counts[kinds.get(d["type"], d["type"])] = counts.get(kinds.get(d["type"], d["type"]), 0) + 1
+        lines.append("\nDokumentumok az időszakban: " + ", ".join(f"{n} {k}" for k, n in counts.items()))
+    return "\n".join(lines)
+
+
+def _norm_number(n: str) -> str:
+    n = n.replace(",", ".")
+    if "." in n:
+        n = n.rstrip("0").rstrip(".")
+    return n
+
+
+def unverified_numbers(text: str, facts_text: str) -> list[str]:
+    """Az "érdemi" számok (tizedes, vagy ≥ 10), amelyek a bemenetben nem szerepelnek."""
+    known = {_norm_number(n) for n in _NUMBER.findall(facts_text)}
+    out = []
+    for n in _NUMBER.findall(text):
+        significant = ("." in n or "," in n) or int(n.split(",")[0].split(".")[0]) >= 10
+        if significant and _norm_number(n) not in known and n not in out:
+            out.append(n)
+    return out
+
+
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+_ABNORMAL_WORDS = re.compile(r"emelked|magas|megnövek|fokozott|csökken|alacsony|kóros|eltér", re.IGNORECASE)
+
+
+def dedupe_sentences(text: str) -> tuple[str, int]:
+    """Az ismétlődő mondatok elhagyása (a modell hurok-hajlama ellen); (szöveg, elhagyott db)."""
+    seen: set[str] = set()
+    kept, dropped = [], 0
+    for sentence in _SENTENCE.split(text.strip()):
+        key = re.sub(r"\W+", " ", sentence).strip().casefold()
+        if not key:
+            continue
+        if key in seen:
+            dropped += 1
+            continue
+        seen.add(key)
+        kept.append(sentence.strip())
+    return " ".join(kept), dropped
+
+
+_NO_ABNORMAL = re.compile(r"nincs(?:enek)?\s+(?:kóros\s+)?eltérés|nem\s+mutat\s+eltérést|minden\s+érték\s+normál",
+                          re.IGNORECASE)
+
+
+def drop_false_normal(text: str, facts: dict) -> tuple[str, bool]:
+    """Ha van tartományon kívüli érték, a "nincs kóros eltérés" mondat hamis — elhagyjuk."""
+    if not any(lab.get("status") for lab in facts.get("labs") or []):
+        return text, False
+    kept = [s for s in _SENTENCE.split(text) if not _NO_ABNORMAL.search(s)]
+    dropped = len(kept) != len(_SENTENCE.split(text))
+    return " ".join(kept).strip(), dropped
+
+
+def contradictions(text: str, facts: dict) -> list[str]:
+    """Ha egy mondat egy (a szabálymotor szerint) normál vizsgálatot eltérőnek nevez, jelezzük —
+    a szabály a mérvadó, nem a modell."""
+    status: dict[str, bool] = {}
+    for lab in facts.get("labs") or []:
+        name = lab["name"]
+        status[name] = status.get(name, False) or bool(lab.get("status"))
+    out = []
+    for sentence in _SENTENCE.split(text):
+        low = sentence.casefold()
+        if not _ABNORMAL_WORDS.search(sentence):
+            continue
+        for name, abnormal in status.items():
+            head = re.split(r"[ (]", name, maxsplit=1)[0].casefold()
+            if not abnormal and len(head) >= 3 and re.search(r"\b" + re.escape(head) + r"\b", low):
+                msg = f"Ellentmondás: a(z) {name} a referenciatartományon belül van, az összefoglaló mégis eltérést említ"
+                if msg not in out:
+                    out.append(msg)
+    return out
+
+
+_CLAUSE = re.compile(r"[,.;:!?\n]")
+
+
+def _clause_key(c: str) -> str:
+    return re.sub(r"\W+", " ", c).strip().casefold()
+
+
+def _loop_start(text: str) -> int | None:
+    """Ha egy (legalább 3 szavas) tagmondat megismétlődik, az ismétlés kezdete; különben None."""
+    seen: set[str] = set()
+    pos = 0
+    for part in _CLAUSE.split(text):
+        key = _clause_key(part)
+        if len(key.split()) >= 3:
+            if key in seen:
+                return text.find(part, pos)
+            seen.add(key)
+        pos += len(part) + 1
+    return None
+
+
+def _stream_text(system: str, user: str, max_tokens: int) -> tuple[str, bool]:
+    """Szöveges generálás streamelve; hurok (ismétlődő tagmondat) esetén azonnal leáll, és a hurok
+    előtti utolsó teljes mondatig tartó részt adja vissza. (szöveg, volt-e hurok/csonkolás)"""
+    out = ""
+    cut = False
+    with requests.post(
+        f"{config.OLLAMA_URL}/api/chat",
+        json={"model": config.LLM_MODEL,
+              "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+              "stream": True,
+              "options": {**_OPTIONS, "seed": config.LLM_SEED, "num_ctx": config.LLM_NUM_CTX,
+                          "num_predict": max_tokens}},
+        stream=True, timeout=config.LLM_TIMEOUT_SEC,
+    ) as resp:
+        resp.raise_for_status()
+        for line in resp.iter_lines():
+            if not line:
+                continue
+            chunk = json.loads(line)
+            if "error" in chunk:
+                raise ValueError(f"Ollama-hiba: {chunk['error']}")
+            out += chunk.get("message", {}).get("content", "")
+            start = _loop_start(out)
+            if start is not None:
+                out, cut = out[:start], True
+                break
+            if chunk.get("done"):
+                cut = chunk.get("done_reason") == "length"
+                break
+    if cut:
+        # az utolsó teljes mondatig (ha nincs ilyen, ameddig van)
+        last = max(out.rfind("."), out.rfind("!"), out.rfind("?"), out.rfind("\n"))
+        out = out[:last + 1] if last > 0 else out.rstrip(" ,;:") + "."
+    return out.strip(), cut
+
+
+def _parse_recommendations(text: str) -> list[str]:
+    items = []
+    for line in text.splitlines():
+        line = re.sub(r"^\s*(?:[-•*→]|\d+[.)])\s*", "", line).strip()
+        if line and len(line) > 3:
+            items.append(line)
+    return list(OrderedDict.fromkeys(items))[:MAX_RECOMMENDATIONS]
+
+
+def summarize(facts: dict) -> dict:
+    """Az Ollama-hívások és az ellenőrzés; a Spring callback-jének törzse (DONE)."""
+    facts_text = render_facts(facts)
+    user = "A beteg tényei:\n\n" + facts_text
+    summary, summary_cut = _stream_text(SYSTEM_SUMMARY, user, 350)
+    if not summary:
+        raise ValueError("A modell nem adott használható összefoglalót")
+    recs_text, recs_cut = _stream_text(SYSTEM_RECOMMENDATIONS, user, 350)
+    recommendations = _parse_recommendations(recs_text)
+
+    summary, repeated = dedupe_sentences(summary)
+    warnings = []
+    summary, denied = drop_false_normal(summary, facts)
+    if denied:
+        warnings.append("Az összefoglaló egy mondata szerint nincs kóros eltérés, holott a referencia-szabály "
+                        "tartományon kívüli értéket talált — a mondatot elhagytuk")
+    if summary_cut or recs_cut or repeated:
+        warnings.append("A modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a szöveg az utolsó teljes "
+                        "mondatnál le lett zárva")
+    warnings += contradictions(summary + " " + " ".join(recommendations), facts)
+    warnings += [f"Ellenőrizetlen szám az összefoglalóban: {n} (nem szerepel a beteg adatai között)"
+                 for n in unverified_numbers(summary, facts_text)]
+    warnings += [f"Ellenőrizetlen szám a javaslatokban: {n} (nem szerepel a beteg adatai között)"
+                 for n in unverified_numbers(" ".join(recommendations), facts_text)]
+    return {
+        "status": "DONE",
+        "summary": summary[:4000],
+        "recommendations": [r[:500] for r in recommendations],
+        "warnings": [w[:500] for w in warnings],
+        "model": {"modelName": config.LLM_MODEL, "seed": config.LLM_SEED, "promptHash": prompt_hash(),
+                  "extractorVersion": config.EXTRACTOR_VERSION},
+    }

@@ -118,17 +118,17 @@ public class LabReferenceRangeRule {
 
     // ------------------------------------------------------------ kiértékelés
 
-    enum Verdict {
+    public enum Verdict {
         IN_RANGE, BELOW, ABOVE, DIFFERS, UNKNOWN;
 
-        boolean outOfRange() {
+        public boolean outOfRange() {
             return this == BELOW || this == ABOVE || this == DIFFERS;
         }
     }
 
     // Cenzorált értéknél (">90") csak akkor van döntés, ha a jelből BIZTOSAN következik
     // (">90" és felső határ 60 → felett; ">90" és felső 120 → nem tudható: UNKNOWN).
-    static Verdict evaluate(LabResult r) {
+    public static Verdict evaluate(LabResult r) {
         if (r.getValueText() != null) {
             if (r.getRefText() == null) {
                 return Verdict.UNKNOWN;

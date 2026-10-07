@@ -1,4 +1,5 @@
-"""Szekvenciális feldolgozó sor: egyszerre EGY dokumentum (GPU/VRAM), a többi vár.
+"""Szekvenciális feldolgozó sor: egyszerre EGY feladat (GPU/VRAM), a többi vár — dokumentum-
+feldolgozás és klinikai összefoglaló ugyanabban a sorban.
 
 A sorbaállítás itt van, nem a Springben: a Spring csak beadja a feladatot és 202-t kap.
 Egy dokumentum végén a callback elmegy, és csak utána jön a következő.
@@ -18,6 +19,7 @@ import config
 import embedding
 import extract
 import locate
+import summarize
 import llm
 from pdf_text import NoTextLayerError, extract_text
 
@@ -30,6 +32,29 @@ class Job:
     file_path: str
     callback_url: str
 
+    @property
+    def key(self) -> tuple:
+        return ("document", self.document_id)
+
+    @property
+    def label(self) -> str:
+        return f"dokumentum {self.document_id}"
+
+
+@dataclass(frozen=True, eq=False)
+class SummaryJob:
+    summary_id: int
+    callback_url: str
+    facts: dict
+
+    @property
+    def key(self) -> tuple:
+        return ("summary", self.summary_id)
+
+    @property
+    def label(self) -> str:
+        return f"összefoglaló {self.summary_id}"
+
 
 class ProcessingError(Exception):
     """Várt, a felhasználónak is értelmes hiba (FAILED callback az üzenettel)."""
@@ -37,18 +62,18 @@ class ProcessingError(Exception):
 
 class JobQueue:
     def __init__(self) -> None:
-        self._queue: queue.Queue[Job] = queue.Queue()
+        self._queue: queue.Queue[Job | SummaryJob] = queue.Queue()
         self._lock = threading.Lock()
-        self._pending: set[int] = set()  # sorban álló + éppen feldolgozott dokumentumok
-        self._current: int | None = None
+        self._pending: set[tuple] = set()  # sorban álló + éppen feldolgozott feladatok
+        self._current: str | None = None
 
-    def submit(self, job: Job) -> int | None:
+    def submit(self, job: "Job | SummaryJob") -> int | None:
         """Sorba állít; a sorban elfoglalt hely (0 = következő), vagy None, ha már bent van
         (ismételt értesítés ugyanarra a dokumentumra nem dolgozza fel kétszer)."""
         with self._lock:
-            if job.document_id in self._pending:
+            if job.key in self._pending:
                 return None
-            self._pending.add(job.document_id)
+            self._pending.add(job.key)
             position = self._queue.qsize()
             self._queue.put(job)
             return position
@@ -64,15 +89,15 @@ class JobQueue:
         while True:
             job = self._queue.get()
             with self._lock:
-                self._current = job.document_id
+                self._current = job.label
             try:
-                payload = process(job)
+                payload = summarize.summarize(job.facts) if isinstance(job, SummaryJob) else process(job)
             except Exception as e:  # noqa: BLE001 — minden hiba FAILED callback, a sor nem állhat le
-                log.exception("A(z) %s dokumentum feldolgozása sikertelen", job.document_id)
+                log.exception("A(z) %s feldolgozása sikertelen", job.label)
                 payload = {"status": "FAILED", "error": _error_message(e)}
             send_callback(job, payload)
             with self._lock:
-                self._pending.discard(job.document_id)
+                self._pending.discard(job.key)
                 self._current = None
             self._queue.task_done()
 
@@ -155,9 +180,9 @@ def process(job: Job) -> dict:
     }
 
 
-def send_callback(job: Job, payload: dict) -> None:
+def send_callback(job: "Job | SummaryJob", payload: dict) -> None:
     """Eredmény a Springnek. Hálózati hibánál / 5xx-nél újrapróbál. 4xx-nél a Spring már
-    FAILED-re állította a dokumentumot (vagy már lezárt) — egy rövid FAILED jelzés biztosítja,
+    FAILED-re állította a feladatot (vagy már lezárt) — egy rövid FAILED jelzés biztosítja,
     hogy olvashatatlan kérés esetén se maradjon PROCESSING-ben."""
     headers = {"X-Internal-Token": config.TOKEN}
     for attempt, delay in enumerate((0, *config.CALLBACK_RETRY_DELAYS_SEC)):
@@ -167,18 +192,18 @@ def send_callback(job: Job, payload: dict) -> None:
             resp = requests.post(job.callback_url, json=payload, headers=headers,
                                  timeout=config.CALLBACK_TIMEOUT_SEC)
         except requests.RequestException as e:
-            log.warning("Callback sikertelen (%s, %d. próbálkozás): %s", job.document_id, attempt + 1, e)
+            log.warning("Callback sikertelen (%s, %d. próbálkozás): %s", job.label, attempt + 1, e)
             continue
         if resp.status_code < 300:
-            log.info("Callback elfogadva: %s → %s", job.document_id, payload["status"])
+            log.info("Callback elfogadva: %s → %s", job.label, payload["status"])
             return
         if resp.status_code >= 500:
-            log.warning("Callback %d (%s), újrapróbálom", resp.status_code, job.document_id)
+            log.warning("Callback %d (%s), újrapróbálom", resp.status_code, job.label)
             continue
         log.error("A Spring elutasította az eredményt (%s, HTTP %d): %s",
-                  job.document_id, resp.status_code, resp.text[:1000])
-        if payload["status"] == "PROCESSED" and resp.status_code == 400:
+                  job.label, resp.status_code, resp.text[:1000])
+        if payload["status"] != "FAILED" and resp.status_code == 400:
             send_callback(job, {"status": "FAILED", "error": "A feldolgozás eredményét a backend elutasította: "
                                 + resp.text[:1500]})
         return
-    log.error("A(z) %s dokumentum eredménye nem jutott el a Springhez — PROCESSING-ben marad", job.document_id)
+    log.error("A(z) %s eredménye nem jutott el a Springhez — PROCESSING-ben marad", job.label)
