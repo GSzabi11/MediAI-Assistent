@@ -537,6 +537,10 @@ def lab_results(data: dict, text: str, warnings: list[str]) -> list[dict]:
             "refText": ref_text,
             "measuredAt": None,  # a Spring a dokumentum klinikai dátumát veszi (budapesti éjfél)
             "code": None if row_line is None else _row_code(lines[row_line], name),
+            # belső mezők a PDF-beli sor megkereséséhez (locate.add_source_boxes veszi ki őket)
+            "_head": _name_head(name),
+            "_value": value_text if value_text is not None else number_raw,
+            "_comparator": comparator,
         })
     return results
 

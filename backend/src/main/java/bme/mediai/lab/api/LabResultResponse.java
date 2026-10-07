@@ -27,13 +27,18 @@ public record LabResultResponse(
         BigDecimal refHigh,
         String refText,
         OffsetDateTime measuredAt,
-        String code
+        String code,
+        // a sor helye a lelet PDF-jében (kiemeléshez); null, ha nem ismert
+        LabSourceBox sourceBox
 ) {
     public static LabResultResponse from(LabResult result) {
         return new LabResultResponse(
                 result.getId(), result.getPatientId(), result.getDocumentId(), result.getGroupName(),
                 result.getName(), LabTestNames.canonical(result.getName()), result.getValueNum(), result.getComparator(), result.getValueText(), result.getUnit(),
                 LabTestNames.canonicalUnit(result.getUnit()),
-                result.getRefLow(), result.getRefHigh(), result.getRefText(), result.getMeasuredAt(), result.getCode());
+                result.getRefLow(), result.getRefHigh(), result.getRefText(), result.getMeasuredAt(), result.getCode(),
+                result.getSourcePage() == null ? null
+                        : new LabSourceBox(result.getSourcePage(), result.getSourceX(), result.getSourceY(),
+                                result.getSourceWidth(), result.getSourceHeight()));
     }
 }

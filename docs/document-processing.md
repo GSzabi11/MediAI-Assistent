@@ -146,6 +146,11 @@ törzset sem tudta értelmezni).
 
 ## Determinisztikus rétegek (nem modell)
 
+- **Sor helye a PDF-ben** (`locate.py`): a laborsorhoz a PyMuPDF szó-koordinátáiból azt a
+  vizuális sort keresi, amelyben a vizsgálat nevének eleje és utána az érték áll, és a teljes
+  sort `sourceBox`-ként küldi (`{page, x, y, width, height}`, normált). Ha nem találja,
+  figyelmeztetés, és a sor kiemelés nélkül jelenik meg.
+
 - **Típus** (`classify.py`): `laboratóriumi lelet` vagy `mikrobiológiai lelet` a szövegben →
   `LAB`, különben `AMBULANCE`. Kis/nagybetű-, ékezet-, whitespace- és sorvégi elválasztás-
   független.

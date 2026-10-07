@@ -274,6 +274,15 @@ export interface LaborIdosor {
   szovegesek: LaborSzovegesParameter[];
 }
 
+/** MERRE a PDF-ben: oldal + a laphoz normált (0–1) téglalap — a kinyeréskor rögzítve */
+export interface ForrasDoboz {
+  oldal: number;
+  x: number;
+  y: number;
+  szelesseg: number;
+  magassag: number;
+}
+
 /** Egy mérés minden adata (GET /lab-results/{id}) */
 export interface LaborReszlet {
   id: number;
@@ -294,6 +303,8 @@ export interface LaborReszlet {
   refSzoveg: string | null;
   idopont: string;
   kod: string | null;
+  /** a sor helye a lelet PDF-jében (kiemeléshez); null, ha nem ismert */
+  forrasDoboz: ForrasDoboz | null;
 }
 
 export interface UjLaborSor {

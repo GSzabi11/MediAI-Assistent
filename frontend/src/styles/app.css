@@ -548,6 +548,21 @@ a:hover {
 }
 
 /* ============ dokumentum ============ */
+/* feldolgozási infó, Kinyert szöveg / Eredeti PDF váltó, PDF — a fejléccel azonos margóval */
+.docview__section {
+  padding: 16px 28px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.docview__section > .pdfview {
+  align-self: stretch;
+  padding-bottom: 24px;
+}
+.docview__section:empty {
+  display: none;
+}
 .docview__text {
   padding: 24px 28px 32px;
   font-size: var(--fs-base);
@@ -1816,4 +1831,56 @@ select.input {
   .searchcard__or {
     padding-top: 0;
   }
+}
+
+/* Eredeti PDF (pdf.js) a kinyert érték sorának kiemelésével */
+.pdfview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pdfview__toolbar {
+  gap: 6px;
+}
+/* oldalra görgethető, ha nagyítva a lap szélesebb a panelnél */
+.pdfview__scroll {
+  overflow-x: auto;
+  position: relative;
+}
+.pdfview__pages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pdfview__page {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--c-line);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.pdfview__page canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pdfview__mark {
+  position: absolute;
+  background: rgba(255, 213, 0, 0.35);
+  outline: 2px solid var(--c-accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* a grafikon tooltipjének "Részletek →" gombja */
+.chart__more {
+  cursor: pointer;
+}
+.chart__more:hover text,
+.chart__more:focus-visible text {
+  text-decoration: underline;
+}
+.chart__more:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
 }

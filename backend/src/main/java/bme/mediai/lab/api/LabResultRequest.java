@@ -3,6 +3,7 @@ package bme.mediai.lab.api;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -48,6 +49,10 @@ public record LabResultRequest(
     OffsetDateTime measuredAt,
 
     @Size(max = 64)
-    String code
+    String code,
+
+    // A dokumentum-feldolgozás adja: az eredmény sora a lelet PDF-jében; kézi rögzítésnél null
+    @Valid
+    LabSourceBox sourceBox
 )
 {}

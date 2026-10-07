@@ -59,7 +59,12 @@ public class LabResultService {
                         r.refHigh(),
                         r.refText(),
                         measuredAtOf(r, document),
-                        r.code()))
+                        r.code(),
+                        r.sourceBox() == null ? null : r.sourceBox().page(),
+                        r.sourceBox() == null ? null : r.sourceBox().x(),
+                        r.sourceBox() == null ? null : r.sourceBox().y(),
+                        r.sourceBox() == null ? null : r.sourceBox().width(),
+                        r.sourceBox() == null ? null : r.sourceBox().height()))
                 .toList();
 
         return repository.saveAll(results)

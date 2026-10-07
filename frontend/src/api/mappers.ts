@@ -389,6 +389,13 @@ export const toLaborReszlet = (r: LabResultDto): LaborReszlet => ({
   refSzoveg: r.refText,
   idopont: r.measuredAt,
   kod: r.code,
+  forrasDoboz: r.sourceBox && {
+    oldal: r.sourceBox.page,
+    x: r.sourceBox.x,
+    y: r.sourceBox.y,
+    szelesseg: r.sourceBox.width,
+    magassag: r.sourceBox.height,
+  },
 });
 
 // ---------- gyógyszer + allergia + napló ----------

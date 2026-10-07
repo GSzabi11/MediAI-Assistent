@@ -253,6 +253,13 @@ a jelből biztosan következik).
   `ref_low <= ref_high`. `unit` nullázható (pl. pH, INR).
 - `measured_at`: ha hiányzik, a dokumentum `clinical_date`-je budapesti
   éjfélkor; ha az sincs, 400.
+- **MERRE (V21)**: `source_page` + `source_x/y/width/height` (a laphoz normált 0–1, mint az
+  állítások IMAGE forrása) — az eredmény sora a lelet PDF-jében. A dokumentum-feldolgozás
+  rögzíti (PyMuPDF szó-koordináták, `ai-service/docproc/locate.py`), nem a megjelenítéskor
+  keressük; a frontend ebből emeli ki a sort az eredeti PDF-ben. Mind az öt vagy egyik sem
+  (CHECK), csak dokumentumhoz tartozó sornál. A V21 előtti soroknál NULL (újrafeltöltéssel
+  pótolható). Entitáson explicit `@Column(name = "source_x")`: a névképzés a mező végi
+  egybetűs nagybetűnél nem tesz aláhúzást.
 - Trend: `GET /api/lab-results?patientId=&name=` időrendben. **Egységes név és
   mértékegység** (`LabTestNames`, olvasáskor számolva — a tárolt `name`/`unit` a leleten
   álló érték marad): `canonicalName` — az akkreditációs `(A)` nélkül, kézzel ellenőrzött

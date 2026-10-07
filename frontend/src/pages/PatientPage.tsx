@@ -122,6 +122,14 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
   const kezdet = params.get('kezdet');
   const veg = params.get('veg');
   const kiemeles = kezdet !== null && veg !== null ? { kezdet: Number(kezdet), veg: Number(veg) } : null;
+  // Laborsorból nyitva: az eredeti PDF, a sor kiemelésével (oldal + normált téglalap)
+  const pdfNezet = params.get('pdf') === '1';
+  const dobozParam = (params.get('doboz') ?? '').split(',').map(Number);
+  const oldalParam = Number(params.get('oldal'));
+  const pdfKiemeles =
+    dobozParam.length === 4 && dobozParam.every(Number.isFinite) && oldalParam >= 1
+      ? { oldal: oldalParam, x: dobozParam[0], y: dobozParam[1], szelesseg: dobozParam[2], magassag: dobozParam[3] }
+      : null;
   const felvetelParam = Number(params.get('felvetel'));
   const felvetelId = felvetelek.some((f) => f.id === felvetelParam) ? felvetelParam : felvetelek[0]?.id;
   const turnIds = (params.get('turn') ?? '').split(',').filter(Boolean).map(Number);
@@ -189,7 +197,9 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
               </Tab>
             ))}
           </div>
-          {nezet === 'dokumentum' && <DokumentumFul dokId={dokId} kiemeles={kiemeles} />}
+          {nezet === 'dokumentum' && (
+            <DokumentumFul dokId={dokId} kiemeles={kiemeles} pdfNezet={pdfNezet} pdfKiemeles={pdfKiemeles} />
+          )}
           {nezet === 'labor' && <LabTrend />}
           {nezet === 'atirat' && <AtiratFul felvetelId={felvetelId} turnIds={turnIds} />}
           {nezet === 'ellatas' && <EllatasPanel />}

@@ -285,6 +285,8 @@ export interface LabResultDto {
   refText: string | null;
   measuredAt: string;
   code: string | null;
+  /** az eredmény sora a lelet PDF-jében (normált 0–1); null, ha nem ismert */
+  sourceBox: { page: number; x: number; y: number; width: number; height: number } | null;
 }
 
 export interface LabBatchDto {

@@ -245,12 +245,23 @@ export function LabTrend() {
 
 /** GET /api/lab-results/{id} — egy mérés minden adata, a lelet megnyitásával. */
 function LaborReszletDoboz({ id, onClose }: { id: number; onClose: () => void }) {
+  const dobozRef = useRef<HTMLElement>(null);
+  // Megnyitáskor a görgető panel tetejére hozza a dobozt — a ragadós fülsáv (.ptabs) ALÁ, ami a
+  // szélességtől függően egy vagy két sor magas, ezért a tényleges magasságával számolunk
+  useEffect(() => {
+    const doboz = dobozRef.current;
+    const panel = doboz?.closest<HTMLElement>('.workspace > *');
+    if (!doboz || !panel) return;
+    const fulsav = panel.querySelector<HTMLElement>('.ptabs')?.offsetHeight ?? 0;
+    const cel = panel.scrollTop + doboz.getBoundingClientRect().top - panel.getBoundingClientRect().top - fulsav - 12;
+    panel.scrollTo({ top: Math.max(0, cel), behavior: 'smooth' });
+  }, [id]);
   const { patient } = usePatient();
   const navigate = useNavigate();
   const { state, reload } = useAsync(() => api.getLaborMeres(id), [id]);
 
   return (
-    <section className="detailbox" aria-label="Mérés részletei">
+    <section ref={dobozRef} className="detailbox" aria-label="Mérés részletei">
       <div className="row-baseline">
         <strong>Mérés részletei</strong>
         <button
@@ -302,7 +313,11 @@ function LaborReszletDoboz({ id, onClose }: { id: number; onClose: () => void })
               <button
                 type="button"
                 className="linkbtn"
-                onClick={() => navigate(`/betegek/${patient.id}?nezet=dokumentum&dok=${state.data.dokumentumId}`)}
+                onClick={() => {
+                  const d = state.data.forrasDoboz;
+                  const doboz = d ? `&oldal=${d.oldal}&doboz=${[d.x, d.y, d.szelesseg, d.magassag].join(',')}` : '';
+                  navigate(`/betegek/${patient.id}?nezet=dokumentum&dok=${state.data.dokumentumId}&pdf=1${doboz}`);
+                }}
               >
                 Dokumentum #{state.data.dokumentumId} megnyitása →
               </button>
@@ -525,6 +540,10 @@ function useWidth<T extends HTMLElement>() {
 
 function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number) => void }) {
   const [hover, setHover] = useState<number | null>(null);
+  // Pontra kattintva a tooltip rögzül (nem nyitja meg rögtön a részleteket); a részleteket a
+  // tooltip "Részletek →" gombja nyitja. Újabb kattintás ugyanarra a pontra / Esc: elengedi.
+  const [kijelolt, setKijelolt] = useState<number | null>(null);
+  const valt = (i: number) => setKijelolt((k) => (k === i ? null : i));
   const [wrapRef, W] = useWidth<HTMLDivElement>();
   const X0 = 60,
     X1 = W - 28,
@@ -559,7 +578,8 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
   const bandBot = y(Math.max(p.refAlso ?? lo, lo));
   const ticks = [p.refAlso, p.refFelso].filter((v): v is number => v !== null);
 
-  const h = hover !== null ? ms[hover] : null;
+  const aktiv = kijelolt ?? hover;
+  const h = aktiv !== null ? (ms[aktiv] ?? null) : null;
   const tipX = h ? Math.min(Math.max(x(h) - 172, 48), W - 170) : 0;
 
   return (
@@ -584,6 +604,7 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
           role="img"
           aria-label={`${p.nev}: ${ms.map((m) => `${formatDatum(m.datum)} ${ertekSzoveg(m.ertek, d, m.jel)}`).join('; ')}`}
           onMouseLeave={() => setHover(null)}
+          onKeyDown={(e) => e.key === 'Escape' && setKijelolt(null)}
         >
           <rect x={L} y={bandTop} width={R - L} height={Math.max(0, bandBot - bandTop)} fill="var(--c-ref-band)" />
           {ticks.map((t) => (
@@ -645,12 +666,13 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
                   className="hit"
                   tabIndex={0}
                   role="button"
-                  aria-label={`${formatDatum(m.datum)}: ${p.nev} ${ertekSzoveg(m.ertek, d, m.jel)}${statusz(p, m.ertek, m.jel) ? ', ' + statusz(p, m.ertek, m.jel) : ''}. Részletek.`}
+                  aria-pressed={kijelolt === i}
+                  aria-label={`${formatDatum(m.datum)}: ${p.nev} ${ertekSzoveg(m.ertek, d, m.jel)}${statusz(p, m.ertek, m.jel) ? ', ' + statusz(p, m.ertek, m.jel) : ''}. Kiválasztás.`}
                   onMouseEnter={() => setHover(i)}
                   onFocus={() => setHover(i)}
                   onBlur={() => setHover(null)}
-                  onClick={() => onValaszt(m.id)}
-                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onValaszt(m.id))}
+                  onClick={() => valt(i)}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), valt(i))}
                 />
               </g>
             );
@@ -668,7 +690,7 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
             </text>
           )}
           {h && (
-            <g pointerEvents="none">
+            <g>
               <rect
                 x={tipX}
                 y={10}
@@ -677,17 +699,30 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
                 rx={4}
                 fill="var(--c-surface)"
                 stroke="var(--c-ink)"
-                strokeWidth={1.5}
+                strokeWidth={kijelolt !== null ? 2.5 : 1.5}
+                pointerEvents="none"
               />
-              <text x={tipX + 10} y={28} fontSize={11} fill="var(--c-ink-muted)">
+              <text x={tipX + 10} y={28} fontSize={11} fill="var(--c-ink-muted)" pointerEvents="none">
                 {formatDatum(h.datum)} · {h.dokumentumId !== null ? 'Laborlelet' : 'kézi rögzítés'}
               </text>
-              <text x={tipX + 10} y={46} fontSize={14} fontWeight={700} fill="var(--c-ink)">
+              <text x={tipX + 10} y={46} fontSize={14} fontWeight={700} fill="var(--c-ink)" pointerEvents="none">
                 {p.nev} {ertekSzoveg(h.ertek, d, h.jel)} {statusz(p, h.ertek, h.jel) ?? ''}
               </text>
-              <text x={tipX + 10} y={60} fontSize={11} fontWeight={700} fill="var(--c-accent)">
-                Részletek →
-              </text>
+              {/* csak ez nyitja meg a Mérés részleteit */}
+              <g
+                className="chart__more"
+                role="button"
+                tabIndex={0}
+                aria-label={`${p.nev} ${formatDatum(h.datum)}: mérés részletei`}
+                onMouseEnter={() => aktiv !== null && setHover(aktiv)}
+                onClick={() => onValaszt(h.id)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onValaszt(h.id))}
+              >
+                <rect x={tipX + 6} y={50} width={84} height={14} fill="transparent" />
+                <text x={tipX + 10} y={60} fontSize={11} fontWeight={700} fill="var(--c-accent)">
+                  Részletek →
+                </text>
+              </g>
             </g>
           )}
         </svg>

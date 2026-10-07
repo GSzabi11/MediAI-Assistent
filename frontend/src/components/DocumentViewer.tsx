@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from '../api';
-import type { DokumentumResponse } from '../api/types';
+import type { DokumentumResponse, ForrasDoboz } from '../api/types';
 import { formatDatum, formatMeret } from '../lib/format';
 import { kijeloltTartomany } from '../lib/kijeles';
 import { useAkcio } from '../lib/useAkcio';
@@ -9,7 +9,11 @@ import { usePatient } from '../patient/PatientContext';
 import { IdezetForm } from './allitas/IdezetForm';
 import { Icon } from './Icon';
 import { KinyertSzovegForm, RagDarabok } from './DokumentumReszek';
+import { Segmented } from './Segmented';
 import { ErrorState, Loading, PatientMatch } from './shell';
+
+// A pdf.js nagy: csak akkor töltődik le, ha valaki ténylegesen megnyit egy PDF-et
+const PdfNezet = lazy(() => import('./PdfNezet').then((m) => ({ default: m.PdfNezet })));
 
 export interface Kiemeles {
   kezdet: number;
@@ -26,7 +30,20 @@ type Kijeloles = { kezdet: number; veg: number; szoveg: string };
  *
  * A kijelölt szövegrész szó szerinti idézet-állításként rögzíthető.
  */
-export function DocumentViewer({ dokumentumId, kiemeles }: { dokumentumId: number; kiemeles: Kiemeles | null }) {
+export function DocumentViewer({
+  dokumentumId,
+  kiemeles,
+  pdfNezet = false,
+  pdfKiemeles = null,
+}: {
+  dokumentumId: number;
+  kiemeles: Kiemeles | null;
+  /** laborsorból nyitva: az eredeti PDF-fel indul */
+  pdfNezet?: boolean;
+  /** a kiemelendő sor a PDF-ben (a kinyeréskor rögzített hely) */
+  pdfKiemeles?: ForrasDoboz | null;
+}) {
+  const [mod, setMod] = useState<'szoveg' | 'pdf'>(pdfNezet ? 'pdf' : 'szoveg');
   const { patient, frissit, dokumentumok } = usePatient();
   // A lista (PatientPage) feldolgozás alatt 5 mp-enként frissül; ha ott az állapot változik
   // (PROCESSING → PROCESSED/FAILED), a megnyitott dokumentum is újratöltődik a kinyert szöveggel
@@ -115,9 +132,37 @@ export function DocumentViewer({ dokumentumId, kiemeles }: { dokumentumId: numbe
         <PatientMatch active={patient} contentPatientId={doc.patientId} what="Dokumentum" />
       </div>
 
-      {sameP && <FeldolgozasInfo doc={doc} />}
+      {sameP && (
+        <div className="docview__section">
+          <FeldolgozasInfo doc={doc} />
+          {doc.mimeTipus === 'application/pdf' && (
+            <Segmented
+              label="Megjelenítés"
+              value={mod}
+              onChange={setMod}
+              options={[
+                ['szoveg', 'Kinyert szöveg'],
+                ['pdf', 'Eredeti PDF'],
+              ]}
+            />
+          )}
+          {mod === 'pdf' && doc.mimeTipus === 'application/pdf' && (
+            <>
+              {pdfNezet && !pdfKiemeles && (
+                <p className="meta">
+                  Ennek a mérésnek nincs rögzített helye a leletben (a hely-rögzítés előtt dolgozták fel) — kiemelés
+                  nélkül.
+                </p>
+              )}
+              <Suspense fallback={<Loading what="PDF-megjelenítő" />}>
+                <PdfNezet dokumentumId={doc.id} kiemeles={pdfKiemeles} />
+              </Suspense>
+            </>
+          )}
+        </div>
+      )}
 
-      {sameP && doc.szoveg === null && doc.allapot !== 'feldolgozas' && (
+      {sameP && mod === 'szoveg' && doc.szoveg === null && doc.allapot !== 'feldolgozas' && (
         <KinyertSzovegForm
           dokumentum={doc}
           onSaved={() => {
@@ -127,7 +172,7 @@ export function DocumentViewer({ dokumentumId, kiemeles }: { dokumentumId: numbe
         />
       )}
 
-      {sameP && doc.szoveg !== null && (
+      {sameP && (mod === 'szoveg' || doc.mimeTipus !== 'application/pdf') && doc.szoveg !== null && (
         <>
           <div
             ref={textRef}

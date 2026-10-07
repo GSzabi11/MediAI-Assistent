@@ -17,6 +17,7 @@ import classify
 import config
 import embedding
 import extract
+import locate
 import llm
 from pdf_text import NoTextLayerError, extract_text
 
@@ -97,7 +98,8 @@ def process(job: Job) -> dict:
     started = time.monotonic()
     warnings: list[str] = []
 
-    text = extract_text(_resolve_path(job.file_path))
+    pdf_path = _resolve_path(job.file_path)
+    text = extract_text(pdf_path)
     doc_type = classify.classify(text)  # determinisztikus, nem modell
     log.info("Dokumentum %s: %s, %d karakter", job.document_id, doc_type, len(text))
 
@@ -118,6 +120,11 @@ def process(job: Job) -> dict:
     statements: list[dict] = []
     if doc_type == classify.LAB:
         lab_results = extract.lab_results(data, text, warnings)
+        # MERRE: az eredmény sora a PDF lapján (a frontend kiemeli)
+        locate.add_source_boxes(pdf_path, lab_results)
+        missing = sum(1 for r in lab_results if r["sourceBox"] is None)
+        if missing:
+            warnings.append(f"{missing} laborsor helye nem található a PDF-ben (kiemelés nélkül jelenik meg)")
     else:
         statements = extract.ambulance_statements(data, text, warnings)
 
