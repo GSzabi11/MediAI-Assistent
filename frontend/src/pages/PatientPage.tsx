@@ -274,54 +274,75 @@ function dokLink(patientId: number, d: DokumentumListItem) {
   return `/betegek/${patientId}?nezet=dokumentum&dok=${d.id}`;
 }
 
+/** Legfrissebb elöl (klinikai dátum, ennek hiányában a feltöltés ideje; azonosnál az újabb id) */
+const ujabbElol =
+  <T extends { id: number }>(datum: (x: T) => string) =>
+  (a: T, b: T) =>
+    new Date(datum(b)).getTime() - new Date(datum(a)).getTime() || b.id - a.id;
+const dokSorrend = ujabbElol<DokumentumListItem>((d) => d.datum);
+
+/**
+ * Összecsukott forrássáv: négy gyors művelet — a legfrissebb dokumentum, a legfrissebb laborlelet,
+ * dokumentum feltöltése, új hangfelvétel. A teljes, csoportosított lista a kinyitott panelen van.
+ */
 function SourcesRail({ onExpand, dokId, nezet }: { onExpand: () => void; dokId?: number; nezet: Nezet }) {
-  const { patient, dokumentumok, felvetelek } = usePatient();
-  const labor = dokumentumok.filter((d) => d.tipus === 'labor');
+  const { patient, dokumentumok } = usePatient();
+  const laborok = dokumentumok.filter((d) => d.tipus === 'labor').sort(dokSorrend);
+  const egyebek = dokumentumok.filter((d) => d.tipus !== 'labor').sort(dokSorrend);
+  const megnyitott = nezet === 'dokumentum' ? dokumentumok.find((d) => d.id === dokId) : undefined;
+  const legfrissebb = egyebek[0];
+  const legfrissebbLabor = laborok[0];
   return (
     <nav className="rail" aria-label="Források (összecsukva)">
       <button type="button" className="iconbtn iconbtn--ghost" aria-label="Források kinyitása" onClick={onExpand}>
         <Icon name="expandRight" size={20} />
       </button>
       <span className="rail__sep" />
-      {dokumentumok
-        .filter((d) => d.tipus !== 'labor')
-        .map((d) => (
-          <Link
-            key={d.id}
-            to={dokLink(patient.id, d)}
-            className={`iconbtn${d.id === dokId ? ' iconbtn--on' : ''}`}
-            aria-label={`${d.cim}, ${formatDatum(d.datum)}`}
-          >
-            <Icon name="doc" size={20} strokeWidth={2} />
-          </Link>
-        ))}
-      {labor.length > 0 && (
+      {legfrissebb ? (
         <Link
-          to={`/betegek/${patient.id}?nezet=labor`}
-          className={`iconbtn${nezet === 'labor' ? ' iconbtn--on' : ''}`}
-          aria-label={`Laborleletek (${labor.length})`}
+          to={dokLink(patient.id, legfrissebb)}
+          className={`iconbtn${megnyitott && megnyitott.tipus !== 'labor' ? ' iconbtn--on' : ''}`}
+          aria-label={`Legfrissebb dokumentum: ${legfrissebb.cim}, ${formatDatum(legfrissebb.datum)}`}
+          title={`Legfrissebb dokumentum: ${legfrissebb.cim} (${formatDatum(legfrissebb.datum)})`}
+        >
+          <Icon name="doc" size={20} strokeWidth={2} />
+        </Link>
+      ) : (
+        <span className="iconbtn iconbtn--disabled" aria-label="Nincs dokumentum" title="Nincs dokumentum">
+          <Icon name="doc" size={20} strokeWidth={2} />
+        </span>
+      )}
+      {legfrissebbLabor ? (
+        <Link
+          to={dokLink(patient.id, legfrissebbLabor)}
+          className={`iconbtn${megnyitott && megnyitott.tipus === 'labor' ? ' iconbtn--on' : ''}`}
+          aria-label={`Legfrissebb laborlelet: ${formatDatum(legfrissebbLabor.datum)}`}
+          title={`Legfrissebb laborlelet (${formatDatum(legfrissebbLabor.datum)})`}
         >
           <Icon name="flask" size={20} strokeWidth={2} />
         </Link>
+      ) : (
+        <span className="iconbtn iconbtn--disabled" aria-label="Nincs laborlelet" title="Nincs laborlelet">
+          <Icon name="flask" size={20} strokeWidth={2} />
+        </span>
       )}
       <Link
         to={`/betegek/${patient.id}?nezet=dokumentum&feltoltes=1`}
         className="iconbtn iconbtn--ghost"
         aria-label="Dokumentum feltöltése"
+        title="Dokumentum feltöltése"
       >
         <Icon name="upload" size={20} strokeWidth={2} />
       </Link>
       <span className="rail__sep" />
-      {felvetelek.map((f) => (
-        <Link
-          key={f.id}
-          to={`/betegek/${patient.id}?nezet=atirat&felvetel=${f.id}`}
-          className={`iconbtn${nezet === 'atirat' ? ' iconbtn--on' : ''}`}
-          aria-label={`Felvétel #${f.id}`}
-        >
-          <Icon name="mic" size={20} strokeWidth={2} />
-        </Link>
-      ))}
+      <Link
+        to={`/betegek/${patient.id}?nezet=atirat&uj=felvetel`}
+        className={`iconbtn${nezet === 'atirat' ? ' iconbtn--on' : ''}`}
+        aria-label="Új hangfelvétel"
+        title="Új hangfelvétel"
+      >
+        <Icon name="mic" size={20} strokeWidth={2} />
+      </Link>
     </nav>
   );
 }
@@ -380,13 +401,11 @@ function SourcesPanel({
           <Icon name="expandLeft" size={18} />
         </button>
       </div>
-      {csoport(
-        'Dokumentumok',
-        dokumentumok.filter((d) => d.tipus !== 'labor'),
-      )}
+      {/* csoportonként időrendben, a legfrissebb elöl */}
+      {csoport('Dokumentumok', dokumentumok.filter((d) => d.tipus !== 'labor').sort(dokSorrend))}
       {csoport(
         `Laborleletek · ${dokumentumok.filter((d) => d.tipus === 'labor').length}`,
-        dokumentumok.filter((d) => d.tipus === 'labor').sort((a, b) => b.datum.localeCompare(a.datum)),
+        dokumentumok.filter((d) => d.tipus === 'labor').sort(dokSorrend),
       )}
       <Link to={`/betegek/${patient.id}?nezet=dokumentum&feltoltes=1`} className="navitem navitem--add">
         <span className="row-inline">
@@ -396,7 +415,7 @@ function SourcesPanel({
       </Link>
       <div className="navgroup">
         <span className="label">Hangfelvételek</span>
-        {felvetelek.map((f) => (
+        {[...felvetelek].sort(ujabbElol((f) => f.kezdes)).map((f) => (
           <Link
             key={f.id}
             to={`/betegek/${patient.id}?nezet=atirat&felvetel=${f.id}`}

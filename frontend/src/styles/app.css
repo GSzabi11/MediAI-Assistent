@@ -2076,3 +2076,9 @@ select.input {
 .devchip:focus-visible {
   text-decoration: underline;
 }
+
+/* összecsukott forrássáv: nincs mit megnyitni (pl. még nincs laborlelet) */
+.iconbtn--disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
