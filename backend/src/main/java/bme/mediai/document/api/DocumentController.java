@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import bme.mediai.document.persistence.DocumentStatus;
 import bme.mediai.document.persistence.DocumentType;
 import bme.mediai.document.service.DocumentService;
 
@@ -25,17 +26,21 @@ public class DocumentController {
         this.service = service;
     }
 
-    // multipart/form-data: file + patientId + type (+ clinicalDate) — a mezők a törzsben jönnek
+    // multipart/form-data: file + patientId (+ type, clinicalDate) — a mezők a törzsben jönnek.
+    // PDF: type/clinicalDate nélkül, 202 Accepted — a feldolgozás a háttérben fut, az állapot a
+    // Location-ön követhető (status: PROCESSING → PROCESSED | FAILED). Más fájl: type kötelező, 201.
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DocumentResponse> upload(
             @RequestPart("file") MultipartFile file,
             @RequestParam Long patientId,
-            @RequestParam DocumentType type,
+            @RequestParam(required = false) DocumentType type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate clinicalDate) {
         DocumentResponse created = service.upload(patientId, type, clinicalDate, file);
-        return ResponseEntity
-                .created(URI.create("/api/documents/" + created.id()))
-                .body(created);
+        URI location = URI.create("/api/documents/" + created.id());
+        if (created.status() == DocumentStatus.PROCESSING) {
+            return ResponseEntity.accepted().location(location).body(created);
+        }
+        return ResponseEntity.created(location).body(created);
     }
 
     @GetMapping("/{id}")

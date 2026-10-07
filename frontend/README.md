@@ -50,14 +50,14 @@ src/
     dto.ts         a backend DTO-k PONTOS tükre (…/api/*Request.java, *Response.java)
     types.ts       nézet-típusok — ezt látják a komponensek
     mappers.ts     DTO ↔ nézet leképezés (egyetlen helyen)
-    importok.ts    gépi formátumok ellenőrzése (Python átirat, RAG-darabok, állítások)
+    importok.ts    gépi formátumok ellenőrzése (Python átirat, RAG-darabok)
     index.ts       az api-kliens: mind a 46 végpont
     http.ts        fetch-wrapper: X-User-Id fejléc, ProblemDetail-hibák, multipart, blob
     currentUser.ts a belépett felhasználó (id, név, szerepkör)
   patient/
     PatientContext.tsx   az aktív beteg egyetlen igazságforrása + csendes frissítés
   components/
-    allitas/       kártya, lista, jóváhagyás (+ előzmény, új döntés), idézet, import
+    allitas/       kártya, lista, jóváhagyás (+ előzmény, új döntés), idézet
     DokumentumFul / DocumentViewer / DokumentumReszek   feltöltés, szöveg, kijelölés → idézet, RAG
     AtiratFul / TranscriptView   új felvétel, állapotgép, átirat-import, idézet a megszólalásból
     LabTrend.tsx         diagram + táblázat, szűrés, mérés részletei, panel rögzítése
@@ -81,8 +81,8 @@ src/
 | Beteg | `GET /patients`, `POST /patients/search`, `POST /patients`, `GET /patients/{id}` |
 | Ellátás | `GET /medical-cares?patientId=`, `GET /medical-cares/{id}`, `POST /medical-cares`, `POST …/{id}/close` |
 | Felvétel, átirat | `GET /recordings?patientId=`, `GET /recordings/{id}`, `POST /recordings`, `PATCH …/{id}/status`, `GET`/`POST /recordings/{id}/utterances` |
-| Dokumentum | `GET /documents?patientId=`, `GET /documents/{id}`, `POST /documents` (multipart), `GET …/file`, `GET`/`PUT …/text`, `GET`/`POST …/chunks` |
-| Állítás | `GET /statements?patientId=`, `GET /statements/{id}`, `POST /statements` (kijelölt idézet, JSON-import), `GET`/`POST …/{id}/approvals` |
+| Dokumentum | `GET /documents?patientId=`, `GET /documents/{id}`, `POST /documents` (multipart; PDF típus nélkül → háttérben AI-feldolgozás, a lista 5 mp-enként frissül, amíg tart), `GET …/file`, `GET`/`PUT …/text`, `GET`/`POST …/chunks` |
+| Állítás | `GET /statements?patientId=`, `GET /statements/{id}`, `POST /statements` (kijelölt idézet), `GET`/`POST …/{id}/approvals` |
 | Labor | `GET /lab-results?patientId=` (`&name=`), `GET /lab-results/{id}`, `POST /lab-results` |
 | Gyógyszer, allergia | `GET /medications?patientId=&activeOnly=`, `GET /medications/{id}`, `POST /medications`, `POST …/{id}/discontinue` · `GET /allergies?patientId=`, `GET /allergies/{id}`, `POST /allergies` |
 | Napló | `GET /access-logs?patientId=` (beteg Napló fül), `GET /access-logs?userId=` (profil, admin) |
@@ -91,8 +91,8 @@ src/
 **Gépi formátumok** (a felületről importálhatók, a kliens előbb ellenőrzi):
 átirat — a Python `beszed_pipeline.py` kimenete (`chat`: `orvos/beteg/egyéb`
 → `DOCTOR/PATIENT/OTHER`, másodperc → ms) vagy a backend `utterances` tömbje;
-RAG-darabok — `{ embeddingModel, chunks: [{ charStart, charEnd, embedding[1024] }] }`;
-állítások — `StatementCreateRequest` tömb (más beteg eleme és szabály-állítás kimarad).
+RAG-darabok — `{ embeddingModel, chunks: [{ charStart, charEnd, embedding[1024] }] }`.
+Állítás csak kézzel, kijelölt idézetként hozható létre a felületről (`RETRIEVED_FACT`).
 
 ## Biztonsági invariánsok a kódban
 

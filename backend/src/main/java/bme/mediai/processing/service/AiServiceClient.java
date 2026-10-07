@@ -1,0 +1,51 @@
+package bme.mediai.processing.service;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+
+import bme.mediai.processing.api.ProcessingJobRequest;
+
+// Spring → Python. A Spring sosem hívja az Ollamát: a modellt, a promptot és a GPU-sort
+// a Python szolgáltatás kezeli, a Spring csak a feladatot adja át.
+@Component
+public class AiServiceClient {
+
+    private final RestClient restClient;
+    private final InternalTokenVerifier token;
+    private final String callbackBaseUrl;
+
+    public AiServiceClient(@Value("${mediai.ai-service.url}") String baseUrl,
+            @Value("${mediai.ai-service.callback-base-url}") String callbackBaseUrl,
+            InternalTokenVerifier token) {
+        // HTTP/1.1: alapból h2c-upgrade-et kérne, amit az uvicorn nem támogat (csak figyelmeztet)
+        HttpClient http = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
+        // A Python csak sorba állít, azonnal válaszol — a feldolgozás idejét nem itt várjuk ki
+        factory.setReadTimeout(Duration.ofSeconds(15));
+        this.restClient = RestClient.builder().baseUrl(baseUrl).requestFactory(factory).build();
+        this.token = token;
+        this.callbackBaseUrl = callbackBaseUrl.replaceAll("/+$", "");
+    }
+
+    // RestClientException, ha a szolgáltatás nem érhető el vagy nem 2xx-et ad
+    public void submit(Long documentId, String filePath) {
+        ProcessingJobRequest job = new ProcessingJobRequest(documentId, filePath,
+                callbackBaseUrl + "/api/documents/" + documentId + "/processing-result");
+        restClient.post()
+                .uri("/jobs")
+                .header(InternalTokenVerifier.HEADER, token.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(job)
+                .retrieve()
+                .toBodilessEntity();
+    }
+}

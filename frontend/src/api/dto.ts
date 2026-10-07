@@ -169,16 +169,24 @@ export interface ApprovalDto {
 // ---------- document + chunk ----------
 export type DocumentTypeDto = 'LAB' | 'AMBULANCE' | 'IMAGING';
 
+export type DocumentStatusDto = 'PROCESSING' | 'PROCESSED' | 'FAILED';
+
 export interface DocumentDto {
   id: number;
   patientId: number;
-  type: DocumentTypeDto;
+  /** PDF-nél PROCESSING alatt null: az automatikus feldolgozás sorolja be */
+  type: DocumentTypeDto | null;
+  status: DocumentStatusDto;
   mimeType: string;
   sizeBytes: number;
   sha256: string;
   hasExtractedText: boolean;
   clinicalDate: string | null;
   uploadedAt: string;
+  processedAt: string | null;
+  processingError: string | null;
+  processingWarnings: string[];
+  extraction: { model: string; seed: number; promptHash: string; extractorVersion: string } | null;
 }
 
 export interface ChunkDto {
@@ -251,16 +259,30 @@ export interface UtteranceCreateDto {
 }
 
 // ---------- lab ----------
+export type LabComparatorDto = '<' | '<=' | '>' | '>=';
+
 export interface LabResultDto {
   id: number;
   patientId: number;
   documentId: number | null;
   groupName: string | null;
+  /** a leleten álló név, változatlanul */
   name: string;
-  value: number;
+  /** egységes név a trendhez (backend LabTestNames: "(A)" nélkül, szinonimák összevonva) */
+  canonicalName: string;
+  /** számérték; kvalitatív eredménynél null (ilyenkor valueText) */
+  value: number | null;
+  /** cenzorált eredmény (pl. ">90"): a value a határ; null = pontos érték */
+  comparator: LabComparatorDto | null;
+  /** kvalitatív eredmény szó szerint ("Negatív", "kevés") */
+  valueText: string | null;
   unit: string | null;
+  /** egységes mértékegység-írásmód ("Giga/L" → "G/L"), 1:1, átváltás nélkül */
+  canonicalUnit: string | null;
   refLow: number | null;
   refHigh: number | null;
+  /** szöveges referencia ("Negatív") */
+  refText: string | null;
   measuredAt: string;
   code: string | null;
 }
@@ -281,6 +303,9 @@ export interface LabBatchDto {
 }
 
 // ---------- medication + allergy ----------
+/** DOCUMENT_PIPELINE: a dokumentum-feldolgozás írta be; verified = a forrás-állítást orvos elfogadta */
+export type EntryOriginDto = 'MANUAL' | 'DOCUMENT_PIPELINE';
+
 export interface MedicationDto {
   id: number;
   patientId: number;
@@ -291,6 +316,8 @@ export interface MedicationDto {
   route: string | null;
   sourceStatementId: number | null;
   active: boolean;
+  origin: EntryOriginDto;
+  verified: boolean;
 }
 
 export interface MedicationCreateDto {
@@ -308,6 +335,8 @@ export interface AllergyDto {
   patientId: number;
   substance: string;
   sourceStatementId: number | null;
+  origin: EntryOriginDto;
+  verified: boolean;
 }
 
 export interface AllergyCreateDto {

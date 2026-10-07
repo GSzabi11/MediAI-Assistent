@@ -17,6 +17,8 @@ import bme.mediai.allergy.exception.AllergyNotFoundException;
 import bme.mediai.allergy.exception.DuplicateAllergyException;
 import bme.mediai.document.exception.ChunksAlreadyExistException;
 import bme.mediai.document.exception.DocumentNotFoundException;
+import bme.mediai.document.exception.DocumentNotProcessingException;
+import bme.mediai.document.exception.DocumentProcessingException;
 import bme.mediai.document.exception.DuplicateDocumentException;
 import bme.mediai.document.exception.ExtractedTextAlreadySetException;
 import bme.mediai.document.exception.ExtractedTextMissingException;
@@ -28,6 +30,7 @@ import bme.mediai.medicalcare.exception.MedicalCarePatientMismatchException;
 import bme.mediai.medication.exception.MedicationAlreadyDiscontinuedException;
 import bme.mediai.medication.exception.MedicationNotFoundException;
 import bme.mediai.patient.exception.PatientNotFoundException;
+import bme.mediai.processing.exception.InvalidCallbackTokenException;
 import bme.mediai.patient.exception.TajConflictException;
 import bme.mediai.recording.exception.InvalidStatusTransitionException;
 import bme.mediai.recording.exception.RecordingNotFoundException;
@@ -123,9 +126,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({DuplicateDocumentException.class, ExtractedTextAlreadySetException.class,
-            ExtractedTextMissingException.class, ChunksAlreadyExistException.class})
+            ExtractedTextMissingException.class, ChunksAlreadyExistException.class,
+            DocumentProcessingException.class, DocumentNotProcessingException.class})
     ProblemDetail handleDocumentConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCallbackTokenException.class)
+    ProblemDetail handleInvalidCallbackToken(InvalidCallbackTokenException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     @ExceptionHandler(LabResultNotFoundException.class)
@@ -165,6 +174,8 @@ public class GlobalExceptionHandler {
 
     // --- A Spring saját hibái is ProblemDetail-t adjanak, olvasható `detail`-lel: különben a
     // --- kliens csak annyit lát, hogy „400”, és nem tudja megmondani, melyik mező a hibás.
+
+    
     // @Valid bukás: mezőnként a validációs üzenet (pl. "results[1].value: ...")
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ProblemDetail handleValidation(MethodArgumentNotValidException ex) {

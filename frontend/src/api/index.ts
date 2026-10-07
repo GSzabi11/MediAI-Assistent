@@ -25,7 +25,7 @@ import type {
   VoiceProfileDto,
 } from './dto';
 import { http } from './http';
-import { parseAllitasok, parseMegszolalasok, parseRagDarabok } from './importok';
+import { parseMegszolalasok, parseRagDarabok } from './importok';
 import {
   allapotDto,
   dokTipusDto,
@@ -134,9 +134,7 @@ export const api = {
   /** POST /users/search — felhasználónévre vagy emailre (törzsben: az email személyes adat); nincs → null */
   keresFelhasznalo: async (q: { felhasznalonev?: string; email?: string }) => {
     try {
-      return toFelhasznalo(
-        await http.post<UserDto>('/users/search', { username: q.felhasznalonev, email: q.email }),
-      );
+      return toFelhasznalo(await http.post<UserDto>('/users/search', { username: q.felhasznalonev, email: q.email }));
     } catch (e) {
       if (is404(e)) return null;
       throw e;
@@ -276,13 +274,17 @@ export const api = {
     return { ...d, szoveg };
   },
 
-  /** POST /documents (multipart) — a hash-t, méretet, típust a szerver számolja */
+  /**
+   * POST /documents (multipart) — a hash-t, méretet, MIME-típust a szerver számolja.
+   * PDF: típus és dátum nélkül (202, a háttérben az AI-feldolgozás sorolja be és tölti ki);
+   * más fájl: a típus kötelező (201).
+   */
   feltoltDokumentum: async (d: UjDokumentum) => {
     const form = new FormData();
     form.append('file', d.fajl);
     form.append('patientId', String(d.patientId));
-    form.append('type', dokTipusDto[d.tipus]);
-    if (d.klinikaiDatum) form.append('clinicalDate', d.klinikaiDatum);
+    if (d.tipus !== null) form.append('type', dokTipusDto[d.tipus]);
+    if (d.tipus !== null && d.klinikaiDatum) form.append('clinicalDate', d.klinikaiDatum);
     return toDokumentum(await http.postForm<DocumentDto>('/documents', form));
   },
 
@@ -336,25 +338,6 @@ export const api = {
         }),
       ])
     )[0],
-
-  /** POST /statements elemenként — gépi (kinyerő/modell) kimenet importja; elemenkénti eredmény */
-  importAllitasok: async (patientId: number, json: unknown) => {
-    const elemek = parseAllitasok(json, patientId);
-    const eredmeny: { index: number; ok: boolean; uzenet: string }[] = [];
-    for (const [index, elem] of elemek.entries()) {
-      if (elem instanceof Error) {
-        eredmeny.push({ index, ok: false, uzenet: elem.message });
-        continue;
-      }
-      try {
-        const s = await http.post<StatementDto>('/statements', elem);
-        eredmeny.push({ index, ok: true, uzenet: `#${s.id} létrehozva` });
-      } catch (e) {
-        eredmeny.push({ index, ok: false, uzenet: `[${index}]: ${(e as Error).message}` });
-      }
-    }
-    return eredmeny;
-  },
 
   /** POST /statements/{id}/approvals — a belépett orvos nevében */
   jovahagy: async (allitasId: number, req: JovahagyasRequest) => {
@@ -411,9 +394,7 @@ export const api = {
 
   /** GET /medications?patientId=&activeOnly= */
   listGyogyszerek: async (patientId: number, csakAktiv: boolean) =>
-    (await http.get<MedicationDto[]>(`/medications?patientId=${patientId}&activeOnly=${csakAktiv}`)).map(
-      toGyogyszer,
-    ),
+    (await http.get<MedicationDto[]>(`/medications?patientId=${patientId}&activeOnly=${csakAktiv}`)).map(toGyogyszer),
 
   /** GET /medications/{id} */
   getGyogyszer: async (id: number) => toGyogyszer(await http.get<MedicationDto>(`/medications/${id}`)),
@@ -433,8 +414,7 @@ export const api = {
     ),
 
   /** POST /medications/{id}/discontinue — egyirányú */
-  leallitGyogyszer: async (id: number) =>
-    toGyogyszer(await http.post<MedicationDto>(`/medications/${id}/discontinue`)),
+  leallitGyogyszer: async (id: number) => toGyogyszer(await http.post<MedicationDto>(`/medications/${id}/discontinue`)),
 
   /** GET /allergies?patientId= */
   listAllergiak: async (patientId: number) =>

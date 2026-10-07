@@ -143,11 +143,21 @@ export interface UjIdezet {
 // ---------- dokumentum + RAG-darab ----------
 export type DokumentumTipus = 'labor' | 'ambulans' | 'kepalkotas';
 
+/** PDF: feltöltés után 'feldolgozas', a Python-feldolgozás után 'kesz' vagy 'hiba' */
+export type FeldolgozasAllapot = 'feldolgozas' | 'kesz' | 'hiba';
+
 export interface DokumentumListItem {
   id: number;
   patientId: number;
-  tipus: DokumentumTipus;
+  /** null: a feldolgozás még nem sorolta be (vagy hibával leállt) */
+  tipus: DokumentumTipus | null;
   cim: string;
+  allapot: FeldolgozasAllapot;
+  feldolgozasiHiba: string | null;
+  /** amit a feldolgozás tudatosan kihagyott (pl. cenzorált laborérték) */
+  figyelmeztetesek: string[];
+  /** HOGY: a kinyerő modell; kézi feltöltésnél null */
+  kinyero: { modell: string; seed: number; promptHash: string; verzio: string } | null;
   osztaly: string | null;
   /** megjelenítéshez: a klinikai dátum, ha nincs, a feltöltés ideje */
   datum: string;
@@ -166,7 +176,8 @@ export interface DokumentumResponse extends DokumentumListItem {
 export interface UjDokumentum {
   patientId: number;
   fajl: File;
-  tipus: DokumentumTipus;
+  /** PDF-nél null: a típust és a dátumot az automatikus feldolgozás határozza meg */
+  tipus: DokumentumTipus | null;
   klinikaiDatum: string | null;
 }
 
@@ -216,10 +227,14 @@ export interface MegszolalasResponse {
 }
 
 // ---------- labor ----------
+/** Cenzorált eredmény jele (pl. EGFR ">90"): az `ertek` ekkor a határ, nem pontos mérés */
+export type LaborJel = '<' | '<=' | '>' | '>=';
+
 export interface LaborMeres {
   id: number;
   datum: string;
   ertek: number;
+  jel: LaborJel | null;
   /** a lelet, amelyből a mérés származik; null: dokumentum nélkül rögzítve */
   dokumentumId: number | null;
 }
@@ -236,9 +251,27 @@ export interface LaborParameter {
   meresek: LaborMeres[];
 }
 
+/** Kvalitatív (szöveges) eredmény, pl. vizelet: Fehérje "Negatív" — grafikonra nem kerül */
+export interface LaborSzovegesMeres {
+  id: number;
+  datum: string;
+  szoveg: string;
+  dokumentumId: number | null;
+}
+
+export interface LaborSzovegesParameter {
+  kod: string;
+  nev: string;
+  mertekegyseg: string;
+  /** szöveges referencia ("Negatív"); a legutóbbi mérésé */
+  refSzoveg: string | null;
+  meresek: LaborSzovegesMeres[];
+}
+
 export interface LaborIdosor {
   patientId: number;
   parameterek: LaborParameter[];
+  szovegesek: LaborSzovegesParameter[];
 }
 
 /** Egy mérés minden adata (GET /lab-results/{id}) */
@@ -247,11 +280,18 @@ export interface LaborReszlet {
   patientId: number;
   dokumentumId: number | null;
   csoport: string | null;
+  /** egységes név (a trendben ez látszik) */
   nev: string;
-  ertek: number;
+  /** a leleten álló eredeti név */
+  leletNev: string;
+  /** null: kvalitatív eredmény (szoveg) */
+  ertek: number | null;
+  jel: LaborJel | null;
+  szoveg: string | null;
   mertekegyseg: string | null;
   refAlso: number | null;
   refFelso: number | null;
+  refSzoveg: string | null;
   idopont: string;
   kod: string | null;
 }
@@ -285,18 +325,24 @@ export interface Gyogyszer {
   alkalmazas: string | null;
   forrasAllitasId: number | null;
   aktiv: boolean;
+  /** a dokumentum-feldolgozás írta be (nem kézi rögzítés) */
+  automatikus: boolean;
+  /** false: automatikus tétel, amelynek forrás-állítását orvos még nem fogadta el */
+  ellenorzott: boolean;
 }
 
-export type UjGyogyszer = Omit<Gyogyszer, 'id' | 'aktiv'>;
+export type UjGyogyszer = Omit<Gyogyszer, 'id' | 'aktiv' | 'automatikus' | 'ellenorzott'>;
 
 export interface Allergia {
   id: number;
   patientId: number;
   anyag: string;
   forrasAllitasId: number | null;
+  automatikus: boolean;
+  ellenorzott: boolean;
 }
 
-export type UjAllergia = Omit<Allergia, 'id'>;
+export type UjAllergia = Omit<Allergia, 'id' | 'automatikus' | 'ellenorzott'>;
 
 // ---------- hozzáférési napló ----------
 export interface NaploBejegyzes {

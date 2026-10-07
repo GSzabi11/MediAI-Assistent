@@ -1,9 +1,9 @@
 /**
- * Gépi formátumok (Python hangmodul, RAG-darabolás, kinyerő) importja: ellenőrzés és
+ * Gépi formátumok (Python hangmodul, RAG-darabolás) importja: ellenőrzés és
  * leképezés a backend kérés-formátumára, MIELŐTT a backendhez küldjük — így a hiba
  * itt, érthetően jelenik meg, és rossz szerkezetű adat nem is indul el.
  */
-import type { ChunkBatchDto, SpeakerDto, StatementCreateDto, UtteranceCreateDto } from './dto';
+import type { ChunkBatchDto, SpeakerDto, UtteranceCreateDto } from './dto';
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -88,26 +88,6 @@ export function parseRagDarabok(json: unknown): ChunkBatchDto {
     return { charStart: c.charStart, charEnd: c.charEnd, embedding: c.embedding as number[] };
   });
   return { embeddingModel: json.embeddingModel, chunks };
-}
-
-/**
- * Állítások (kinyerő/modell kimenete) backend-formátumban: tömb vagy `{ "statements": [...] }`.
- * A `patientId` hiányozhat (az aktív beteg kerül bele); ha más beteget ad, az elem hibás —
- * az identitás-kaput itt is betartjuk, nem csak a backendben.
- */
-export function parseAllitasok(json: unknown, patientId: number): (StatementCreateDto | Error)[] {
-  const lista = Array.isArray(json) ? json : isObj(json) && Array.isArray(json.statements) ? json.statements : null;
-  if (!lista) throw new Error('Állítások tömbje kell (vagy { "statements": [...] }).');
-  return lista.map((s, i) => {
-    if (!isObj(s)) return new Error(`[${i}]: nem objektum`);
-    if (s.patientId !== undefined && s.patientId !== patientId) {
-      return new Error(`[${i}]: más beteg állítása (patientId ${String(s.patientId)}) — kihagyva`);
-    }
-    if (s.type === 'DETERMINISTIC_RULE') {
-      return new Error(`[${i}]: szabály-állítást csak a szabálymotor hozhat létre`);
-    }
-    return { ...(s as unknown as StatementCreateDto), patientId };
-  });
 }
 
 /** JSON-fájl beolvasása (a böngészőben, feltöltés nélkül) */

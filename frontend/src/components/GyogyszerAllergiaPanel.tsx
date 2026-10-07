@@ -9,8 +9,7 @@ import { Icon } from './Icon';
 import { ErrorState, Loading } from './shell';
 
 /** Forrásként csak orvosilag elfogadott vagy módosított állítás használható (a backend is ellenőrzi). */
-const jovahagyott = (a: ClaimResponse) =>
-  a.jovahagyas?.dontes === 'jovahagyva' || a.jovahagyas?.dontes === 'modositva';
+const jovahagyott = (a: ClaimResponse) => a.jovahagyas?.dontes === 'jovahagyva' || a.jovahagyas?.dontes === 'modositva';
 
 const rovid = (s: string, n = 70) => (s.length > n ? `${s.slice(0, n)}…` : s);
 const allitasSzoveg = (a: ClaimResponse) => a.ervenyesSzoveg || a.idezet || a.cim;
@@ -52,10 +51,28 @@ function ForrasValaszto({ value, onChange }: { value: string; onChange: (v: stri
  * rögzített tétel ettől még a listán marad (a backend nem vonja vissza) —
  * az orvos döntse el, leállítja-e.
  */
-function ForrasJelzes({ allitasId }: { allitasId: number | null }) {
+function ForrasJelzes({
+  allitasId,
+  automatikus = false,
+  ellenorzott = true,
+}: {
+  allitasId: number | null;
+  automatikus?: boolean;
+  ellenorzott?: boolean;
+}) {
   const { allitasok } = usePatient();
   if (allitasId === null) return <span className="meta">kézi rögzítés</span>;
   const a = allitasok.find((x) => x.id === allitasId);
+  // A dokumentum-feldolgozás jóváhagyás előtt veszi fel a tételt: amíg az orvos el nem fogadja
+  // a forrás-állítást, a tétel nem orvosi tény (a backend `verified` mezője dönt, nem a kliens)
+  if (automatikus && !ellenorzott && a?.jovahagyas?.dontes !== 'elutasitva') {
+    return (
+      <span className="warnchip" title="Az AI-dokumentumfeldolgozás vette fel; a forrás-állítás jóváhagyásra vár">
+        <Icon name="alert" size={14} />
+        nem ellenőrzött · AI-kinyerés, forrás: állítás #{allitasId}
+      </span>
+    );
+  }
   if (!a) return <span className="meta">forrás: állítás #{allitasId}</span>;
   if (a.jovahagyas?.dontes === 'elutasitva') {
     return (
@@ -113,7 +130,7 @@ function AllergiaResz() {
                 <div className="item__row">
                   <Icon name="alert" size={16} strokeWidth={2.4} />
                   <strong>{a.anyag}</strong>
-                  <ForrasJelzes allitasId={a.forrasAllitasId} />
+                  <ForrasJelzes allitasId={a.forrasAllitasId} automatikus={a.automatikus} ellenorzott={a.ellenorzott} />
                   <button
                     type="button"
                     className="btn btn--sm push-right"
@@ -247,7 +264,7 @@ function GyogyszerResz() {
                   </div>
                 </div>
                 <div className="item__sub">
-                  <ForrasJelzes allitasId={g.forrasAllitasId} />
+                  <ForrasJelzes allitasId={g.forrasAllitasId} automatikus={g.automatikus} ellenorzott={g.ellenorzott} />
                 </div>
                 {reszlet === g.id && <GyogyszerReszlet id={g.id} />}
               </li>

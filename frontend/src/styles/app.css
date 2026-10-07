@@ -1573,23 +1573,6 @@ select.input {
   background: rgba(255, 255, 255, 0.12);
   color: inherit;
 }
-.importbox {
-  padding: 14px 16px;
-  border: 1.5px dashed var(--c-line-strong);
-  border-radius: var(--radius-md);
-  background: var(--c-surface);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.importlog {
-  margin: 0;
-  padding-left: 18px;
-  font-size: var(--fs-sm);
-  max-height: 200px;
-  overflow-y: auto;
-}
-
 /* táblázatok kiegészítése */
 .labtable td.wrap {
   white-space: normal;

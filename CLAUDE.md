@@ -11,8 +11,11 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
 ## Stack
 
 - **backend/** — Java 25, Spring Boot 4.1.x, Maven. Postgres (pgvector), Flyway.
-- **voice/** — Python, önálló prototípus (faster-whisper, pyannote, Ollama).
+- **ai-service/voice/** — Python, önálló prototípus (faster-whisper, pyannote, Ollama).
   Még NEM kötött be a backendbe.
+- **ai-service/docproc/** — Python (FastAPI) dokumentum-feldolgozó: PDF → labor /
+  ambuláns adatok, Ollama-val. A Spring REST-en adja át, a Python callbackkel válaszol;
+  a Spring sosem hívja az Ollamát. Ld. `docs/document-processing.md`.
 - **frontend/** — React (Figma-terv alapján, még nincs kód).
 
 ## A rendszer központi elve: az Allitas (Statement)
@@ -47,8 +50,12 @@ be kell tartani:
 - `dokumentum.kinyert_szoveg` kötelező, ha a dokumentumra bármilyen
   `allitas.forras` char-offsettel hivatkozik.
 - Minden időbélyeg `TIMESTAMPTZ`, sose `TIMESTAMP` (nyári időszámítás).
-- `labor.ertek_num` NUMERIC a motoroknak; cenzorált/kvalitatív eredményt
-  (`<0,5`, `negatív`) importáláskor elutasítjuk, nem kerekítjük csendben.
+- `labor.ertek_num` NUMERIC a motoroknak, sosem kerekítünk csendben. Cenzorált
+  eredmény (`>90`, `<0,5`) V18 óta `value_num` = határ + `comparator` (`<`, `<=`,
+  `>`, `>=`) — sosem pontos értékként. Kvalitatív eredmény (`Negatív`, `kevés`)
+  V19 óta `value_text` + szöveges referencia `ref_text`; egy sorban pontosan az
+  egyik: `value_num` VAGY `value_text`. A motoroknak a jelet és a szöveges sorokat
+  is kezelniük kell (szöveges sort számként sosem értelmezünk).
 
 ## Flyway — szigorú szabály
 

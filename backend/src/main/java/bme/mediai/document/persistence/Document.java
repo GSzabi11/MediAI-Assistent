@@ -2,8 +2,11 @@ package bme.mediai.document.persistence;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import bme.mediai.document.exception.ExtractedTextMissingException;
 
@@ -26,10 +29,19 @@ public class Document {
 
     private Long patientId;
 
+    // Feldolgozáskor a Python-callback a típus szerinti mappába helyezi át (native UPDATE)
+    @Column(updatable = false)
     private String storagePath;
 
+    // PDF-nél feltöltéskor NULL, a feldolgozás sorolja be (native UPDATE)
     @Enumerated(EnumType.STRING)
+    @Column(updatable = false)
     private DocumentType type;
+
+    // Csak a DocumentRepository állapotváltó lekérdezései írják, atomikusan
+    @Enumerated(EnumType.STRING)
+    @Column(updatable = false)
+    private DocumentStatus status;
 
     private String mimeType;
 
@@ -41,7 +53,31 @@ public class Document {
     @Column(insertable = false, updatable = false)
     private String extractedText;
 
+    // PDF-nél a feldolgozás olvassa ki a dokumentum szövegéből (native UPDATE)
+    @Column(updatable = false)
     private LocalDate clinicalDate;
+
+    @Column(insertable = false, updatable = false)
+    private OffsetDateTime processedAt;
+
+    @Column(insertable = false, updatable = false)
+    private String processingError;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(insertable = false, updatable = false)
+    private List<String> processingWarnings;
+
+    @Column(insertable = false, updatable = false)
+    private String extractionModel;
+
+    @Column(insertable = false, updatable = false)
+    private Long extractionSeed;
+
+    @Column(insertable = false, updatable = false)
+    private String extractionPromptHash;
+
+    @Column(insertable = false, updatable = false)
+    private String extractorVersion;
 
     @Generated
     @Column(insertable = false, updatable = false)
@@ -50,11 +86,18 @@ public class Document {
     protected Document() {
     }
 
-    public Document(Long patientId, String storagePath, DocumentType type, String mimeType,
-            Long sizeBytes, String sha256, LocalDate clinicalDate) {
+    public Document(Long patientId, String storagePath, DocumentType type, DocumentStatus status,
+            String mimeType, Long sizeBytes, String sha256, LocalDate clinicalDate) {
+        if (status == DocumentStatus.PROCESSED && type == null) {
+            throw new IllegalArgumentException("Feldolgozott dokumentumnak kötelező a típusa");
+        }
+        if (status == DocumentStatus.FAILED) {
+            throw new IllegalArgumentException("Dokumentum nem jöhet létre hibás állapotban");
+        }
         this.patientId = patientId;
         this.storagePath = storagePath;
         this.type = type;
+        this.status = status;
         this.mimeType = mimeType;
         this.sizeBytes = sizeBytes;
         this.sha256 = sha256;
@@ -96,6 +139,38 @@ public class Document {
 
     public DocumentType getType() {
         return type;
+    }
+
+    public DocumentStatus getStatus() {
+        return status;
+    }
+
+    public OffsetDateTime getProcessedAt() {
+        return processedAt;
+    }
+
+    public String getProcessingError() {
+        return processingError;
+    }
+
+    public List<String> getProcessingWarnings() {
+        return processingWarnings;
+    }
+
+    public String getExtractionModel() {
+        return extractionModel;
+    }
+
+    public Long getExtractionSeed() {
+        return extractionSeed;
+    }
+
+    public String getExtractionPromptHash() {
+        return extractionPromptHash;
+    }
+
+    public String getExtractorVersion() {
+        return extractorVersion;
     }
 
     public String getMimeType() {

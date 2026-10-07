@@ -19,6 +19,9 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `lab_result` (= `labor`), `medication` (= `gyogyszer`), `allergy` (= `allergia`),
 `access_log` (= `hozzaferes_naplo`).
 
+V17: automatikus dokumentum-feldolgozás (`document.status`, `extraction_*`,
+`medication/allergy.origin`) — részletek: `docs/document-processing.md`.
+
 ## `app_user` (felhasznalo)
 
 Angol elnevezés, a tábla neve `app_user`, mert a `user` Postgresben
@@ -213,15 +216,28 @@ CONSTRAINT model_needs_uncertainty CHECK (type <> 'MODEL_INFERENCE'    OR uncert
 
 ## `lab_result` (labor) — V13
 
-`value_num NUMERIC(12,4) NOT NULL` a motoroknak (összehasonlítás referencia-
-tartománnyal). Cenzorált (`<0,5`) vagy kvalitatív (`negatív`) eredményt
-NEM kerekítünk bele csendben — **az import elutasítja** (nincs
-`ertek_szoveg` oszlop). FHIR `Quantity` (value+comparator+unit) a "helyes"
-hosszú távú megoldás, de most nem építjük meg — dokumentált tudatos
-egyszerűsítés.
+`value_num NUMERIC(12,4)` a motoroknak (összehasonlítás referencia-tartománnyal).
 
-- **Az érték JSON számként jön** (a kliens értelmezi a leletet). Ezért a
-  `<0,5`/`negatív` szöveg JSON-parse hibán bukik el (400). Mellékhatás: a
+**Kvalitatív eredmény — V19, `value_text` + `ref_text`**: a vizeletvizsgálat és
+hasonlók eredménye szöveg (`Negatív`, `Normális`, `kevés`), a referenciája is
+(`Negatív`). Korábban elutasítottuk (a lelet sorai elvesztek); most szó szerint
+tároljuk. A `value_num` **nem** lett szöveg: a trend, a grafikon és a motorok számot
+várnak. CHECK-ek: pontosan az egyik (`value_num` XOR `value_text`); `comparator` csak
+számos eredményhez. Számos referencia (`ref_low/ref_high`) szöveges eredményhez is
+tartozhat (V20): pl. „Nem számolható” eredmény, `< 30.0 mg/nap` referencia. A frontend a szöveges eredményt csak a
+táblázatban mutatja (grafikonon nem), és „≠”-t jelez, ha eltér a szöveges referenciától.
+
+**Cenzorált eredmény — V18, `comparator`** (FHIR `Quantity` mintája: value +
+comparator + unit): `>90` → `value_num = 90`, `comparator = '>'`; pontos
+értéknél NULL. CHECK: `<`, `<=`, `>`, `>=`. Oka: valódi leleteken gyakori
+(EGFR-EPI `>90`, CRP `<0,5`), és kihagyva a lelet sora elveszett. A szám nem
+pontos mérés: **minden motornak és megjelenítésnek a jelet is figyelembe kell
+vennie** (a frontend `>90`-et mutat, és csak akkor jelez tartományon kívülit, ha
+a jelből biztosan következik).
+
+- **Az érték JSON számként jön** (a kliens értelmezi a leletet), a jel külön
+  `comparator` mezőben. Ezért a `<0,5`/`negatív` szöveg az értékben JSON-parse
+  hibán bukik el (400). Mellékhatás: a
   számot tartalmazó szöveget (`"139"`) a Jackson elfogadja.
 - **Csendes kerekítés ellen**: `@Digits(integer = 8, fraction = 4)` a
   kérésben — a `NUMERIC(12,4)` a több tizedesjegyet szó nélkül kerekítené,
@@ -237,14 +253,23 @@ egyszerűsítés.
   `ref_low <= ref_high`. `unit` nullázható (pl. pH, INR).
 - `measured_at`: ha hiányzik, a dokumentum `clinical_date`-je budapesti
   éjfélkor; ha az sincs, 400.
-- Trend: `GET /api/lab-results?patientId=&name=` időrendben, index
-  `(patient_id, name, measured_at)`. **Nincs egységkonverzió** — azonos
-  `name` más `unit`-tal a trendben keveredhet.
+- Trend: `GET /api/lab-results?patientId=&name=` időrendben. **Egységes név és
+  mértékegység** (`LabTestNames`, olvasáskor számolva — a tárolt `name`/`unit` a leleten
+  álló érték marad): `canonicalName` — az akkreditációs `(A)` nélkül, kézzel ellenőrzött
+  szinonimatáblával (`Kálium (K)` = `Kálium`, `Koleszterin` = `Koleszterin összes`, …);
+  `canonicalUnit` — csak 1:1 írásmód-egyezés (`Giga/L` = `G/L`), **átváltás nincs**
+  (Hematokrit `%` ≠ `L/L`). A `?name=` szűrő és a frontend csoportosítása ezek szerint
+  dolgozik. Tudatosan nem heurisztika („egy szóval hosszabb név + azonos referencia”): a
+  referencia laboronként eltér, és két különböző vizsgálat egy trendbe vonása hamis trendet
+  mutatna. Új pár = új sor a táblában.
 - **Következő lépés**: a referencia-tartomány szabály (első determinisztikus
   motor) → `DETERMINISTIC_RULE` állítások; ehhez `LAB` forrástípus kell a
   `statement.source`-ba.
 
 ## `document` (dokumentum) — V11
+
+> V17 óta PDF-nél a típust, a dátumot és a szöveget az automatikus feldolgozás tölti, a
+> tárolási út `{patientId}/{PROCESSING|típus}/{sha256}.{ext}` — `docs/document-processing.md`.
 
 - **A Spring fogadja a fájlt** (multipart), és **maga számolja** az SHA-256-ot,
   a méretet és a MIME-típust (magic bytes: PDF/PNG/JPEG, különben érvényes
@@ -298,7 +323,10 @@ RAG-darabok a `document.extracted_text`-ből, a diagram szerint.
   `statement`-re), `NO ACTION`.
 - **Csak jóváhagyott állításból** (legfrissebb döntés `ACCEPTED` vagy
   `MODIFIED`, különben 409): a gyógyszerlista orvosi tényként jelenik meg,
-  PENDING LLM-kinyerés nem kerülhet bele. **Ismert rés**: ha az állítást
+  PENDING LLM-kinyerés nem kerülhet bele. **Kivétel (V17)**: a dokumentum-
+  feldolgozás PENDING állításból is felveszi, `origin = DOCUMENT_PIPELINE`-nal; a
+  válasz `verified` mezője (a forrás-állítás legfrissebb döntéséből számolva, nem
+  tárolva) jelzi, hogy még nem ellenőrzött. A kézi API-t a szabály továbbra is köti. **Ismert rés**: ha az állítást
   később elutasítják, a belőle már létrehozott gyógyszer aktív marad.
 - **`active` egyirányú** (`POST /{id}/discontinue`, másodszor 409):
   újrakezdés = új sor, az előzmény megmarad. Nincs kezdő/leállítási dátum
@@ -311,7 +339,7 @@ RAG-darabok a `document.extracted_text`-ből, a diagram szerint.
 - Mezők a diagram szerint: `substance` (= `anyag`), `source_statement_id`
   (= `forras_allitas_id`).
 - Forrás-állítás: ugyanaz a szabály, mint a `medication`-nél (nullázható,
-  összetett FK, csak `ACCEPTED`/`MODIFIED`). A szabály **egyetlen helyen**
+  összetett FK, csak `ACCEPTED`/`MODIFIED`; V17 óta ugyanazzal a pipeline-kivétellel). A szabály **egyetlen helyen**
   él: `StatementApprovalService.requireApprovedStatementOfPatient()`, ezt
   hívja a gyógyszer és az allergia is.
 - **Egy betegnél egy anyag egyszer**: egyedi index

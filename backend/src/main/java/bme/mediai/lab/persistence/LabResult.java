@@ -28,11 +28,20 @@ public class LabResult {
 
     private BigDecimal valueNum;
 
+    // Cenzorált eredménynél ('<', '<=', '>', '>='): a valueNum a határ, nem pontos mérés
+    private String comparator;
+
+    // Kvalitatív eredmény szó szerint ("Negatív"); pontosan az egyik: valueNum VAGY valueText
+    private String valueText;
+
     private String unit;
 
     private BigDecimal refLow;
 
     private BigDecimal refHigh;
+
+    // Szöveges referencia ("Negatív", "normális")
+    private String refText;
 
     private OffsetDateTime measuredAt;
 
@@ -42,7 +51,16 @@ public class LabResult {
     }
 
     public LabResult(Long patientId, Long documentId, String groupName, String name, BigDecimal valueNum,
-            String unit, BigDecimal refLow, BigDecimal refHigh, OffsetDateTime measuredAt, String code) {
+            String comparator, String valueText, String unit, BigDecimal refLow, BigDecimal refHigh, String refText,
+            OffsetDateTime measuredAt, String code) {
+        boolean hasText = valueText != null && !valueText.isBlank();
+        if ((valueNum == null) == !hasText) {
+            throw new IllegalArgumentException(
+                    "A(z) " + name + " eredményéhez pontosan az egyik kell: számérték (value) vagy szöveg (valueText)");
+        }
+        if (comparator != null && valueNum == null) {
+            throw new IllegalArgumentException("A(z) " + name + ": összehasonlító jel csak számértékhez adható");
+        }
         if (refLow != null && refHigh != null && refLow.compareTo(refHigh) > 0) {
             throw new IllegalArgumentException(
                     "A(z) " + name + " referencia-tartománya fordított: " + refLow + " > " + refHigh);
@@ -52,9 +70,12 @@ public class LabResult {
         this.groupName = groupName;
         this.name = name;
         this.valueNum = valueNum;
+        this.comparator = comparator;
+        this.valueText = hasText ? valueText.strip() : null;
         this.unit = unit;
         this.refLow = refLow;
         this.refHigh = refHigh;
+        this.refText = refText == null || refText.isBlank() ? null : refText.strip();
         this.measuredAt = measuredAt;
         this.code = code;
     }
@@ -97,6 +118,18 @@ public class LabResult {
 
     public OffsetDateTime getMeasuredAt() {
         return measuredAt;
+    }
+
+    public String getValueText() {
+        return valueText;
+    }
+
+    public String getRefText() {
+        return refText;
+    }
+
+    public String getComparator() {
+        return comparator;
     }
 
     public String getCode() {

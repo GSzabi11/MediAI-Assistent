@@ -1,0 +1,177 @@
+"""Szekvenciális feldolgozó sor: egyszerre EGY dokumentum (GPU/VRAM), a többi vár.
+
+A sorbaállítás itt van, nem a Springben: a Spring csak beadja a feladatot és 202-t kap.
+Egy dokumentum végén a callback elmegy, és csak utána jön a következő.
+"""
+import logging
+import queue
+import threading
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+import requests
+
+import chunking
+import classify
+import config
+import embedding
+import extract
+import llm
+from pdf_text import NoTextLayerError, extract_text
+
+log = logging.getLogger("docproc")
+
+
+@dataclass(frozen=True)
+class Job:
+    document_id: int
+    file_path: str
+    callback_url: str
+
+
+class ProcessingError(Exception):
+    """Várt, a felhasználónak is értelmes hiba (FAILED callback az üzenettel)."""
+
+
+class JobQueue:
+    def __init__(self) -> None:
+        self._queue: queue.Queue[Job] = queue.Queue()
+        self._lock = threading.Lock()
+        self._pending: set[int] = set()  # sorban álló + éppen feldolgozott dokumentumok
+        self._current: int | None = None
+
+    def submit(self, job: Job) -> int | None:
+        """Sorba állít; a sorban elfoglalt hely (0 = következő), vagy None, ha már bent van
+        (ismételt értesítés ugyanarra a dokumentumra nem dolgozza fel kétszer)."""
+        with self._lock:
+            if job.document_id in self._pending:
+                return None
+            self._pending.add(job.document_id)
+            position = self._queue.qsize()
+            self._queue.put(job)
+            return position
+
+    def status(self) -> dict:
+        with self._lock:
+            return {"queued": self._queue.qsize(), "current": self._current}
+
+    def start(self) -> None:
+        threading.Thread(target=self._run, name="docproc-worker", daemon=True).start()
+
+    def _run(self) -> None:
+        while True:
+            job = self._queue.get()
+            with self._lock:
+                self._current = job.document_id
+            try:
+                payload = process(job)
+            except Exception as e:  # noqa: BLE001 — minden hiba FAILED callback, a sor nem állhat le
+                log.exception("A(z) %s dokumentum feldolgozása sikertelen", job.document_id)
+                payload = {"status": "FAILED", "error": _error_message(e)}
+            send_callback(job, payload)
+            with self._lock:
+                self._pending.discard(job.document_id)
+                self._current = None
+            self._queue.task_done()
+
+
+def _error_message(e: Exception) -> str:
+    if isinstance(e, (ProcessingError, NoTextLayerError)):
+        return str(e)
+    if isinstance(e, requests.RequestException):
+        return f"Az Ollama-hívás sikertelen ({config.LLM_MODEL}): {e}"[:2000]
+    return f"Váratlan hiba a feldolgozásban: {type(e).__name__}: {e}"[:2000]
+
+
+def _resolve_path(raw: str) -> Path:
+    path = Path(raw).resolve()
+    if config.DOCUMENTS_ROOT and not path.is_relative_to(config.DOCUMENTS_ROOT):
+        raise ProcessingError("A fájl a megengedett dokumentum-könyvtáron kívül van")
+    if not path.is_file():
+        raise ProcessingError("A dokumentum fájlja nem található")
+    return path
+
+
+def process(job: Job) -> dict:
+    started = time.monotonic()
+    warnings: list[str] = []
+
+    text = extract_text(_resolve_path(job.file_path))
+    doc_type = classify.classify(text)  # determinisztikus, nem modell
+    log.info("Dokumentum %s: %s, %d karakter", job.document_id, doc_type, len(text))
+
+    llm_text = text
+    # A laborlelet szakaszonként megy a modellhez (llm.lab_segments), ott nincs vágás
+    if doc_type != classify.LAB and len(text) > config.LLM_MAX_CHARS:
+        llm_text = text[:config.LLM_MAX_CHARS]
+        warnings.append(f"A dokumentum hosszú: csak az első {config.LLM_MAX_CHARS} karaktere került a modellhez")
+    data, llm_warnings = llm.extract(doc_type, llm_text)
+    warnings.extend(llm_warnings)
+
+    clinical_date = extract.resolve_clinical_date(data.get("datum"), text, warnings)
+    if clinical_date is None:
+        raise ProcessingError("Nem állapítható meg megbízhatóan a dokumentum klinikai dátuma "
+                              "(nincs a szövegben, vagy több jelölt van)")
+
+    lab_results: list[dict] = []
+    statements: list[dict] = []
+    if doc_type == classify.LAB:
+        lab_results = extract.lab_results(data, text, warnings)
+    else:
+        statements = extract.ambulance_statements(data, text, warnings)
+
+    ranges = chunking.chunk_ranges(text)
+    vectors = embedding.embed([text[s:e] for s, e in ranges])
+
+    log.info("Dokumentum %s kész: %d laborsor, %d állítás, %d darab, %d figyelmeztetés, %.1f s",
+             job.document_id, len(lab_results), len(statements), len(ranges), len(warnings),
+             time.monotonic() - started)
+    return {
+        "status": "PROCESSED",
+        "documentType": doc_type,
+        "extractedText": text,
+        "clinicalDate": clinical_date.isoformat(),
+        "extraction": {
+            "modelName": config.LLM_MODEL,
+            "seed": config.LLM_SEED,
+            "promptHash": llm.prompt_hash(doc_type),
+            "extractorVersion": config.EXTRACTOR_VERSION,
+        },
+        "chunks": {
+            "embeddingModel": config.EMBEDDING_MODEL,
+            "chunks": [{"charStart": s, "charEnd": e, "embedding": v} for (s, e), v in zip(ranges, vectors)],
+        },
+        "labResults": lab_results,
+        "statements": statements,
+        "warnings": [w[:500] for w in warnings],
+    }
+
+
+def send_callback(job: Job, payload: dict) -> None:
+    """Eredmény a Springnek. Hálózati hibánál / 5xx-nél újrapróbál. 4xx-nél a Spring már
+    FAILED-re állította a dokumentumot (vagy már lezárt) — egy rövid FAILED jelzés biztosítja,
+    hogy olvashatatlan kérés esetén se maradjon PROCESSING-ben."""
+    headers = {"X-Internal-Token": config.TOKEN}
+    for attempt, delay in enumerate((0, *config.CALLBACK_RETRY_DELAYS_SEC)):
+        if delay:
+            time.sleep(delay)
+        try:
+            resp = requests.post(job.callback_url, json=payload, headers=headers,
+                                 timeout=config.CALLBACK_TIMEOUT_SEC)
+        except requests.RequestException as e:
+            log.warning("Callback sikertelen (%s, %d. próbálkozás): %s", job.document_id, attempt + 1, e)
+            continue
+        if resp.status_code < 300:
+            log.info("Callback elfogadva: %s → %s", job.document_id, payload["status"])
+            return
+        if resp.status_code >= 500:
+            log.warning("Callback %d (%s), újrapróbálom", resp.status_code, job.document_id)
+            continue
+        log.error("A Spring elutasította az eredményt (%s, HTTP %d): %s",
+                  job.document_id, resp.status_code, resp.text[:1000])
+        if payload["status"] == "PROCESSED" and resp.status_code == 400:
+            send_callback(job, {"status": "FAILED", "error": "A feldolgozás eredményét a backend elutasította: "
+                                + resp.text[:1500]})
+        return
+    log.error("A(z) %s dokumentum eredménye nem jutott el a Springhez — PROCESSING-ben marad", job.document_id)

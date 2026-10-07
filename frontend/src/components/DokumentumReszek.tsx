@@ -2,28 +2,37 @@ import { useId, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { readJsonFile } from '../api/importok';
-import type { DokumentumListItem, DokumentumTipus } from '../api/types';
+import type { DokumentumListItem } from '../api/types';
 import { formatSzam } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
 import { Icon } from './Icon';
-import { Segmented } from './Segmented';
 import { ErrorState, Loading } from './shell';
 
 const MAX_MERET = 20 * 1024 * 1024; // a backend spring.servlet.multipart.max-file-size
 
-/** POST /api/documents (multipart). A hash-t, a méretet és a típust a szerver számolja. */
+/** A backend is a tartalom első bájtjaiból dönt (nem a kiterjesztésből): PDF = "%PDF-" */
+async function isPdf(fajl: File): Promise<boolean> {
+  try {
+    return (await fajl.slice(0, 5).text()) === '%PDF-';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * POST /api/documents (multipart) — csak PDF, csak a fájl: a típust (labor / ambuláns), a
+ * klinikai dátumot, a laborsorokat és az állításokat a háttérben futó AI-feldolgozás adja.
+ * A hash-t, a méretet és a MIME-típust a szerver számolja.
+ */
 export function DokumentumFeltoltes({ onDone, onCancel }: { onDone: (id: number) => void; onCancel?: () => void }) {
   const { patient, frissit } = usePatient();
   const [fajl, setFajl] = useState<File | null>(null);
-  const [tipus, setTipus] = useState<DokumentumTipus>('labor');
-  const [datum, setDatum] = useState('');
+  const [pdf, setPdf] = useState<boolean | null>(null);
   const [tried, setTried] = useState(false);
   const { busy, error, run } = useAkcio();
   const fajlId = useId();
-  const datumId = useId();
-  const ma = new Date().toISOString().slice(0, 10);
 
   const hiba = !fajl
     ? 'Válassz fájlt.'
@@ -31,16 +40,16 @@ export function DokumentumFeltoltes({ onDone, onCancel }: { onDone: (id: number)
       ? 'A fájl üres.'
       : fajl.size > MAX_MERET
         ? 'A fájl nagyobb 20 MB-nál.'
-        : datum > ma
-          ? 'A klinikai dátum nem lehet a jövőben.'
+        : pdf === false
+          ? 'Csak PDF tölthető fel.'
           : null;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setTried(true);
-    if (hiba || !fajl) return;
+    if (hiba || !fajl || !pdf) return;
     const d = await run(async () => {
-      const uj = await api.feltoltDokumentum({ patientId: patient.id, fajl, tipus, klinikaiDatum: datum || null });
+      const uj = await api.feltoltDokumentum({ patientId: patient.id, fajl, tipus: null, klinikaiDatum: null });
       await frissit();
       return uj;
     });
@@ -51,45 +60,22 @@ export function DokumentumFeltoltes({ onDone, onCancel }: { onDone: (id: number)
     <form className="tabform" onSubmit={submit} noValidate aria-label="Dokumentum feltöltése">
       <div className="row-baseline">
         <h2 className="h2 h2--sm">Dokumentum feltöltése</h2>
-        <span className="meta">PDF, PNG, JPEG vagy UTF-8 szöveg, legfeljebb 20 MB</span>
+        <span className="meta">PDF, legfeljebb 20 MB — a típust és a dátumot az automatikus feldolgozás adja</span>
       </div>
-      <div className="row-end">
-        <div className="field grow">
-          <label htmlFor={fajlId}>Fájl</label>
-          <input
-            id={fajlId}
-            type="file"
-            className="input input--file"
-            accept=".pdf,.png,.jpg,.jpeg,.txt,application/pdf,image/png,image/jpeg,text/plain"
-            onChange={(e) => setFajl(e.target.files?.[0] ?? null)}
-          />
-        </div>
-        <div className="field">
-          <span className="field__legend">Típus</span>
-          <Segmented
-            label="Dokumentum típusa"
-            value={tipus}
-            onChange={setTipus}
-            options={[
-              ['labor', 'Laborlelet'],
-              ['ambulans', 'Ambuláns lap'],
-              ['kepalkotas', 'Képalkotó'],
-            ]}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor={datumId}>
-            Klinikai dátum <span className="meta">(nem kötelező)</span>
-          </label>
-          <input
-            id={datumId}
-            type="date"
-            className="input mono"
-            max={ma}
-            value={datum}
-            onChange={(e) => setDatum(e.target.value)}
-          />
-        </div>
+      <div className="field">
+        <label htmlFor={fajlId}>Fájl</label>
+        <input
+          id={fajlId}
+          type="file"
+          className="input input--file"
+          accept=".pdf,application/pdf"
+          onChange={(e) => {
+            const f = e.target.files?.[0] ?? null;
+            setFajl(f);
+            setPdf(null);
+            if (f) void isPdf(f).then(setPdf);
+          }}
+        />
       </div>
       {tried && hiba && <p className="form-error">{hiba}</p>}
       {error && (
@@ -116,13 +102,7 @@ export function DokumentumFeltoltes({ onDone, onCancel }: { onDone: (id: number)
  * PUT /api/documents/{id}/text — egyszer állítható be: az állítások és a RAG-darabok
  * karakterpozícióval hivatkoznak rá, egy utólagos módosítás rossz szövegrészre mutatna.
  */
-export function KinyertSzovegForm({
-  dokumentum,
-  onSaved,
-}: {
-  dokumentum: DokumentumListItem;
-  onSaved: () => void;
-}) {
+export function KinyertSzovegForm({ dokumentum, onSaved }: { dokumentum: DokumentumListItem; onSaved: () => void }) {
   const [szoveg, setSzoveg] = useState('');
   const { busy, error, run } = useAkcio();
   const betoltes = useAkcio();
@@ -211,12 +191,7 @@ export function RagDarabok({ dokumentum }: { dokumentum: DokumentumListItem }) {
   return (
     <section className="subsection" aria-label="RAG-darabok">
       <div className="row-baseline">
-        <button
-          type="button"
-          className="linkbtn"
-          aria-expanded={nyitva}
-          onClick={() => setNyitva((n) => !n)}
-        >
+        <button type="button" className="linkbtn" aria-expanded={nyitva} onClick={() => setNyitva((n) => !n)}>
           <Icon name={nyitva ? 'chevronUp' : 'chevronDown'} size={14} />
           RAG-darabok {state.status === 'ok' && `(${darabok.length})`}
         </button>

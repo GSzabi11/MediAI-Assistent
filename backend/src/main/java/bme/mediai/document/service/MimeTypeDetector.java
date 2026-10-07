@@ -13,6 +13,8 @@ import java.util.Arrays;
 // A MIME-típust a fájl tartalmából állapítjuk meg, nem a kliens Content-Type fejlécéből.
 final class MimeTypeDetector {
 
+    static final String PDF_MIME = "application/pdf";
+
     private static final byte[] PDF = {'%', 'P', 'D', 'F', '-'};
     private static final byte[] PNG = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'};
     private static final byte[] JPEG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
@@ -27,7 +29,7 @@ final class MimeTypeDetector {
             head = in.readNBytes(8);
         }
         if (startsWith(head, PDF)) {
-            return "application/pdf";
+            return PDF_MIME;
         }
         if (startsWith(head, PNG)) {
             return "image/png";

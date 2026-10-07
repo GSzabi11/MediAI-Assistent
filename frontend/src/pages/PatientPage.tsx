@@ -71,6 +71,19 @@ export function PatientPage() {
     };
   }, [patientId]);
 
+  // Amíg van feldolgozás alatt álló PDF, 5 mp-enként csendben frissít: a típus, a laborsorok
+  // és az állítások a háttérben érkeznek, az orvosnak nem kell újratöltenie az oldalt.
+  const feldolgozasAlatt = state.status === 'ok' && state.data.dokumentumok.some((d) => d.allapot === 'feldolgozas');
+  useEffect(() => {
+    if (!feldolgozasAlatt) return;
+    const t = setInterval(() => {
+      refresh().catch(() => {
+        /* átmeneti hiba: a következő kör újrapróbálja, a látható adat marad */
+      });
+    }, 5000);
+    return () => clearInterval(t);
+  }, [feldolgozasAlatt, refresh]);
+
   // Döntés után a backend számolja az érvényes állapotot (legfrissebb döntés): onnan kérjük vissza
   const onDecided = useCallback(
     async (id: number) => {
@@ -95,13 +108,7 @@ export function PatientPage() {
   );
 }
 
-function Workspace({
-  allitasok,
-  onDecided,
-}: {
-  allitasok: ClaimResponse[];
-  onDecided: (id: number) => Promise<void>;
-}) {
+function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDecided: (id: number) => Promise<void> }) {
   const [params, setParams] = useSearchParams();
   const [forrasokNyitva, setForrasokNyitva] = usePersistentFlag('mediai.sources.open', false);
   const [chatNyitva, setChatNyitva] = usePersistentFlag('mediai.chat.open', true);
@@ -331,7 +338,19 @@ function SourcesPanel({
           >
             <strong>{d.cim}</strong>
             <span className="meta">
-              {[d.osztaly, formatDatum(d.datum), d.vanSzoveg ? null : 'nincs szöveg'].filter(Boolean).join(' · ')}
+              {[
+                d.osztaly,
+                formatDatum(d.datum),
+                d.allapot === 'feldolgozas'
+                  ? 'AI-feldolgozás…'
+                  : d.allapot === 'hiba'
+                    ? 'feldolgozási hiba'
+                    : d.vanSzoveg
+                      ? null
+                      : 'nincs szöveg',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </span>
           </Link>
         ))}
@@ -374,8 +393,8 @@ function SourcesPanel({
           >
             <strong>Felvétel #{f.id}</strong>
             <span className="meta">
-              {f.mod === 'surgossegi' ? 'Sürgősségi' : 'Echo diktálás'} · {formatDatum(f.kezdes)}{' '}
-              {formatIdo(f.kezdes)} · {allapotFelirat[f.allapot].toLowerCase()}
+              {f.mod === 'surgossegi' ? 'Sürgősségi' : 'Echo diktálás'} · {formatDatum(f.kezdes)} {formatIdo(f.kezdes)}{' '}
+              · {allapotFelirat[f.allapot].toLowerCase()}
             </span>
           </Link>
         ))}

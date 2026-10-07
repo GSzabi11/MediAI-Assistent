@@ -20,7 +20,10 @@ import bme.mediai.user.persistence.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class StatementApprovalService {
@@ -77,6 +80,20 @@ public class StatementApprovalService {
                     + " állítás nincs orvosilag jóváhagyva (állapot: " + (status == null ? "PENDING" : status)
                     + "); csak elfogadott vagy módosított állítás lehet forrás");
         }
+    }
+
+    // A megadott állítások közül azok, amelyek legfrissebb döntése ACCEPTED vagy MODIFIED.
+    // A pipeline-ból jött gyógyszer/allergia "ellenőrzött" jelzése ebből számolódik, nem tárolt
+    // flag — így egy későbbi elutasítás is azonnal látszik.
+    @Transactional(readOnly = true)
+    public Set<Long> approvedAmong(Collection<Long> statementIds) {
+        if (statementIds.isEmpty()) {
+            return Set.of();
+        }
+        return repository.findLatestForStatements(statementIds).stream()
+                .filter(a -> a.getStatus() == ApprovalStatus.ACCEPTED || a.getStatus() == ApprovalStatus.MODIFIED)
+                .map(StatementApproval::getStatementId)
+                .collect(Collectors.toSet());
     }
 
     @Transactional(readOnly = true)

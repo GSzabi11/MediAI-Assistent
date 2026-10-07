@@ -31,6 +31,7 @@ import type {
   Dontes,
   DokumentumListItem,
   DokumentumTipus,
+  FeldolgozasAllapot,
   Ellatas,
   EllatasTipus,
   Felhasznalo,
@@ -41,6 +42,7 @@ import type {
   Hangprofil,
   JovahagyasElozmeny,
   LaborIdosor,
+  LaborSzovegesParameter,
   LaborParameter,
   LaborReszlet,
   MegszolalasResponse,
@@ -212,11 +214,26 @@ export const dokTipusDto: Record<DokumentumTipus, DocumentTypeDto> = {
   kepalkotas: 'IMAGING',
 };
 
+const feldolgozasOf: Record<DocumentDto['status'], FeldolgozasAllapot> = {
+  PROCESSING: 'feldolgozas',
+  PROCESSED: 'kesz',
+  FAILED: 'hiba',
+};
+
 export const toDokumentum = (d: DocumentDto): DokumentumListItem => ({
   id: d.id,
   patientId: d.patientId,
-  tipus: dokTipus[d.type].tipus,
-  cim: dokTipus[d.type].cim,
+  tipus: d.type === null ? null : dokTipus[d.type].tipus,
+  cim: d.type !== null ? dokTipus[d.type].cim : d.status === 'FAILED' ? 'Feldolgozás sikertelen' : 'Feldolgozás alatt…',
+  allapot: feldolgozasOf[d.status],
+  feldolgozasiHiba: d.processingError,
+  figyelmeztetesek: d.processingWarnings ?? [],
+  kinyero: d.extraction && {
+    modell: d.extraction.model,
+    seed: d.extraction.seed,
+    promptHash: d.extraction.promptHash,
+    verzio: d.extraction.extractorVersion,
+  },
   osztaly: null,
   datum: d.clinicalDate ?? d.uploadedAt,
   klinikaiDatum: d.clinicalDate,
@@ -280,18 +297,51 @@ export const toMegszolalas = (u: UtteranceDto): MegszolalasResponse => ({
 
 // ---------- labor ----------
 
-/** Egy paraméter = azonos név ÉS mértékegység: különböző egységű mérés nem kerül egy trendbe. */
+/**
+ * Egy paraméter = azonos név ÉS mértékegység: különböző egységű mérés nem kerül egy trendbe.
+ * A név kis/nagybetű- és szóköz-független ("eGFR-EPI" = "EGFR-EPI"), a mértékegység a backend
+ * egységes írásmódja ("Giga/L" = "G/L"; a kis/nagybetű ott számít: g/L ≠ G/L). A leletek
+ * írásmódja eltér, a vizsgálat ugyanaz. Megjelenítésre a legutóbbi mérés írásmódja.
+ */
+const paramKulcs = (name: string, unit: string | null) =>
+  `${name.trim().replace(/\s+/g, ' ').toLocaleLowerCase('hu')}|${(unit ?? '').trim()}`;
+
 export function toLaborIdosor(patientId: number, results: LabResultDto[]): LaborIdosor {
   const byKey = new Map<string, LaborParameter & { refIdo: number }>();
+  const szovegesek = new Map<string, LaborSzovegesParameter & { refIdo: number }>();
   for (const r of results) {
-    const kod = `${r.name}|${r.unit ?? ''}`;
+    if (r.value === null) {
+      // Kvalitatív eredmény: külön lista — a grafikon, a trend és a tartomány-számítás számot vár
+      const kod = `${paramKulcs(r.canonicalName, r.canonicalUnit)}|szöveg`;
+      const ido = new Date(r.measuredAt).getTime();
+      let p = szovegesek.get(kod);
+      if (!p) {
+        p = {
+          kod,
+          nev: r.canonicalName,
+          mertekegyseg: r.canonicalUnit ?? '',
+          refSzoveg: r.refText,
+          meresek: [],
+          refIdo: ido,
+        };
+        szovegesek.set(kod, p);
+      }
+      if (ido >= p.refIdo) {
+        p.refIdo = ido;
+        p.nev = r.canonicalName;
+        p.refSzoveg = r.refText;
+      }
+      p.meresek.push({ id: r.id, datum: r.measuredAt, szoveg: r.valueText ?? '', dokumentumId: r.documentId });
+      continue;
+    }
+    const kod = paramKulcs(r.canonicalName, r.canonicalUnit);
     const ido = new Date(r.measuredAt).getTime();
     let p = byKey.get(kod);
     if (!p) {
       p = {
         kod,
-        nev: r.name,
-        mertekegyseg: r.unit ?? '',
+        nev: r.canonicalName,
+        mertekegyseg: r.canonicalUnit ?? '',
         refAlso: r.refLow === null ? null : Number(r.refLow),
         refFelso: r.refHigh === null ? null : Number(r.refHigh),
         celtartomany: false,
@@ -303,12 +353,24 @@ export function toLaborIdosor(patientId: number, results: LabResultDto[]): Labor
     // A legutóbbi mérés referencia-tartománya érvényes (időpont szerint, nem szövegként összevetve)
     if (ido >= p.refIdo) {
       p.refIdo = ido;
+      p.nev = r.canonicalName;
+      p.mertekegyseg = r.canonicalUnit ?? '';
       p.refAlso = r.refLow === null ? null : Number(r.refLow);
       p.refFelso = r.refHigh === null ? null : Number(r.refHigh);
     }
-    p.meresek.push({ id: r.id, datum: r.measuredAt, ertek: Number(r.value), dokumentumId: r.documentId });
+    p.meresek.push({
+      id: r.id,
+      datum: r.measuredAt,
+      ertek: Number(r.value),
+      jel: r.comparator,
+      dokumentumId: r.documentId,
+    });
   }
-  return { patientId, parameterek: [...byKey.values()].map(({ refIdo: _refIdo, ...p }) => p) };
+  return {
+    patientId,
+    parameterek: [...byKey.values()].map(({ refIdo: _refIdo, ...p }) => p),
+    szovegesek: [...szovegesek.values()].map(({ refIdo: _refIdo, ...p }) => p),
+  };
 }
 
 export const toLaborReszlet = (r: LabResultDto): LaborReszlet => ({
@@ -316,11 +378,15 @@ export const toLaborReszlet = (r: LabResultDto): LaborReszlet => ({
   patientId: r.patientId,
   dokumentumId: r.documentId,
   csoport: r.groupName,
-  nev: r.name,
-  ertek: Number(r.value),
+  nev: r.canonicalName,
+  leletNev: r.name,
+  ertek: r.value === null ? null : Number(r.value),
+  jel: r.comparator,
+  szoveg: r.valueText,
   mertekegyseg: r.unit,
   refAlso: r.refLow === null ? null : Number(r.refLow),
   refFelso: r.refHigh === null ? null : Number(r.refHigh),
+  refSzoveg: r.refText,
   idopont: r.measuredAt,
   kod: r.code,
 });
@@ -337,6 +403,8 @@ export const toGyogyszer = (m: MedicationDto): Gyogyszer => ({
   alkalmazas: m.route,
   forrasAllitasId: m.sourceStatementId,
   aktiv: m.active,
+  automatikus: m.origin === 'DOCUMENT_PIPELINE',
+  ellenorzott: m.verified,
 });
 
 export const toAllergia = (a: AllergyDto): Allergia => ({
@@ -344,6 +412,8 @@ export const toAllergia = (a: AllergyDto): Allergia => ({
   patientId: a.patientId,
   anyag: a.substance,
   forrasAllitasId: a.sourceStatementId,
+  automatikus: a.origin === 'DOCUMENT_PIPELINE',
+  ellenorzott: a.verified,
 });
 
 export const toNaplo = (l: AccessLogDto): NaploBejegyzes => ({

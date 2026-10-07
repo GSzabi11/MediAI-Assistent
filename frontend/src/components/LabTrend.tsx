@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import type { LaborMeres, LaborParameter, UjLaborSor } from '../api/types';
+import type { LaborJel, LaborMeres, LaborParameter, LaborSzovegesParameter, UjLaborSor } from '../api/types';
 import { formatDatum, formatDatumIdo, formatHonap, formatSzam, helyiToIso, parseSzam } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
@@ -32,14 +32,33 @@ const tizedes = (p: LaborParameter) =>
     ...(p.refAlso !== null ? [tizedesOf(p.refAlso)] : []),
     ...(p.refFelso !== null ? [tizedesOf(p.refFelso)] : []),
   );
-const kivul = (p: LaborParameter, v: number) =>
-  (p.refAlso !== null && v < p.refAlso) || (p.refFelso !== null && v > p.refFelso);
+/**
+ * Tartományon kívül? Cenzorált eredménynél (">90") csak akkor jelzünk, ha a jelből biztosan
+ * következik — pl. ">90" és ref. felső 60 → felett; ">90" és ref. felső 120 → nem tudható.
+ */
+function irany(p: LaborParameter, v: number, jel: LaborJel | null = null): 'alatt' | 'felett' | null {
+  const alatt =
+    p.refAlso !== null &&
+    (jel === null ? v < p.refAlso : jel === '<' ? v <= p.refAlso : jel === '<=' ? v < p.refAlso : false);
+  const felett =
+    p.refFelso !== null &&
+    (jel === null ? v > p.refFelso : jel === '>' ? v >= p.refFelso : jel === '>=' ? v > p.refFelso : false);
+  return alatt ? 'alatt' : felett ? 'felett' : null;
+}
 
-function statusz(p: LaborParameter, v: number) {
-  if (p.refAlso !== null && v < p.refAlso) return p.celtartomany ? '↓ cél alatt' : '↓ ref. alatt';
-  if (p.refFelso !== null && v > p.refFelso) return p.celtartomany ? '↑ cél felett' : '↑ ref. felett';
+const kivul = (p: LaborParameter, v: number, jel: LaborJel | null = null) => irany(p, v, jel) !== null;
+
+function statusz(p: LaborParameter, v: number, jel: LaborJel | null = null) {
+  const i = irany(p, v, jel);
+  if (i === 'alatt') return p.celtartomany ? '↓ cél alatt' : '↓ ref. alatt';
+  if (i === 'felett') return p.celtartomany ? '↑ cél felett' : '↑ ref. felett';
   return null;
 }
+
+const JEL: Record<LaborJel, string> = { '<': '<', '<=': '≤', '>': '>', '>=': '≥' };
+
+/** Megjelenített érték: cenzoráltnál a jellel együtt (">90"), hogy ne tűnjön pontos mérésnek */
+const ertekSzoveg = (v: number, d: number, jel: LaborJel | null) => `${jel ? JEL[jel] : ''}${formatSzam(v, d)}`;
 
 function refSzoveg(p: LaborParameter) {
   const d = tizedes(p);
@@ -83,10 +102,14 @@ export function LabTrend() {
     return <ErrorState error={new Error('A labor-adat nem az aktív beteghez tartozik — rejtve.')} />;
   }
 
-  const nevek = [...new Set(osszes.state.data.parameterek.map((p) => p.nev))].sort((a, b) => a.localeCompare(b, 'hu'));
+  const nevek = [
+    ...new Set([...osszes.state.data.parameterek, ...osszes.state.data.szovegesek].map((p) => p.nev)),
+  ].sort((a, b) => a.localeCompare(b, 'hu'));
   const adat = nevSzuro ? (szurt.state.status === 'ok' ? szurt.state.data : null) : osszes.state.data;
 
-  const minden = (adat?.parameterek ?? []).flatMap((p) => p.meresek.map((m) => m.datum)).sort();
+  const minden = [...(adat?.parameterek ?? []), ...(adat?.szovegesek ?? [])]
+    .flatMap((p) => p.meresek.map((m) => m.datum))
+    .sort();
   const utolso = minden.at(-1);
   const hatar = utolso && idoszak !== 'mind' ? new Date(new Date(utolso).getTime() - napok[idoszak] * 864e5) : null;
   const params = (adat?.parameterek ?? []).map((p) => ({
@@ -95,10 +118,20 @@ export function LabTrend() {
       .filter((m) => !hatar || new Date(m.datum) >= hatar)
       .sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime()),
   }));
+  const szovegesek = (adat?.szovegesek ?? [])
+    .map((p) => ({
+      ...p,
+      meresek: p.meresek
+        .filter((m) => !hatar || new Date(m.datum) >= hatar)
+        .sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime()),
+    }))
+    .filter((p) => p.meresek.length > 0);
   const leletSzam = new Set(
-    params.flatMap((p) => p.meresek.map((m) => m.dokumentumId)).filter((id): id is number => id !== null),
+    [...params, ...szovegesek]
+      .flatMap((p) => p.meresek.map((m) => m.dokumentumId))
+      .filter((id): id is number => id !== null),
   ).size;
-  const meresSzam = params.reduce((n, p) => n + p.meresek.length, 0);
+  const meresSzam = [...params, ...szovegesek].reduce((n, p) => n + p.meresek.length, 0);
 
   return (
     <div className="labtrend">
@@ -114,7 +147,12 @@ export function LabTrend() {
           <label className="sr-only" htmlFor={szuroId}>
             Vizsgálat
           </label>
-          <select id={szuroId} className="input input--sm" value={nevSzuro} onChange={(e) => setNevSzuro(e.target.value)}>
+          <select
+            id={szuroId}
+            className="input input--sm"
+            value={nevSzuro}
+            onChange={(e) => setNevSzuro(e.target.value)}
+          >
             <option value="">Minden vizsgálat</option>
             {nevek.map((n) => (
               <option key={n} value={n}>
@@ -154,13 +192,13 @@ export function LabTrend() {
       {reszletId !== null && <LaborReszletDoboz id={reszletId} onClose={() => setReszletId(null)} />}
 
       {nevSzuro && szurt.state.status === 'loading' && <Loading what={nevSzuro} />}
-      {nevSzuro && szurt.state.status === 'error' && (
-        <ErrorState error={szurt.state.error} onRetry={szurt.reload} />
+      {nevSzuro && szurt.state.status === 'error' && <ErrorState error={szurt.state.error} onRetry={szurt.reload} />}
+      {adat && params.length === 0 && szovegesek.length === 0 && (
+        <p className="empty docview__hint">Nincs laboradat.</p>
       )}
-      {adat && params.length === 0 && <p className="empty docview__hint">Nincs laboradat.</p>}
 
       {adat &&
-        params.length > 0 &&
+        (params.length > 0 || szovegesek.length > 0) &&
         (nezet === 'diagram' ? (
           <>
             <div className="labgrid">
@@ -188,9 +226,15 @@ export function LabTrend() {
               </span>
               <span className="push-right">Pontra kattintva a mérés részletei nyílnak meg.</span>
             </div>
+            {szovegesek.length > 0 && (
+              <>
+                <h3 className="h3">Szöveges eredmények</h3>
+                <LabTable params={[]} szovegesek={szovegesek} onValaszt={setReszletId} />
+              </>
+            )}
           </>
         ) : (
-          <LabTable params={params} onValaszt={setReszletId} />
+          <LabTable params={params} szovegesek={szovegesek} onValaszt={setReszletId} />
         ))}
     </div>
   );
@@ -226,15 +270,21 @@ function LaborReszletDoboz({ id, onClose }: { id: number; onClose: () => void })
           <dd>
             {state.data.nev}
             {state.data.csoport && <span className="meta"> · {state.data.csoport}</span>}
+            {state.data.leletNev !== state.data.nev && (
+              <span className="meta"> · a leleten: „{state.data.leletNev}”</span>
+            )}
           </dd>
           <dt>Érték</dt>
           <dd className="mono">
-            {formatSzam(state.data.ertek, tizedesOf(state.data.ertek))} {state.data.mertekegyseg ?? ''}
+            {state.data.ertek === null
+              ? state.data.szoveg
+              : ertekSzoveg(state.data.ertek, tizedesOf(state.data.ertek), state.data.jel)}{' '}
+            {state.data.mertekegyseg ?? ''}
           </dd>
           <dt>Referencia</dt>
           <dd className="mono">
             {state.data.refAlso === null && state.data.refFelso === null
-              ? '—'
+              ? (state.data.refSzoveg ?? '—')
               : `${state.data.refAlso === null ? '' : formatSzam(state.data.refAlso, tizedesOf(state.data.refAlso))}–${
                   state.data.refFelso === null ? '' : formatSzam(state.data.refFelso, tizedesOf(state.data.refFelso))
                 }`}
@@ -484,7 +534,7 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
 
   const last = ms[ms.length - 1];
   const first = ms[0];
-  const st = statusz(p, last.ertek);
+  const st = statusz(p, last.ertek, last.jel);
 
   // y-tartomány: mérések + referenciahatárok, kis ráhagyással
   const vals = [
@@ -517,10 +567,10 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
         <span className="meta push-right">{refSzoveg(p)}</span>
       </div>
       <div className="row-inline row-gap-10">
-        <span className="big">{formatSzam(last.ertek, d)}</span>
+        <span className="big">{ertekSzoveg(last.ertek, d, last.jel)}</span>
         {st && <span className="flag">{st}</span>}
         <span className="meta push-right">
-          {formatSzam(first.ertek, d)} → {formatSzam(last.ertek, d)} · {ms.length} mérés
+          {ertekSzoveg(first.ertek, d, first.jel)} → {ertekSzoveg(last.ertek, d, last.jel)} · {ms.length} mérés
         </span>
       </div>
       <div ref={wrapRef}>
@@ -529,7 +579,7 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
           width={W}
           height={Hh}
           role="img"
-          aria-label={`${p.nev}: ${ms.map((m) => `${formatDatum(m.datum)} ${formatSzam(m.ertek, d)}`).join('; ')}`}
+          aria-label={`${p.nev}: ${ms.map((m) => `${formatDatum(m.datum)} ${ertekSzoveg(m.ertek, d, m.jel)}`).join('; ')}`}
           onMouseLeave={() => setHover(null)}
         >
           <rect x={L} y={bandTop} width={R - L} height={Math.max(0, bandBot - bandTop)} fill="var(--c-ref-band)" />
@@ -571,7 +621,7 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
             strokeLinejoin="round"
           />
           {ms.map((m, i) => {
-            const out = kivul(p, m.ertek);
+            const out = kivul(p, m.ertek, m.jel);
             return (
               <g key={m.id}>
                 <circle
@@ -592,7 +642,7 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
                   className="hit"
                   tabIndex={0}
                   role="button"
-                  aria-label={`${formatDatum(m.datum)}: ${p.nev} ${formatSzam(m.ertek, d)}${statusz(p, m.ertek) ? ', ' + statusz(p, m.ertek) : ''}. Részletek.`}
+                  aria-label={`${formatDatum(m.datum)}: ${p.nev} ${ertekSzoveg(m.ertek, d, m.jel)}${statusz(p, m.ertek, m.jel) ? ', ' + statusz(p, m.ertek, m.jel) : ''}. Részletek.`}
                   onMouseEnter={() => setHover(i)}
                   onFocus={() => setHover(i)}
                   onBlur={() => setHover(null)}
@@ -611,7 +661,7 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
               textAnchor="end"
               fill="var(--c-ink)"
             >
-              {formatSzam(last.ertek, d)}
+              {ertekSzoveg(last.ertek, d, last.jel)}
             </text>
           )}
           {h && (
@@ -630,7 +680,7 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
                 {formatDatum(h.datum)} · {h.dokumentumId !== null ? 'Laborlelet' : 'kézi rögzítés'}
               </text>
               <text x={tipX + 10} y={46} fontSize={14} fontWeight={700} fill="var(--c-ink)">
-                {p.nev} {formatSzam(h.ertek, d)} {statusz(p, h.ertek) ?? ''}
+                {p.nev} {ertekSzoveg(h.ertek, d, h.jel)} {statusz(p, h.ertek, h.jel) ?? ''}
               </text>
               <text x={tipX + 10} y={60} fontSize={11} fontWeight={700} fill="var(--c-accent)">
                 Részletek →
@@ -643,8 +693,23 @@ function LabChart({ p, onValaszt }: { p: LaborParameter; onValaszt: (id: number)
   );
 }
 
-function LabTable({ params, onValaszt }: { params: LaborParameter[]; onValaszt: (id: number) => void }) {
-  const datumok = [...new Set(params.flatMap((p) => p.meresek.map((m) => m.datum)))].sort(
+/**
+ * Kvalitatív eredmény eltér-e a szöveges referenciától ("Pozitív" vs. "Negatív") —
+ * kis/nagybetű-független összevetés; referencia nélkül nem jelzünk semmit.
+ */
+const szovegEltér = (p: LaborSzovegesParameter, szoveg: string) =>
+  p.refSzoveg !== null && szoveg.trim().toLocaleLowerCase('hu') !== p.refSzoveg.trim().toLocaleLowerCase('hu');
+
+function LabTable({
+  params,
+  szovegesek = [],
+  onValaszt,
+}: {
+  params: LaborParameter[];
+  szovegesek?: LaborSzovegesParameter[];
+  onValaszt: (id: number) => void;
+}) {
+  const datumok = [...new Set([...params, ...szovegesek].flatMap((p) => p.meresek.map((m) => m.datum)))].sort(
     (a, b) => new Date(a).getTime() - new Date(b).getTime(),
   );
   return (
@@ -671,12 +736,35 @@ function LabTable({ params, onValaszt }: { params: LaborParameter[]; onValaszt: 
               <td className="meta">{refSzoveg(p)}</td>
               {datumok.map((d) => {
                 const m = p.meresek.find((x) => x.datum === d);
-                const st = m ? statusz(p, m.ertek) : null;
+                const st = m ? statusz(p, m.ertek, m.jel) : null;
                 return (
                   <td key={d} className={`mono${st ? ' labtable__out' : ''}`}>
                     {m ? (
                       <button type="button" className="linkbtn mono" onClick={() => onValaszt(m.id)}>
-                        {formatSzam(m.ertek, tizedes(p))} {st && <span aria-label={st}>{st.slice(0, 1)}</span>}
+                        {ertekSzoveg(m.ertek, tizedes(p), m.jel)} {st && <span aria-label={st}>{st.slice(0, 1)}</span>}
+                      </button>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+          {szovegesek.map((p) => (
+            <tr key={p.kod}>
+              <th scope="row">
+                {p.nev} <span className="meta">{p.mertekegyseg}</span>
+              </th>
+              <td className="meta">{p.refSzoveg ? `ref. ${p.refSzoveg}` : '—'}</td>
+              {datumok.map((d) => {
+                const m = p.meresek.find((x) => x.datum === d);
+                const elter = m ? szovegEltér(p, m.szoveg) : false;
+                return (
+                  <td key={d} className={elter ? 'labtable__out' : undefined}>
+                    {m ? (
+                      <button type="button" className="linkbtn" onClick={() => onValaszt(m.id)}>
+                        {m.szoveg} {elter && <span aria-label="eltér a referenciától">≠</span>}
                       </button>
                     ) : (
                       '—'

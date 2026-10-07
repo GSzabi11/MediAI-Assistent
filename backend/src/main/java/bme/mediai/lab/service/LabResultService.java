@@ -52,9 +52,12 @@ public class LabResultService {
                         r.groupName(),
                         r.name(),
                         r.value(),
+                        r.comparator(),
+                        r.valueText(),
                         r.unit(),
                         r.refLow(),
                         r.refHigh(),
+                        r.refText(),
                         measuredAtOf(r, document),
                         r.code()))
                 .toList();
@@ -75,10 +78,14 @@ public class LabResultService {
     @Transactional(readOnly = true)
     public List<LabResultResponse> findByPatient(Long patientId, String name) {
         requirePatientExists(patientId);
-        List<LabResult> results = name == null
-                ? repository.findByPatientIdOrderByMeasuredAtDescIdDesc(patientId)
-                : repository.findByPatientIdAndNameOrderByMeasuredAtAscIdAsc(patientId, name);
-        return results.stream()
+        List<LabResult> results = repository.findByPatientIdOrderByMeasuredAtDescIdDesc(patientId);
+        if (name == null) {
+            return results.stream().map(LabResultResponse::from).toList();
+        }
+        // Egy vizsgálat trendje időrendben, az egységes név szerint ("Kálium (K)" = "Kálium") —
+        // a szinonimák miatt nem lehet egyszerű név-egyezéses lekérdezés
+        return results.reversed().stream()
+                .filter(r -> LabTestNames.sameTest(r.getName(), name))
                 .map(LabResultResponse::from)
                 .toList();
     }

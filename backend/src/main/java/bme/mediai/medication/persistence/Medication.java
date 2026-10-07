@@ -2,7 +2,12 @@ package bme.mediai.medication.persistence;
 
 import java.math.BigDecimal;
 
+import bme.mediai.common.persistence.EntryOrigin;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -32,11 +37,18 @@ public class Medication {
 
     private boolean active;
 
+    @Enumerated(EnumType.STRING)
+    @Column(updatable = false)
+    private EntryOrigin origin;
+
     protected Medication() {
     }
 
     public Medication(Long patientId, String name, String activeIngredient, BigDecimal dose,
-            String doseUnit, String route, Long sourceStatementId) {
+            String doseUnit, String route, Long sourceStatementId, EntryOrigin origin) {
+        if (origin == EntryOrigin.DOCUMENT_PIPELINE && sourceStatementId == null) {
+            throw new IllegalArgumentException("A pipeline-ból jött gyógyszerhez kötelező a forrás-állítás");
+        }
         if (dose != null && (doseUnit == null || doseUnit.isBlank())) {
             throw new IllegalArgumentException("Dózishoz kötelező a mértékegység (doseUnit)");
         }
@@ -48,6 +60,7 @@ public class Medication {
         this.route = route;
         this.sourceStatementId = sourceStatementId;
         this.active = true;
+        this.origin = origin;
     }
 
     // Egyirányú: leállított gyógyszer nem kapcsolható vissza, újrakezdés = új sor.
@@ -88,6 +101,10 @@ public class Medication {
 
     public Long getSourceStatementId() {
         return sourceStatementId;
+    }
+
+    public EntryOrigin getOrigin() {
+        return origin;
     }
 
     public boolean isActive() {
