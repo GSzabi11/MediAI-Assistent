@@ -16,6 +16,9 @@ DOCUMENTS_ROOT = Path(_root).resolve() if _root else None
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
 # architecture.md: helyi fejlesztésnél MedGemma 4B (ollama pull medgemma:4b — vagy más letöltött modell)
 LLM_MODEL = os.environ.get("DOC_LLM_MODEL", "medgemma:4b")
+# A klinikai asszisztens (chat) modellje — külön állítható: a hosszú, sok forrású kontextusban a 4B-s
+# MedGemma hurokba esett és rossz forrásra hivatkozott, a qwen3.5:9b nem (docs/clinical-chat.md)
+CHAT_LLM_MODEL = os.environ.get("CHAT_LLM_MODEL", LLM_MODEL)
 LLM_SEED = int(os.environ.get("DOC_LLM_SEED", "42"))
 # Az Ollama alapértelmezett kontextusa (2–4k token) egy többoldalas leletet levágna
 LLM_NUM_CTX = int(os.environ.get("DOC_LLM_NUM_CTX", "16384"))
@@ -34,7 +37,7 @@ CHUNK_TARGET_CHARS = int(os.environ.get("CHUNK_TARGET_CHARS", "800"))
 CHUNK_OVERLAP_CHARS = int(os.environ.get("CHUNK_OVERLAP_CHARS", "150"))
 
 # A dokumentum extractor_version oszlopába kerül: a feldolgozó kód (prompt, utófeldolgozás) verziója
-EXTRACTOR_VERSION = "docproc-13"
+EXTRACTOR_VERSION = "docproc-14"
 
 CALLBACK_TIMEOUT_SEC = 60
 CALLBACK_RETRY_DELAYS_SEC = (2, 10, 30, 60)

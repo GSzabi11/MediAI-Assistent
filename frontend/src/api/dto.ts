@@ -388,3 +388,35 @@ export interface ClinicalSummaryDto {
   /** az összefoglaló óta új dokumentum/állítás jött */
   stale: boolean;
 }
+
+/** GET /chat-messages?patientId= — klinikai asszisztens (külön tábla, nem állítás) */
+export interface ChatMessageDto {
+  id: number;
+  patientId: number;
+  status: 'PROCESSING' | 'DONE' | 'FAILED';
+  requestedBy: number | null;
+  requestedAt: string;
+  completedAt: string | null;
+  error: string | null;
+  question: string;
+  history: number[];
+  answer: {
+    text: string;
+    list: boolean;
+    /** bevezető/címsor — nem kell forrás */
+    heading: boolean;
+    sources: { kind: string; id: number; label: string; source: StatementSourceDto }[];
+  }[];
+  /** forrás-lefedettségből számolva (nem a modell önértékelése) */
+  uncertainty: UncertaintyDto | null;
+  warnings: string[];
+  relatedRules: { statementId: number; text: string; severity: SeverityDto }[];
+  model: {
+    modelName: string;
+    seed: number;
+    promptHash: string;
+    extractorVersion: string;
+    embeddingModel: string | null;
+  } | null;
+  contextCounts: Record<string, number>;
+}

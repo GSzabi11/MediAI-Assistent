@@ -106,7 +106,8 @@ public class SummaryFactsBuilder {
         return new Built(facts, ids);
     }
 
-    private static SummaryFacts.LabFact labFact(LabResult r) {
+    // egy laborsor a modellnek: érték a jellel, referencia, a szabálymotor minősítése (a chat is ezt használja)
+    public static SummaryFacts.LabFact labFact(LabResult r) {
         String value = r.getValueText() != null ? r.getValueText()
                 : (r.getComparator() == null ? "" : r.getComparator()) + number(r.getValueNum());
         String reference = r.getRefText() != null ? r.getRefText()

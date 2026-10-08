@@ -31,6 +31,8 @@ import bme.mediai.medication.exception.MedicationAlreadyDiscontinuedException;
 import bme.mediai.medication.exception.MedicationNotFoundException;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.processing.exception.InvalidCallbackTokenException;
+import bme.mediai.chat.exception.ChatConflictException;
+import bme.mediai.chat.exception.ChatMessageNotFoundException;
 import bme.mediai.summary.exception.ClinicalSummaryNotFoundException;
 import bme.mediai.summary.exception.SummaryConflictException;
 import bme.mediai.patient.exception.TajConflictException;
@@ -141,6 +143,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SummaryConflictException.class)
     ProblemDetail handleSummaryConflict(SummaryConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ChatMessageNotFoundException.class)
+    ProblemDetail handleChatNotFound(ChatMessageNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ChatConflictException.class)
+    ProblemDetail handleChatConflict(ChatConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

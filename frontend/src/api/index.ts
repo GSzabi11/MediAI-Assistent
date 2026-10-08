@@ -24,6 +24,7 @@ import type {
   UtteranceDto,
   VoiceProfileDto,
   ClinicalSummaryDto,
+  ChatMessageDto,
 } from './dto';
 import { http } from './http';
 import { parseMegszolalasok, parseRagDarabok } from './importok';
@@ -49,10 +50,10 @@ import {
   toRagDarab,
   toSourceDto,
   toOsszefoglalo,
+  toChatValasz,
 } from './mappers';
 import {
   ApiError,
-  NotAvailableError,
   type ChatValasz,
   type ClaimResponse,
   type EllatasTipus,
@@ -451,11 +452,29 @@ export const api = {
   listNaploFelhasznalora: async (userId: number) =>
     (await http.get<AccessLogDto[]>(`/access-logs?userId=${userId}`)).map(toNaplo),
 
-  // ======================= chat =======================
+  // ======================= klinikai asszisztens (chat) =======================
 
-  /** nincs backend-végpont */
-  kerdez: (_patientId: number, _kerdes: string): Promise<ChatValasz> =>
-    Promise.reject(new NotAvailableError('Klinikai asszisztens')),
+  /** GET /chat-messages?patientId= — a beteg legutóbbi kérdései, a legfrissebb elöl */
+  listChat: async (patientId: number) =>
+    (await http.get<ChatMessageDto[]>(`/chat-messages?patientId=${patientId}`)).map(toChatValasz),
+
+  /** GET /chat-messages/{id} — a készülő válasz állapota */
+  getChat: async (id: number) => toChatValasz(await http.get<ChatMessageDto>(`/chat-messages/${id}`)),
+
+  /**
+   * POST /chat-messages — a belépett orvos nevében; 202, a háttérben készül (getChat-tel követhető).
+   * A kérdés a törzsben megy (érzékeny adat lehet), sosem query stringben. `elozmenyIds`: a
+   * beszélgetés előző (legfeljebb 3) kész válasza — a modell ezekből érti a visszautaló kérdést.
+   */
+  kerdez: async (patientId: number, kerdes: string, elozmenyIds: number[]): Promise<ChatValasz> =>
+    toChatValasz(
+      await http.post<ChatMessageDto>('/chat-messages', {
+        patientId,
+        userId: requireUser().id,
+        question: kerdes,
+        previousMessageIds: elozmenyIds,
+      }),
+    ),
 };
 
 export type Api = typeof api;

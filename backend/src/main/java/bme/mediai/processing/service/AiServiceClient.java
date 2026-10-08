@@ -9,6 +9,7 @@ import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import bme.mediai.chat.api.ChatJobRequest;
 import bme.mediai.processing.api.ProcessingJobRequest;
 import bme.mediai.summary.api.SummaryFacts;
 import bme.mediai.summary.api.SummaryJobRequest;
@@ -44,6 +45,17 @@ public class AiServiceClient {
                 callbackBaseUrl + "/api/clinical-summaries/" + summaryId + "/result", facts);
         restClient.post()
                 .uri("/summaries")
+                .header(InternalTokenVerifier.HEADER, token.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(job)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    // Klinikai asszisztens: a kérdés + kontextus; a Python a sor elejére teszi
+    public void submitChat(ChatJobRequest job) {
+        restClient.post()
+                .uri("/chats")
                 .header(InternalTokenVerifier.HEADER, token.token())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(job)

@@ -2,6 +2,7 @@
 
     POST /jobs       Spring → Python: dokumentum-feldolgozás (sorba áll, 202)
     POST /summaries  Spring → Python: klinikai összefoglaló (ugyanabba a sorba, 202)
+    POST /chats      Spring → Python: klinikai asszisztens kérdése (a sor elejére, 202)
     GET  /health   sor állapota
 
 Indítás: python app.py   (ld. README.md)
@@ -15,7 +16,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import config
-from worker import Job, JobQueue, SummaryJob
+from worker import ChatJob, Job, JobQueue, SummaryJob
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -62,6 +63,30 @@ def submit_summary(req: SummaryRequest, x_internal_token: str | None = Header(de
     if position is None:
         return JSONResponse(status_code=202, content={"summaryId": req.summaryId, "alreadyQueued": True})
     return {"summaryId": req.summaryId, "queuePosition": position}
+
+
+class ChatTurn(BaseModel):
+    question: str
+    answer: str
+
+
+class ChatRequest(BaseModel):
+    chatId: int = Field(gt=0)
+    callbackUrl: str = Field(pattern=r"^https?://")
+    retrieveUrl: str = Field(pattern=r"^https?://")
+    question: str = Field(min_length=1, max_length=2000)
+    history: list[ChatTurn] = Field(default_factory=list, max_length=3)
+    facts: list[dict]
+
+
+@app.post("/chats", status_code=202)
+def submit_chat(req: ChatRequest, x_internal_token: str | None = Header(default=None)):
+    _check_token(x_internal_token)
+    position = jobs.submit(ChatJob(req.chatId, req.callbackUrl, req.retrieveUrl, req.question,
+                                   [t.model_dump() for t in req.history], req.facts))
+    if position is None:
+        return JSONResponse(status_code=202, content={"chatId": req.chatId, "alreadyQueued": True})
+    return {"chatId": req.chatId, "queuePosition": position}
 
 
 @app.get("/health")

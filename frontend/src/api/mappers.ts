@@ -24,6 +24,7 @@ import type {
   UtteranceDto,
   VoiceProfileDto,
   ClinicalSummaryDto,
+  ChatMessageDto,
 } from './dto';
 import type {
   Allergia,
@@ -51,6 +52,7 @@ import type {
   PatientResponse,
   RagDarab,
   KlinikaiOsszefoglalo,
+  ChatValasz,
 } from './types';
 
 // ---------- beteg + felhasználó ----------
@@ -461,4 +463,34 @@ export const toOsszefoglalo = (s: ClinicalSummaryDto): KlinikaiOsszefoglalo => (
   },
   bemenet: s.inputCounts ?? {},
   elavult: s.stale,
+});
+
+export const toChatValasz = (m: ChatMessageDto): ChatValasz => ({
+  id: m.id,
+  patientId: m.patientId,
+  allapot: osszefoglaloAllapot[m.status],
+  kerdes: m.question,
+  kerve: m.requestedAt,
+  hiba: m.error,
+  bizonytalansag: m.uncertainty ? (m.uncertainty.toLowerCase() as ChatValasz['bizonytalansag']) : null,
+  pontok: (m.answer ?? []).map((p) => ({
+    szoveg: p.text,
+    lista: p.list,
+    bevezeto: p.heading,
+    forrasok: p.sources.map((f) => ({ forras: toForras(f.source), cim: f.label })),
+  })),
+  figyelmeztetesek: m.warnings ?? [],
+  kapcsoltSzabalyok: (m.relatedRules ?? []).map((r) => ({
+    allitasId: r.statementId,
+    cim: r.text,
+    sulyossag: r.severity.toLowerCase() as ChatValasz['kapcsoltSzabalyok'][number]['sulyossag'],
+  })),
+  modell: m.model && {
+    nev: m.model.modelName,
+    seed: m.model.seed,
+    promptHash: m.model.promptHash,
+    verzio: m.model.extractorVersion,
+    embedding: m.model.embeddingModel,
+  },
+  kontextus: m.contextCounts ?? {},
 });

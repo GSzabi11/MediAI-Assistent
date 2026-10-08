@@ -18,6 +18,8 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
   a Spring sosem hívja az Ollamát. Ld. `docs/document-processing.md`. Ugyanez a szolgáltatás
   készíti a Klinikai státusz összefoglalóját (`docs/clinical-summary.md`) — ez a felhasználó
   döntése szerint külön táblában él, NEM `allitas`-ként (tudatos kivétel a lenti elv alól).
+  Ugyanígy a Klinikai asszisztens (RAG-chat, `chat_message`, `docs/clinical-chat.md`): a válasz
+  pontjai forrásra hivatkoznak, de nem jóváhagyható állítások.
 - **frontend/** — React (Figma-terv alapján, még nincs kód).
 
 ## A rendszer központi elve: az Allitas (Statement)

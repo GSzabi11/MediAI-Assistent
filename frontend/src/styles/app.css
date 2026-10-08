@@ -1235,6 +1235,45 @@ mark {
   font-size: var(--fs-md);
   line-height: 1.5;
 }
+.chat-a__p {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: 1.6;
+}
+.chat-a__list li {
+  line-height: 1.6;
+}
+/* a forrás-chip a mondat végén, a szöveggel egy sorban (tördelhető) */
+.chat-src {
+  vertical-align: baseline;
+  max-width: 100%;
+  white-space: nowrap;
+}
+.chat-a__warn {
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+  border: 1.5px dashed #9a5b00;
+  border-radius: var(--radius-sm);
+  background: var(--c-warning-tint);
+  color: var(--c-warning-ink);
+  font-size: var(--fs-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.chat-a__rulelist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chat-a__rules > summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-ink-muted);
+  margin-bottom: 8px;
+}
 .chat-a__foot {
   padding: 10px 16px;
   border-top: 1.5px dashed var(--c-accent);

@@ -1,9 +1,11 @@
 """Szekvenciális feldolgozó sor: egyszerre EGY feladat (GPU/VRAM), a többi vár — dokumentum-
-feldolgozás és klinikai összefoglaló ugyanabban a sorban.
+feldolgozás, klinikai összefoglaló és chat ugyanabban a sorban. A chat-kérdés elsőbbséget kap
+(az orvos vár rá): a sor elejére kerül, de a már futó feladatot megvárja.
 
 A sorbaállítás itt van, nem a Springben: a Spring csak beadja a feladatot és 202-t kap.
 Egy dokumentum végén a callback elmegy, és csak utána jön a következő.
 """
+import itertools
 import logging
 import queue
 import threading
@@ -13,6 +15,7 @@ from pathlib import Path
 
 import requests
 
+import chat
 import chunking
 import classify
 import config
@@ -56,26 +59,58 @@ class SummaryJob:
         return f"összefoglaló {self.summary_id}"
 
 
+@dataclass(frozen=True, eq=False)
+class ChatJob:
+    chat_id: int
+    callback_url: str
+    retrieve_url: str
+    question: str
+    history: list
+    facts: list
+
+    @property
+    def key(self) -> tuple:
+        return ("chat", self.chat_id)
+
+    @property
+    def label(self) -> str:
+        return f"chat {self.chat_id}"
+
+
+# kisebb = előbb; azonos prioritáson belül érkezési sorrend
+_PRIORITY = {ChatJob: 0}
+
+
+def run_chat(job: ChatJob) -> dict:
+    try:
+        chunks = chat.retrieve(job.retrieve_url, job.question, job.history)
+    except requests.RequestException as e:
+        raise ProcessingError(f"A dokumentumok keresése (Spring retrieve) sikertelen: {e}"[:2000]) from e
+    return chat.answer(job.question, job.history, job.facts, chunks)
+
+
 class ProcessingError(Exception):
     """Várt, a felhasználónak is értelmes hiba (FAILED callback az üzenettel)."""
 
 
 class JobQueue:
     def __init__(self) -> None:
-        self._queue: queue.Queue[Job | SummaryJob] = queue.Queue()
+        self._queue: queue.PriorityQueue[tuple[int, int, Job | SummaryJob | ChatJob]] = queue.PriorityQueue()
+        self._seq = itertools.count()
         self._lock = threading.Lock()
         self._pending: set[tuple] = set()  # sorban álló + éppen feldolgozott feladatok
         self._current: str | None = None
 
-    def submit(self, job: "Job | SummaryJob") -> int | None:
+    def submit(self, job: "Job | SummaryJob | ChatJob") -> int | None:
         """Sorba állít; a sorban elfoglalt hely (0 = következő), vagy None, ha már bent van
         (ismételt értesítés ugyanarra a dokumentumra nem dolgozza fel kétszer)."""
+        priority = _PRIORITY.get(type(job), 1)
         with self._lock:
             if job.key in self._pending:
                 return None
             self._pending.add(job.key)
-            position = self._queue.qsize()
-            self._queue.put(job)
+            position = sum(1 for p, _, _ in list(self._queue.queue) if p <= priority)
+            self._queue.put((priority, next(self._seq), job))
             return position
 
     def status(self) -> dict:
@@ -87,11 +122,16 @@ class JobQueue:
 
     def _run(self) -> None:
         while True:
-            job = self._queue.get()
+            _, _, job = self._queue.get()
             with self._lock:
                 self._current = job.label
             try:
-                payload = summarize.summarize(job.facts) if isinstance(job, SummaryJob) else process(job)
+                if isinstance(job, ChatJob):
+                    payload = run_chat(job)
+                elif isinstance(job, SummaryJob):
+                    payload = summarize.summarize(job.facts)
+                else:
+                    payload = process(job)
             except Exception as e:  # noqa: BLE001 — minden hiba FAILED callback, a sor nem állhat le
                 log.exception("A(z) %s feldolgozása sikertelen", job.label)
                 payload = {"status": "FAILED", "error": _error_message(e)}
@@ -180,7 +220,7 @@ def process(job: Job) -> dict:
     }
 
 
-def send_callback(job: "Job | SummaryJob", payload: dict) -> None:
+def send_callback(job: "Job | SummaryJob | ChatJob", payload: dict) -> None:
     """Eredmény a Springnek. Hálózati hibánál / 5xx-nél újrapróbál. 4xx-nél a Spring már
     FAILED-re állította a feladatot (vagy már lezárt) — egy rövid FAILED jelzés biztosítja,
     hogy olvashatatlan kérés esetén se maradjon PROCESSING-ben."""

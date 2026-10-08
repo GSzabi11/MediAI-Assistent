@@ -187,8 +187,13 @@ def contradictions(text: str, facts: dict) -> list[str]:
 _CLAUSE = re.compile(r"[,.;:!?\n]")
 
 
+_BRACKETED = re.compile(r"\[[^\]]*\]")
+
+
 def _clause_key(c: str) -> str:
-    return re.sub(r"\W+", " ", c).strip().casefold()
+    # a [..] jelölések (forrás-sorszám, "[orvos által jóváhagyva]") nem számítanak: ezek ismétlődése
+    # nem hurok
+    return re.sub(r"\W+", " ", _BRACKETED.sub(" ", c)).strip().casefold()
 
 
 def _loop_start(text: str) -> int | None:
@@ -206,17 +211,29 @@ def _loop_start(text: str) -> int | None:
 
 
 def _stream_text(system: str, user: str, max_tokens: int) -> tuple[str, bool]:
-    """Szöveges generálás streamelve; hurok (ismétlődő tagmondat) esetén azonnal leáll, és a hurok
-    előtti utolsó teljes mondatig tartó részt adja vissza. (szöveg, volt-e hurok/csonkolás)"""
+    return stream_messages([{"role": "system", "content": system}, {"role": "user", "content": user}], max_tokens)
+
+
+def stream_messages(messages: list[dict], max_tokens: int, options: dict | None = None, *,
+                    model: str | None = None, loop_start=_loop_start,
+                    think: bool | None = None) -> tuple[str, bool]:
+    """Szöveges generálás streamelve; hurok (loop_start: alapból ismétlődő tagmondat) esetén azonnal
+    leáll, és a hurok előtti utolsó teljes mondatig tartó részt adja vissza. (szöveg, volt-e
+    hurok/csonkolás). think=False: a gondolkodó modelleknél (qwen3.5) kikapcsolja a gondolkodási
+    fázist — a nem gondolkodó modellek figyelmen kívül hagyják."""
     out = ""
     cut = False
+    body = {"model": model or config.LLM_MODEL,
+            "messages": messages,
+            "stream": True,
+            "options": {**(_OPTIONS if options is None else options), "seed": config.LLM_SEED,
+                        "num_ctx": config.LLM_NUM_CTX,
+                        "num_predict": max_tokens}}
+    if think is not None:
+        body["think"] = think
     with requests.post(
         f"{config.OLLAMA_URL}/api/chat",
-        json={"model": config.LLM_MODEL,
-              "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-              "stream": True,
-              "options": {**_OPTIONS, "seed": config.LLM_SEED, "num_ctx": config.LLM_NUM_CTX,
-                          "num_predict": max_tokens}},
+        json=body,
         stream=True, timeout=config.LLM_TIMEOUT_SEC,
     ) as resp:
         resp.raise_for_status()
@@ -227,7 +244,7 @@ def _stream_text(system: str, user: str, max_tokens: int) -> tuple[str, bool]:
             if "error" in chunk:
                 raise ValueError(f"Ollama-hiba: {chunk['error']}")
             out += chunk.get("message", {}).get("content", "")
-            start = _loop_start(out)
+            start = loop_start(out)
             if start is not None:
                 out, cut = out[:start], True
                 break

@@ -1,0 +1,13 @@
+backend:
+cd backend
+.\mvnw spring-boot:run
+
+frondend:
+cd frondend
+npm run dev
+
+ai:
+.venv\Scripts\activate          
+ $env:DOC_LLM_MODEL = "medgemma:latest"      
+ python app.py    
+ .venv\Scripts\python app.py

@@ -368,25 +368,37 @@ export interface NaploBejegyzes {
   ip: string | null;
 }
 
-// ---------- chat (NINCS még backend-végpont) ----------
+// ---------- klinikai asszisztens (chat) ----------
+export interface ChatForras {
+  forras: Forras;
+  /** a backend adja: dokumentum címe + dátuma, ill. vizsgálat neve + dátuma */
+  cim: string;
+}
+
 export interface ChatPont {
   szoveg: string;
-  forrasok: Forras[]; // üres = forrás nélküli következtetés
+  /** számozott/felsorolt pont volt */
+  lista: boolean;
+  /** bevezető mondat (kettősponttal) — nem kell forrás */
+  bevezeto: boolean;
+  forrasok: ChatForras[]; // üres = forrás nélküli következtetés
 }
 
 export interface ChatValasz {
-  id: string;
+  id: number;
   patientId: number;
-  bizonytalansag: Bizonytalansag;
+  allapot: 'keszul' | 'kesz' | 'hiba';
+  kerdes: string;
+  kerve: string;
+  hiba: string | null;
+  /** forrás-lefedettségből (backend), csak kész válasznál */
+  bizonytalansag: Bizonytalansag | null;
   pontok: ChatPont[];
+  figyelmeztetesek: string[];
   kapcsoltSzabalyok: { allitasId: number; cim: string; sulyossag: Sulyossag }[];
-}
-
-export interface ChatUzenet {
-  id: string;
-  szerep: 'orvos' | 'ai';
-  szoveg?: string;
-  valasz?: ChatValasz;
+  modell: { nev: string; seed: number; promptHash: string; verzio: string; embedding: string | null } | null;
+  /** hány tényt kapott a modell, fajtánként */
+  kontextus: Record<string, number>;
 }
 
 // ---------- hiba ----------

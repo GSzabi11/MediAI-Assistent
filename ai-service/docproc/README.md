@@ -6,14 +6,16 @@ Interfész és döntések: [`docs/document-processing.md`](../../docs/document-p
 
 | Fájl | Feladat |
 |---|---|
-| `app.py` | FastAPI: `POST /jobs`, `GET /health` |
-| `worker.py` | sor + szekvenciális feldolgozó szál + callback a Springnek |
+| `app.py` | FastAPI: `POST /jobs`, `POST /summaries`, `POST /chats`, `GET /health` |
+| `worker.py` | prioritásos sor (a chat elöl) + szekvenciális feldolgozó szál + callback a Springnek |
 | `pdf_text.py` | PDF szöveges rétege (PyMuPDF), OCR nincs |
 | `classify.py` | LAB / AMBULANCE — kulcsszó-keresés, nem modell |
 | `llm.py` | Ollama-hívás, típusfüggő prompt + JSON-séma, prompt-hash |
 | `extract.py` | a modell-kimenet determinisztikus visszakeresése, szám/dátum értelmezés |
 | `textutil.py` | normalizálás, idézet → code-point offset |
 | `chunking.py`, `embedding.py` | RAG-darabolás, BGE-M3 (1024 dim) |
+| `summarize.py` | Klinikai státusz összefoglaló ([`docs/clinical-summary.md`](../../docs/clinical-summary.md)) |
+| `chat.py` | Klinikai asszisztens (RAG-chat, [`docs/clinical-chat.md`](../../docs/clinical-chat.md)) |
 
 ## Telepítés
 
@@ -42,6 +44,7 @@ python app.py                                # http://127.0.0.1:8001
 | `MEDIAI_DOCUMENTS_ROOT` | — | ha meg van adva, csak ez alatti fájl olvasható |
 | `OLLAMA_URL` | `http://localhost:11434` | |
 | `DOC_LLM_MODEL` | `medgemma:4b` | pl. `gemma4:e4b`, `qwen3.5:9b` |
+| `CHAT_LLM_MODEL` | = `DOC_LLM_MODEL` | a chat modellje; ajánlott: `qwen3.5:9b` (ld. clinical-chat.md) |
 | `DOC_LLM_SEED` | `42` | a producer-be is bekerül |
 | `DOC_LLM_NUM_CTX` | `16384` | az Ollama alapértéke egy leletet levágna |
 | `DOC_LLM_MAX_CHARS` | `40000` | ennél hosszabb szöveg vége nem megy a modellhez |
