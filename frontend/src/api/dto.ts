@@ -389,7 +389,7 @@ export interface ClinicalSummaryDto {
   stale: boolean;
 }
 
-/** GET /chat-messages?patientId= — klinikai asszisztens (külön tábla, nem állítás) */
+/** GET/POST /chat-messages — klinikai asszisztens (nem állítás, nem tárolódik) */
 export interface ChatMessageDto {
   id: number;
   patientId: number;

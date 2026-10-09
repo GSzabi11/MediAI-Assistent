@@ -1,20 +1,30 @@
-# Klinikai asszisztens (RAG-chat) — V24
+# Klinikai asszisztens (RAG-chat) — V24, V25
 
 A betegoldal jobb oldali panelje. Az orvos kérdez a betegről; a válasz a beteg **összes
 dokumentumából** (visszakeresett szövegrészek) és a strukturált adataiból (labor, kinyert
 állítások, gyógyszer, allergia) készül, és **minden pontja a forrására hivatkozik** — a chip a
 dokumentumot a hivatkozott karakter-tartománnyal, ill. a laborsort nyitja meg.
 
-## Tudatos döntés: külön tábla, nem `statement`
+## Tudatos döntés: nem `statement`, és nem is tárolódik (V25)
 
-A felhasználó döntése: a válasz a `chat_message` táblában él, **nem** állításként (ugyanaz a
-kivétel, mint a `clinical_summary`-nél). A pontok nem jóváhagyhatók, és nem kerülnek az
-állításlistába. Amit megőrzünk, hogy utólag igazolható legyen, mit mondott a modell:
+A felhasználó döntése: a válasz **nem** állítás (ugyanaz a kivétel, mint a
+`clinical_summary`-nél), a pontok nem jóváhagyhatók, és nem kerülnek az állításlistába.
+
+**V25 óta a beszélgetés nem tárolódik** (a V24 `chat_message` táblát a V25 törölte, a
+sorokkal együtt): újratöltés után, ill. más felhasználónak a chat üres. Az üzenet a Spring
+memóriájában él (`ChatMessageStore`) — a válasz elkészüléséig, a felület lekérdezéséig és a
+következő kérdés előzményéig kell —, a kérdéstől számított 2 óráig, utána törlődik; újraindításkor
+elvész. Az azonosító az indulás idejéből (ms) indul, így újraindítás után egy elkésett Python-callback
+nem írhat egy új kérdésbe (404). Memóriában a válasz mellett ugyanazt tartjuk, mint korábban:
 
 - **MIBŐL**: `context` (a hivatkozható strukturált tények) + `retrieved` (a kérdéshez
   visszakeresett `document_chunk`-ok) — `{kind, id, label, source}` elemek;
-- **HOGY**: `model_name`, `seed`, `prompt_hash`, `extractor_version`, `embedding_model`;
-- **MIKOR**: `requested_at`, `completed_at`; `history` — a modellnek átadott korábbi kérdések.
+- **HOGY**: `modelName`, `seed`, `promptHash`, `extractorVersion`, `embeddingModel`;
+- **MIKOR**: `requestedAt`, `completedAt`; `history` — a modellnek átadott korábbi kérdések.
+
+**Ára**: utólag nem igazolható, mit mondott a modell egy adott kérdésre. A hozzáférési napló
+továbbra is rögzíti a chat-hívásokat a beteggel (a controller kérés-attribútumban adja át, mert
+nincs tábla, amiből a `PatientResolver` feloldaná), de a kérdés és a válasz szövegét nem.
 
 A felület kiírja: „AI-válasz döntéstámogatásra — nem jóváhagyott állítás”.
 
@@ -29,11 +39,12 @@ Python (worker, a GPU-sorban):
   2. POST /api/chat-messages/{id}/retrieve {embedding}  → a beteg 8 legközelebbi darabja (pgvector)
   3. a modell számozott forrásokat kap, [n] jelekkel hivatkozik
   4. determinisztikus utófeldolgozás → POST /api/chat-messages/{id}/result
-GET /api/chat-messages?patientId=   — a legutóbbi 50 kérdés (a felület ebből tölti vissza a beszélgetést)
 GET /api/chat-messages/{id}         — a készülő válasz állapota (a felület 1,5 mp-enként kérdezi)
 ```
 
-Betegenként egyszerre egy készülő válasz (részleges egyedi index, 409). A kérdés a kérés
+Listázó végpont nincs (V25 óta): a felület nem tölt vissza előzményt. A lejárt előzmény-azonosító
+(`previousMessageIds`) csendben kimarad. Betegenként egyszerre egy készülő válasz (a
+`ChatMessageStore` szinkronizáltan ellenőrzi, 409). A kérdés a kérés
 törzsében megy, sosem query stringben (CLAUDE.md: érzékeny adat).
 
 **Miért a Spring keres, nem a Python?** Az adatbázist csak a Spring éri el (architektúra-határ);
@@ -93,5 +104,6 @@ küld (a nem gondolkodó modellek ezt figyelmen kívül hagyják).
 - A darab-hivatkozás a teljes ~800 karakteres darabra mutat, nem a pontos mondatra.
 - Hangfelvétel (megszólalások) még nincs a kontextusban — csak a belőlük kinyert állítások.
 - A javaslatok orvosszakmai helyességét semmi nem ellenőrzi — feltételes mód, „döntés az orvosé”.
-- „Új beszélgetés”: a felület elrejti a korábbiakat (böngészőnként, `localStorage`); a szerveren
-  minden kérdés megmarad.
+- „Új beszélgetés”: a felület kiüríti a beszélgetést (a modell a korábbiakat nem látja többé).
+- Ha a felhasználó újratölt, mialatt egy válasz készül, a válasz nem jelenik meg, és a
+  feldolgozás végéig az új kérdés 409-et kap.

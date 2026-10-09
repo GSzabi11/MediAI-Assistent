@@ -3,93 +3,44 @@ package bme.mediai.chat.persistence;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import bme.mediai.statement.persistence.Uncertainty;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
+// Nem entitás: a beszélgetés nem tárolódik (V25 óta nincs chat_message tábla), csak a
+// ChatMessageStore tartja memóriában, amíg a válasz elkészül és a felület lekérdezi.
 // A kérdés, az előzmény és a kontextus létrehozáskor rögzül. Az eredményt csak a
-// PROCESSING állapotú sor kaphatja meg, egyszer — a service sorzárral (FOR UPDATE) olvassa be,
-// így két párhuzamos callback sem írhatja felül egymást.
-@Entity
-@Table(name = "chat_message")
+// PROCESSING állapotú üzenet kaphatja meg, egyszer — a service az üzenetre szinkronizálva
+// módosítja, így két párhuzamos callback sem írhatja felül egymást.
 public class ChatMessage {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(updatable = false)
-    private Long patientId;
-
-    @Column(updatable = false)
-    private Long requestedBy;
-
-    @Generated
-    @Column(insertable = false, updatable = false)
-    private OffsetDateTime requestedAt;
-
-    @Enumerated(EnumType.STRING)
+    private final Long id;
+    private final Long patientId;
+    private final Long requestedBy;
+    private final OffsetDateTime requestedAt;
     private ChatStatus status;
-
-    // a lezárás pillanata (az alkalmazás órája — a requested_at a DB-é)
-    @Column(insertable = false)
     private OffsetDateTime completedAt;
-
     private String error;
-
-    @Column(updatable = false)
-    private String question;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(updatable = false)
-    private List<Long> history;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(updatable = false)
-    private List<ChatContextItem> context;
-
-    @JdbcTypeCode(SqlTypes.JSON)
+    private final String question;
+    private final List<Long> history;
+    private final List<ChatContextItem> context;
     private List<ChatContextItem> retrieved;
-
-    @JdbcTypeCode(SqlTypes.JSON)
     private List<ChatPoint> answer;
-
-    @Enumerated(EnumType.STRING)
     private Uncertainty uncertainty;
-
-    @JdbcTypeCode(SqlTypes.JSON)
     private List<String> warnings;
-
     private String modelName;
-
     private Long seed;
-
     private String promptHash;
-
     private String extractorVersion;
-
     private String embeddingModel;
 
-    protected ChatMessage() {
-    }
-
-    public ChatMessage(Long patientId, Long requestedBy, String question, List<Long> history,
+    public ChatMessage(Long id, Long patientId, Long requestedBy, String question, List<Long> history,
             List<ChatContextItem> context) {
         if (question == null || question.isBlank()) {
             throw new IllegalArgumentException("A kérdés nem lehet üres");
         }
+        this.id = id;
         this.patientId = patientId;
         this.requestedBy = requestedBy;
+        this.requestedAt = OffsetDateTime.now();
         this.status = ChatStatus.PROCESSING;
         this.question = question.strip();
         this.history = List.copyOf(history);

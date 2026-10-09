@@ -454,10 +454,6 @@ export const api = {
 
   // ======================= klinikai asszisztens (chat) =======================
 
-  /** GET /chat-messages?patientId= — a beteg legutóbbi kérdései, a legfrissebb elöl */
-  listChat: async (patientId: number) =>
-    (await http.get<ChatMessageDto[]>(`/chat-messages?patientId=${patientId}`)).map(toChatValasz),
-
   /** GET /chat-messages/{id} — a készülő válasz állapota */
   getChat: async (id: number) => toChatValasz(await http.get<ChatMessageDto>(`/chat-messages/${id}`)),
 

@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +26,7 @@ import bme.mediai.chat.exception.ChatMessageNotFoundException;
 import bme.mediai.chat.persistence.ChatCitation;
 import bme.mediai.chat.persistence.ChatContextItem;
 import bme.mediai.chat.persistence.ChatMessage;
-import bme.mediai.chat.persistence.ChatMessageRepository;
+import bme.mediai.chat.persistence.ChatMessageStore;
 import bme.mediai.chat.persistence.ChatPoint;
 import bme.mediai.chat.persistence.ChatStatus;
 import bme.mediai.document.persistence.Document;
@@ -49,7 +48,8 @@ import jakarta.validation.Validator;
 
 // Klinikai asszisztens (RAG-chat). A Spring állítja össze a kontextust, végzi a vektoros
 // keresést (pgvector) és ellenőrzi a választ; a beágyazást és az Ollama-hívást a Python végzi
-// (a Spring sosem hívja az Ollamát). Külön tábla, nem statement — a felhasználó döntése
+// (a Spring sosem hívja az Ollamát). Nem statement, és nem is tárolódik: az üzenetek csak
+// memóriában élnek (ChatMessageStore), amíg a válasz elkészül — a felhasználó döntése
 // (docs/clinical-chat.md).
 @Service
 public class ChatService {
@@ -60,7 +60,7 @@ public class ChatService {
     static final double DUPLICATE_DISTANCE = 0.05;
     private static final int MAX_ERROR_LENGTH = 2000;
 
-    private final ChatMessageRepository repository;
+    private final ChatMessageStore store;
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
     private final ChatContextBuilder contextBuilder;
@@ -71,12 +71,12 @@ public class ChatService {
     private final Validator validator;
     private final String callbackBaseUrl;
 
-    public ChatService(ChatMessageRepository repository, PatientRepository patientRepository,
+    public ChatService(ChatMessageStore store, PatientRepository patientRepository,
             UserRepository userRepository, ChatContextBuilder contextBuilder, DocumentChunkRepository chunkRepository,
             DocumentRepository documentRepository, StatementRepository statementRepository,
             ApplicationEventPublisher events, Validator validator,
             @Value("${mediai.ai-service.callback-base-url}") String callbackBaseUrl) {
-        this.repository = repository;
+        this.store = store;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
         this.contextBuilder = contextBuilder;
@@ -88,27 +88,21 @@ public class ChatService {
         this.callbackBaseUrl = callbackBaseUrl.replaceAll("/+$", "");
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public ChatMessageResponse ask(Long patientId, Long userId, String question, List<Long> previousMessageIds) {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new PatientNotFoundException(patientId));
         if (userId != null && !userRepository.existsById(userId)) {
             throw new UserNotFoundException(userId);
         }
-        if (repository.existsByPatientIdAndStatus(patientId, ChatStatus.PROCESSING)) {
-            throw new ChatConflictException("A betegről már készül egy válasz — várd meg");
-        }
         List<ChatMessage> history = loadHistory(patientId, previousMessageIds == null ? List.of() : previousMessageIds);
         ChatContextBuilder.Built context = contextBuilder.build(patient);
+        List<Long> historyIds = history.stream().map(ChatMessage::getId).toList();
 
-        ChatMessage saved;
-        try {
-            saved = repository.saveAndFlush(new ChatMessage(patientId, userId, question,
-                    history.stream().map(ChatMessage::getId).toList(), context.citable()));
-        } catch (DataIntegrityViolationException e) {
-            // párhuzamos kérés: a részleges egyedi index (egy PROCESSING / beteg) fogta meg
-            throw new ChatConflictException("A betegről már készül egy válasz — várd meg");
-        }
+        // betegenként egyszerre egy készülő válasz (dupla küldés ellen)
+        ChatMessage saved = store.addIfIdle(patientId,
+                        id -> new ChatMessage(id, patientId, userId, question, historyIds, context.citable()))
+                .orElseThrow(() -> new ChatConflictException("A betegről már készül egy válasz — várd meg"));
         Long id = saved.getId();
         ChatJobRequest job = new ChatJobRequest(id,
                 callbackBaseUrl + "/api/chat-messages/" + id + "/result",
@@ -121,27 +115,25 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChatMessageResponse> findByPatient(Long patientId) {
-        if (!patientRepository.existsById(patientId)) {
-            throw new PatientNotFoundException(patientId);
+    public ChatMessageResponse findById(Long id) {
+        ChatMessage m = find(id);
+        synchronized (m) {
+            return ChatMessageResponse.from(m, relatedRules(m, ruleStatementsByLabResult(m.getPatientId())));
         }
-        List<ChatMessage> messages = repository.findTop50ByPatientIdOrderByRequestedAtDescIdDesc(patientId);
-        Map<Long, List<Statement>> rules = ruleStatementsByLabResult(patientId);
-        return messages.stream().map(m -> ChatMessageResponse.from(m, relatedRules(m, rules))).toList();
     }
 
-    @Transactional(readOnly = true)
-    public ChatMessageResponse findById(Long id) {
-        ChatMessage m = repository.findById(id).orElseThrow(() -> new ChatMessageNotFoundException(id));
-        return ChatMessageResponse.from(m, relatedRules(m, ruleStatementsByLabResult(m.getPatientId())));
+    // a hozzáférési naplónak: melyik beteg kérdése (ismeretlen/lejárt azonosítónál üres)
+    public Long patientIdOf(Long id) {
+        return store.findById(id).map(ChatMessage::getPatientId).orElse(null);
     }
 
     // Python → Spring a feldolgozás közben: a kérdés vektorához legközelebbi darabok a beteg
     // dokumentumaiból. Ami itt visszamegy, az kerül a retrieved-be — a válasz csak ezekre és a
     // context elemeire hivatkozhat.
-    @Transactional
+    @Transactional(readOnly = true)
     public ChatRetrieveResponse retrieve(Long id, ChatRetrieveRequest request) {
-        ChatMessage message = lockProcessing(id);
+        ChatMessage message = find(id);
+        requireProcessing(message);
         validate(request);
         float[] embedding = request.embedding();
         if (embedding.length != DocumentChunk.EMBEDDING_DIMENSION) {
@@ -170,59 +162,70 @@ public class ChatService {
             chunks.add(new ChatFact(ChatContextBuilder.CHUNK, c.getId(), ChatContextBuilder.documentLabel(d),
                     c.getText(), new StatementSource.Document(d.getId(), c.getCharStart(), c.getCharEnd())));
         }
-        message.recordRetrieval(chunks.stream()
-                .map(f -> new ChatContextItem(f.kind(), f.id(), f.label(), f.source())).toList(),
-                request.embeddingModel());
+        // az üzenetre szinkronizálva: a callbackek egymás után, a friss állapotot látva írnak
+        synchronized (message) {
+            requireProcessing(message);
+            message.recordRetrieval(chunks.stream()
+                    .map(f -> new ChatContextItem(f.kind(), f.id(), f.label(), f.source())).toList(),
+                    request.embeddingModel());
+        }
         return new ChatRetrieveResponse(chunks);
     }
 
     // Python callback. Az érvénytelen eredmény is FAILED-del zárja (a controller hívja a fail-t)
-    @Transactional
+    @Transactional(readOnly = true)
     public ChatMessageResponse complete(Long id, ChatResultRequest result) {
-        ChatMessage message = lockProcessing(id);
-        validate(result);
-        if ("FAILED".equals(result.status())) {
-            message.fail(truncate("AI-feldolgozás: " + (result.error() == null ? "ismeretlen hiba" : result.error())));
-            return ChatMessageResponse.from(message, List.of());
-        }
-        if (result.points() == null || result.points().isEmpty() || result.model() == null) {
-            throw new IllegalArgumentException("DONE eredményhez kötelező legalább egy pont és a model");
-        }
-        // a forrás csak a modellnek átadott tények egyike lehet (a modell nem hivatkozhat máshová)
-        Map<String, ChatContextItem> allowed = new HashMap<>();
-        for (ChatContextItem item : message.getContext()) {
-            allowed.put(item.kind() + ":" + item.id(), item);
-        }
-        for (ChatContextItem item : message.getRetrieved()) {
-            allowed.put(item.kind() + ":" + item.id(), item);
-        }
-        List<ChatPoint> points = new ArrayList<>();
-        for (ChatResultRequest.Point p : result.points()) {
-            Set<ChatContextItem> cited = new LinkedHashSet<>();
-            for (ChatResultRequest.SourceRef ref : p.sources()) {
-                ChatContextItem item = allowed.get(ref.kind() + ":" + ref.id());
-                if (item == null) {
-                    throw new IllegalArgumentException("A válasz a kontextusban nem szereplő forrásra hivatkozik: "
-                            + ref.kind() + " #" + ref.id());
-                }
-                cited.add(item);
+        ChatMessage message = find(id);
+        synchronized (message) {
+            requireProcessing(message);
+            validate(result);
+            if ("FAILED".equals(result.status())) {
+                message.fail(truncate("AI-feldolgozás: "
+                        + (result.error() == null ? "ismeretlen hiba" : result.error())));
+                return ChatMessageResponse.from(message, List.of());
             }
-            points.add(new ChatPoint(p.text().strip(), p.list(), p.heading() && cited.isEmpty(),
-                    cited.stream().map(ChatCitation::of).toList()));
+            if (result.points() == null || result.points().isEmpty() || result.model() == null) {
+                throw new IllegalArgumentException("DONE eredményhez kötelező legalább egy pont és a model");
+            }
+            // a forrás csak a modellnek átadott tények egyike lehet (a modell nem hivatkozhat máshová)
+            Map<String, ChatContextItem> allowed = new HashMap<>();
+            for (ChatContextItem item : message.getContext()) {
+                allowed.put(item.kind() + ":" + item.id(), item);
+            }
+            for (ChatContextItem item : message.getRetrieved()) {
+                allowed.put(item.kind() + ":" + item.id(), item);
+            }
+            List<ChatPoint> points = new ArrayList<>();
+            for (ChatResultRequest.Point p : result.points()) {
+                Set<ChatContextItem> cited = new LinkedHashSet<>();
+                for (ChatResultRequest.SourceRef ref : p.sources()) {
+                    ChatContextItem item = allowed.get(ref.kind() + ":" + ref.id());
+                    if (item == null) {
+                        throw new IllegalArgumentException("A válasz a kontextusban nem szereplő forrásra hivatkozik: "
+                                + ref.kind() + " #" + ref.id());
+                    }
+                    cited.add(item);
+                }
+                points.add(new ChatPoint(p.text().strip(), p.list(), p.heading() && cited.isEmpty(),
+                        cited.stream().map(ChatCitation::of).toList()));
+            }
+            List<String> warnings = result.warnings() == null ? List.of() : result.warnings();
+            ChatResultRequest.Model m = result.model();
+            message.complete(points, uncertainty(points, warnings), warnings, m.modelName(), m.seed(),
+                    m.promptHash(), m.extractorVersion());
+            return ChatMessageResponse.from(message,
+                    relatedRules(message, ruleStatementsByLabResult(message.getPatientId())));
         }
-        List<String> warnings = result.warnings() == null ? List.of() : result.warnings();
-        ChatResultRequest.Model m = result.model();
-        message.complete(points, uncertainty(points, warnings), warnings, m.modelName(), m.seed(), m.promptHash(),
-                m.extractorVersion());
-        repository.flush();
-        return ChatMessageResponse.from(message, relatedRules(message, ruleStatementsByLabResult(message.getPatientId())));
     }
 
-    @Transactional
     public void fail(Long id, String error) {
-        repository.findByIdForUpdate(id)
-                .filter(m -> m.getStatus() == ChatStatus.PROCESSING)
-                .ifPresent(m -> m.fail(truncate(error == null || error.isBlank() ? "Ismeretlen hiba" : error.strip())));
+        store.findById(id).ifPresent(m -> {
+            synchronized (m) {
+                if (m.getStatus() == ChatStatus.PROCESSING) {
+                    m.fail(truncate(error == null || error.isBlank() ? "Ismeretlen hiba" : error.strip()));
+                }
+            }
+        });
     }
 
     // Determinisztikus, a forrás-lefedettségből (nem a modell önértékelése — a kis modellek
@@ -240,11 +243,10 @@ public class ChatService {
         return uncited * 2 <= content.size() ? Uncertainty.MEDIUM : Uncertainty.HIGH;
     }
 
+    // A lejárt (ChatMessageStore.RETENTION) előzmény csendben kimarad: a felület egy hosszan nyitva
+    // hagyott beszélgetésben is kérdezhet tovább, csak a modell nem látja a régi választ.
     private List<ChatMessage> loadHistory(Long patientId, List<Long> ids) {
-        List<ChatMessage> history = repository.findAllById(new LinkedHashSet<>(ids));
-        if (history.size() != new LinkedHashSet<>(ids).size()) {
-            throw new IllegalArgumentException("Ismeretlen korábbi üzenet a previousMessageIds-ben");
-        }
+        List<ChatMessage> history = store.findAllById(new LinkedHashSet<>(ids));
         for (ChatMessage h : history) {
             if (!h.getPatientId().equals(patientId) || h.getStatus() != ChatStatus.DONE) {
                 throw new IllegalArgumentException("Előzmény csak ugyanennek a betegnek egy kész válasza lehet (#"
@@ -284,12 +286,15 @@ public class ChatService {
                 .toList();
     }
 
-    private ChatMessage lockProcessing(Long id) {
-        ChatMessage message = repository.findByIdForUpdate(id).orElseThrow(() -> new ChatMessageNotFoundException(id));
+    private ChatMessage find(Long id) {
+        return store.findById(id).orElseThrow(() -> new ChatMessageNotFoundException(id));
+    }
+
+    private static void requireProcessing(ChatMessage message) {
         if (message.getStatus() != ChatStatus.PROCESSING) {
-            throw new ChatConflictException("A(z) " + id + " chat-válasz már lezárult (" + message.getStatus() + ")");
+            throw new ChatConflictException("A(z) " + message.getId() + " chat-válasz már lezárult ("
+                    + message.getStatus() + ")");
         }
-        return message;
     }
 
     private <T> void validate(T request) {

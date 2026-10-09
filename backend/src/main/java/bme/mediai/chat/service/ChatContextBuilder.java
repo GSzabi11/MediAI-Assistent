@@ -52,7 +52,7 @@ public class ChatContextBuilder {
     public static final String ALLERGY = "ALLERGY";
     public static final String CHUNK = "CHUNK";
 
-    // facts: a modellnek (hivatkozható + háttér); citable: ami a chat_message.context-be kerül
+    // facts: a modellnek (hivatkozható + háttér); citable: ami a ChatMessage context-jébe kerül
     public record Built(List<ChatFact> facts, List<ChatContextItem> citable) {
     }
 

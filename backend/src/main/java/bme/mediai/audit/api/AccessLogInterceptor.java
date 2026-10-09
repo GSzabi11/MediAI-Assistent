@@ -17,6 +17,10 @@ public class AccessLogInterceptor implements HandlerInterceptor {
     // Ideiglenes, amíg nincs bejelentkezés: ezután a bejelentkezett felhasználóból jön
     public static final String USER_HEADER = "X-User-Id";
 
+    // Kérés-attribútum (Long): az érintett beteg, ha sem a ?patientId=, sem a tábla-alapú
+    // útfeloldás nem adja meg — pl. a memóriában élő chat-üzeneteknél (nincs táblájuk).
+    public static final String PATIENT_ATTRIBUTE = AccessLogInterceptor.class.getName() + ".patientId";
+
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogInterceptor.class);
 
     private final AccessLogService service;
@@ -29,11 +33,15 @@ public class AccessLogInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
             Object handler, Exception ex) {
         try {
+            String patientId = request.getParameter("patientId");
+            if (patientId == null && request.getAttribute(PATIENT_ATTRIBUTE) instanceof Long id) {
+                patientId = id.toString();
+            }
             service.record(
                     request.getHeader(USER_HEADER),
                     request.getMethod(),
                     request.getRequestURI(),
-                    request.getParameter("patientId"),
+                    patientId,
                     response.getHeader(HttpHeaders.LOCATION),
                     response.getStatus(),
                     request.getRemoteAddr());

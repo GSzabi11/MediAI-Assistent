@@ -22,6 +22,8 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 V24: `chat_message` — a Klinikai asszisztens (RAG-chat) kérdései és válaszai; ugyanaz a kivétel,
 **külön tábla, nem `statement`** (a felhasználó döntése). A válasz forrásai csak a modellnek átadott
 tények (`context`, `retrieved`) lehetnek — részletek: `docs/clinical-chat.md`.
+**V25: a `chat_message` táblát töröltük** (a felhasználó döntése): a beszélgetés nem tárolódik,
+a készülő válasz csak a Spring memóriájában él (`ChatMessageStore`).
 
 V23: `clinical_summary` — a Klinikai státusz AI-összefoglalója; **tudatosan külön tábla, nem
 `statement`** (a felhasználó döntése), részletek: `docs/clinical-summary.md`.

@@ -20,37 +20,18 @@ const LEKERDEZES_MS = 1500;
 /** ennyi után a felület feladja a várakozást (a sor elején is megvárja a futó feldolgozást) */
 const MAX_VARAKOZAS_MS = 15 * 60 * 1000;
 
-/** „Új beszélgetés”: az ennél nem újabb üzenetek elrejtve (betegenként, csak ebben a böngészőben) */
-const hatarKulcs = (patientId: number) => `mediai.chat.hatar.${patientId}`;
-function olvasHatar(patientId: number): number {
-  try {
-    return Number(localStorage.getItem(hatarKulcs(patientId))) || 0;
-  } catch {
-    return 0;
-  }
-}
-function irHatar(patientId: number, id: number) {
-  try {
-    localStorage.setItem(hatarKulcs(patientId), String(id));
-  } catch {
-    /* privát mód: csak a munkamenetre szól */
-  }
-}
-
 /**
  * Klinikai asszisztens (AI-chat, RAG). A backend a beteg dokumentumaiból visszakeresett
  * részletekből és a strukturált adatokból (labor, gyógyszer, allergia, kinyert állítások)
  * válaszoltat; a válasz minden pontja a hivatkozott forrásra mutat, forrás nélküli pont
  * külön jelölést kap. Érintett szabályok lakatos hivatkozásként jelennek meg.
  *
- * A válaszok a szerveren tárolódnak (chat_message, nem állítás): újratöltés után is
- * visszanézhetők. A szülő `key={patient.id}`-vel rendereli, betegváltáskor újraindul.
+ * A beszélgetés nem tárolódik: csak ebben a komponensben él, újratöltés vagy betegváltás után
+ * (és más felhasználónak) üres. A szülő `key={patient.id}`-vel rendereli, betegváltáskor újraindul.
  */
 export function ChatPanel({ onCollapse }: { onCollapse: () => void }) {
   const { patient, dokumentumok, felvetelek } = usePatient();
   const [uzenetek, setUzenetek] = useState<ChatValasz[]>([]);
-  const [hatar, setHatar] = useState(() => olvasHatar(patient.id));
-  const [betoltve, setBetoltve] = useState(false);
   const [kerdes, setKerdes] = useState('');
   const [kuldes, setKuldes] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,23 +39,11 @@ export function ChatPanel({ onCollapse }: { onCollapse: () => void }) {
   const inputId = useId();
   const endRef = useRef<HTMLDivElement>(null);
 
-  const lathato = uzenetek.filter((u) => u.id > hatar);
+  const lathato = uzenetek;
   const keszulo = lathato.find((u) => u.allapot === 'keszul');
   const busy = kuldes || keszulo !== undefined;
 
-  useEffect(() => {
-    let elo = true;
-    api
-      .listChat(patient.id)
-      .then((lista) => elo && setUzenetek([...lista].reverse()))
-      .catch((e: Error) => elo && setError(`Az előzmények nem tölthetők be: ${e.message}`))
-      .finally(() => elo && setBetoltve(true));
-    return () => {
-      elo = false;
-    };
-  }, [patient.id]);
-
-  // A készülő választ lekérdezi, amíg el nem készül (újratöltés után is folytatja)
+  // A készülő választ lekérdezi, amíg el nem készül
   const keszuloId = keszulo?.id;
   const keszuloKerve = keszulo?.kerve;
   useEffect(() => {
@@ -140,9 +109,7 @@ export function ChatPanel({ onCollapse }: { onCollapse: () => void }) {
   );
 
   function ujBeszelgetes() {
-    const utolso = uzenetek.at(-1)?.id ?? 0;
-    irHatar(patient.id, utolso);
-    setHatar(utolso);
+    setUzenetek([]);
     setError(null);
   }
 
@@ -181,7 +148,7 @@ export function ChatPanel({ onCollapse }: { onCollapse: () => void }) {
       </div>
 
       <div className="chat__log" aria-live="polite">
-        {betoltve && lathato.length === 0 && (
+        {lathato.length === 0 && (
           <p className="empty">
             Kérdezz a beteg állapotáról. A válasz a beteg dokumentumaiból és adataiból készül, minden pontja forrásra
             hivatkozik.
