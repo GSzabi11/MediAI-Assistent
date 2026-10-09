@@ -1,0 +1,9 @@
+faster-whisper>=1.1
+pyannote.audio>=3.3
+silero-vad>=5.1
+sounddevice>=0.5
+numpy>=1.26
+requests>=2.32
+python-dotenv>=1.0
+# GPU-hoz a CUDA-s torch külön telepítendő (RTX 50xx: CUDA 12.8+), ld. docproc/README.md
+torch>=2.7

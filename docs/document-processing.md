@@ -24,7 +24,10 @@ Spring ◀── POST /api/documents/{id}/processing-result ── Python (callb
 - **A Spring sosem hívja az Ollamát**: modellt, promptot, GPU-sort a Python kezel.
 - **A sorbaállítás a Pythonban van** (`worker.JobQueue`): a Spring csak beadja a feladatot.
 - **Hitelesítés**: mindkét irányban `X-Internal-Token` fejléc, közös titok
-  (`mediai.ai-service.token` ↔ `MEDIAI_AI_TOKEN`). Spring Security nélkül ez tartja távol a
+  (`mediai.ai-service.token` ↔ `MEDIAI_AI_TOKEN`), konstans idejű összevetéssel mindkét oldalon.
+  **Nincs alapérték**: ha a `MEDIAI_AI_TOKEN` nincs beállítva, egyik szolgáltatás sem indul
+  (fail-closed — a korábbi beégetett `dev-only-change-me` a repóban bárki számára ismert volt).
+  Spring Security nélkül ez tartja távol a
   callbacktől a klienseket — enélkül bárki „feldolgozott” laborértéket írhatna egy beteghez.
 
 ## 1. Spring → Python: `POST {mediai.ai-service.url}/jobs`

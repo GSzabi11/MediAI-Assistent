@@ -33,13 +33,13 @@ Első futáskor a BGE-M3 (~2 GB) letöltődik a Hugging Face-ről.
 ## Indítás
 
 ```bash
-set MEDIAI_AI_TOKEN=dev-only-change-me      # ugyanaz, mint a Spring mediai.ai-service.token
+set MEDIAI_AI_TOKEN=<közös titok>           # kötelező, ugyanaz, mint a Springnél
 python app.py                                # http://127.0.0.1:8001
 ```
 
 | Változó | Alapérték | |
 |---|---|---|
-| `MEDIAI_AI_TOKEN` | `dev-only-change-me` | közös titok a Springgel |
+| `MEDIAI_AI_TOKEN` | — (kötelező) | közös titok a Springgel; nélküle nem indul |
 | `DOCPROC_HOST` / `DOCPROC_PORT` | `127.0.0.1` / `8001` | |
 | `MEDIAI_DOCUMENTS_ROOT` | — | ha meg van adva, csak ez alatti fájl olvasható |
 | `OLLAMA_URL` | `http://localhost:11434` | |

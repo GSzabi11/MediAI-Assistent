@@ -20,7 +20,8 @@ public class InternalTokenVerifier {
 
     public InternalTokenVerifier(@Value("${mediai.ai-service.token}") String token) {
         if (token == null || token.isBlank()) {
-            throw new IllegalStateException("A mediai.ai-service.token nincs beállítva");
+            // Fail-closed: beégetett alapérték helyett inkább el sem indulunk
+            throw new IllegalStateException("A MEDIAI_AI_TOKEN környezeti változó nincs beállítva");
         }
         this.expected = token.getBytes(StandardCharsets.UTF_8);
     }

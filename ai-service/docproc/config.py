@@ -2,8 +2,11 @@
 import os
 from pathlib import Path
 
-# A Spring ↔ Python közös titka, mindkét irányban az X-Internal-Token fejlécben
-TOKEN = os.environ.get("MEDIAI_AI_TOKEN", "dev-only-change-me")
+# A Spring ↔ Python közös titka, mindkét irányban az X-Internal-Token fejlécben. Nincs alapérték:
+# beállítás nélkül nem indulunk (fail-closed) — üres tokennel egy üres fejléc is átmenne.
+TOKEN = os.environ.get("MEDIAI_AI_TOKEN", "").strip()
+if not TOKEN:
+    raise RuntimeError("A MEDIAI_AI_TOKEN környezeti változó nincs beállítva (ugyanaz kell, mint a Springnél)")
 
 HOST = os.environ.get("DOCPROC_HOST", "127.0.0.1")
 PORT = int(os.environ.get("DOCPROC_PORT", "8001"))
