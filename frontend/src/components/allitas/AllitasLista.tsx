@@ -16,12 +16,14 @@ export function AllitasLista({
   onDecided,
   laborDokIds,
   defaultSzuro = 'mind',
+  onCollapse,
 }: {
   allitasok: ClaimResponse[];
   activeForras?: (f: Forras) => boolean;
   onDecided: (id: number) => Promise<void>;
   laborDokIds?: Set<number>;
   defaultSzuro?: Szuro;
+  onCollapse?: () => void;
 }) {
   const [szuro, setSzuro] = useState<Szuro>(defaultSzuro);
 
@@ -67,6 +69,16 @@ export function AllitasLista({
             </>
           )}
         </span>
+        {onCollapse && (
+          <button
+            type="button"
+            className="iconbtn iconbtn--ghost iconbtn--sm push-right"
+            aria-label="Állítások összecsukása"
+            onClick={onCollapse}
+          >
+            <Icon name="expandRight" size={18} />
+          </button>
+        )}
       </div>
       <div className="chips" role="group" aria-label="Szűrés típus szerint">
         {chips.map((c) => (

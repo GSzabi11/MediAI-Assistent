@@ -45,7 +45,9 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
   const [kwHiba, setKwHiba] = useState<string | null>(null);
   const ugras = (turnIds: number[]) => {
     setUgrott(turnIds);
-    listRef.current?.querySelector(`[data-turn="${turnIds[0]}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    listRef.current
+      ?.querySelector(`[data-turn="${turnIds[0]}"]`)
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   };
 
   // A hangszolgáltatás dolgozik: amíg kész nem lesz, csendben frissítünk
@@ -102,7 +104,11 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
           </span>
         </div>
         <span className="meta mono">
-          {felvetel.automatikus ? (felvetel.hangTorolve ? 'nyers hang törölve' : 'hang a feldolgozásig tárolva') : felvetel.hangfajl}{' '}
+          {felvetel.automatikus
+            ? felvetel.hangTorolve
+              ? 'nyers hang törölve'
+              : 'hang a feldolgozásig tárolva'
+            : felvetel.hangfajl}{' '}
           · ASR: {felvetel.asrModell}
           {felvetel.automatikus && ` · AI-átnézés: ${felvetel.atnezoModell ?? 'nem futott'}`}
         </span>

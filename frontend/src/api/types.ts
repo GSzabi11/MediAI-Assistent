@@ -488,4 +488,8 @@ export interface FelvetelOsszefoglalo {
   kulcsszavak: string[];
   figyelmeztetesek: string[];
   modell: string | null;
+  /** az orvos szerkesztett változata (az AI eredetije a szoveg / pontok-ban megmarad) */
+  szerkesztett: string | null;
+  szerkesztette: number | null;
+  szerkesztve: string | null;
 }

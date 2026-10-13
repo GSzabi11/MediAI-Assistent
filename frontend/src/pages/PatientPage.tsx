@@ -112,8 +112,14 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
   const [params, setParams] = useSearchParams();
   const [forrasokNyitva, setForrasokNyitva] = usePersistentFlag('mediai.sources.open', false);
   const [chatNyitva, setChatNyitva] = usePersistentFlag('mediai.chat.open', true);
+  const [allitasokNyitva, setAllitasokNyitva] = usePersistentFlag('mediai.claims.open', true);
   const { patient, dokumentumok, felvetelek } = usePatient();
-  useScrollToAllitas();
+  // ?allitas=ID (pl. a chat szabály-hivatkozása) → az Állítások panel kinyílik, hogy a kártya látsszon
+  const allitasParam = params.get('allitas');
+  useEffect(() => {
+    if (allitasParam) setAllitasokNyitva(true);
+  }, [allitasParam, setAllitasokNyitva]);
+  useScrollToAllitas(allitasokNyitva);
   const nezetParam = params.get('nezet');
   // alapértelmezés: a Klinikai státusz (az első fül)
   const nezet: Nezet = NEZETEK.includes(nezetParam as Nezet) ? (nezetParam as Nezet) : 'statusz';
@@ -154,9 +160,14 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
   const cols = [
     forrasokNyitva ? 'var(--sources-w)' : 'var(--rail-w)',
     'minmax(0, 1fr)',
-    'var(--claims-w)',
-    chatNyitva ? 'var(--chat-w)' : 'var(--rail-w)',
-  ].join(' ');
+    allitasokNyitva && 'var(--claims-w)',
+    chatNyitva && 'var(--chat-w)',
+    // az összecsukott jobb oldali panelek (Állítások, asszisztens) közös sávja a jobb szélen
+    (!allitasokNyitva || !chatNyitva) && 'var(--rail-w)',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const fuggoAllitas = allitasok.filter((a) => a.claimType === 'modell' && !a.jovahagyas).length;
 
   const fulek: { n: Nezet; icon: IconName; label: string }[] = [
     { n: 'statusz', icon: 'spark', label: 'Klinikai státusz' },
@@ -210,32 +221,60 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
           {nezet === 'gyogyszer' && <GyogyszerAllergiaPanel />}
         </section>
 
-        <AllitasLista
-          key={nezet === 'labor' ? 'labor' : 'mind'}
-          allitasok={allitasok}
-          activeForras={activeForras}
-          onDecided={onDecided}
-          laborDokIds={laborDokIds}
-          defaultSzuro={nezet === 'labor' ? 'labor' : 'mind'}
-        />
+        {allitasokNyitva && (
+          <AllitasLista
+            key={nezet === 'labor' ? 'labor' : 'mind'}
+            allitasok={allitasok}
+            activeForras={activeForras}
+            onDecided={onDecided}
+            laborDokIds={laborDokIds}
+            defaultSzuro={nezet === 'labor' ? 'labor' : 'mind'}
+            onCollapse={() => setAllitasokNyitva(false)}
+          />
+        )}
 
-        {chatNyitva ? (
-          <ChatPanel key={patient.id} onCollapse={() => setChatNyitva(false)} />
-        ) : (
-          <nav className="rail rail--chat" aria-label="Klinikai asszisztens (összecsukva)">
-            <button
-              type="button"
-              className="iconbtn iconbtn--ghost"
-              aria-label="Klinikai asszisztens kinyitása"
-              onClick={() => setChatNyitva(true)}
-            >
-              <Icon name="expandLeft" size={20} />
-            </button>
-            <span className="tag tag--modell tag--icon" aria-hidden="true">
-              <Icon name="spark" size={14} />
-            </span>
-            <span className="rail__vertical">Klinikai asszisztens</span>
-          </nav>
+        {chatNyitva && <ChatPanel key={patient.id} onCollapse={() => setChatNyitva(false)} />}
+
+        {(!allitasokNyitva || !chatNyitva) && (
+          <div className="rail-stack">
+            {!allitasokNyitva && (
+              <nav className="rail rail--claims" aria-label="Állítások (összecsukva)">
+                <button
+                  type="button"
+                  className="iconbtn iconbtn--ghost"
+                  aria-label="Állítások kinyitása"
+                  onClick={() => setAllitasokNyitva(true)}
+                >
+                  <Icon name="expandLeft" size={20} />
+                </button>
+                <span className="tag tag--icon" aria-hidden="true">
+                  <Icon name="list" size={14} />
+                </span>
+                {fuggoAllitas > 0 && (
+                  <strong className="rail__badge" title={`${fuggoAllitas} jóváhagyásra vár`}>
+                    {fuggoAllitas}
+                  </strong>
+                )}
+                <span className="rail__vertical rail__vertical--ink">Állítások · {allitasok.length}</span>
+              </nav>
+            )}
+            {!chatNyitva && (
+              <nav className="rail rail--chat" aria-label="Klinikai asszisztens (összecsukva)">
+                <button
+                  type="button"
+                  className="iconbtn iconbtn--ghost"
+                  aria-label="Klinikai asszisztens kinyitása"
+                  onClick={() => setChatNyitva(true)}
+                >
+                  <Icon name="expandLeft" size={20} />
+                </button>
+                <span className="tag tag--modell tag--icon" aria-hidden="true">
+                  <Icon name="spark" size={14} />
+                </span>
+                <span className="rail__vertical">Klinikai asszisztens</span>
+              </nav>
+            )}
+          </div>
         )}
       </main>
     </>
@@ -440,10 +479,10 @@ function SourcesPanel({
 }
 
 /** ?allitas=ID → a kártyához görget (pl. a chat szabály-hivatkozásából). */
-function useScrollToAllitas() {
+function useScrollToAllitas(nyitva: boolean) {
   const [params] = useSearchParams();
   const id = params.get('allitas');
   useEffect(() => {
-    if (id) document.getElementById(`allitas-${id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  }, [id]);
+    if (id && nyitva) document.getElementById(`allitas-${id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [id, nyitva]);
 }

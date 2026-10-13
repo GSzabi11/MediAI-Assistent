@@ -40,6 +40,13 @@ public class RecordingSummaryController {
                 .body(created);
     }
 
+    // Az orvos szerkesztett változata (az AI eredeti szövege megmarad)
+    @PutMapping("/recordings/{recordingId}/summaries/{id}/edited-text")
+    public RecordingSummaryResponse edit(@PathVariable Long recordingId, @PathVariable Long id,
+            @Valid @RequestBody RecordingSummaryEditRequest request) {
+        return service.edit(recordingId, id, request.userId(), request.text());
+    }
+
     // Python → Spring, belső tokennel. Nincs @Valid: a validáció a service-ben fut, hogy az
     // érvénytelen eredmény is FAILED-del zárja az összefoglalót.
     @PostMapping("/recording-summaries/{id}/result")

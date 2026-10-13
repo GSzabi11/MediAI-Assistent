@@ -20,7 +20,9 @@ export interface Felvevo {
 const MIME_PREFERENCIA = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/webm', 'audio/mp4'];
 
 export function felvetelTamogatott(): boolean {
-  return typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined';
+  return (
+    typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined'
+  );
 }
 
 export async function mikrofonNeve(stream: MediaStream): Promise<string | null> {

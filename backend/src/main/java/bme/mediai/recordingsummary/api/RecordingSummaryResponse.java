@@ -20,11 +20,15 @@ public record RecordingSummaryResponse(
         List<String> warnings,
         String modelName,
         Long seed,
-        String promptHash
+        String promptHash,
+        String editedText,
+        Long editedBy,
+        OffsetDateTime editedAt
 ) {
     public static RecordingSummaryResponse from(RecordingSummary s) {
         return new RecordingSummaryResponse(s.getId(), s.getRecordingId(), s.getStatus(), s.getRequestedBy(),
                 s.getRequestedAt(), s.getCompletedAt(), s.getError(), s.getSummary(), s.getPoints(), s.getKeywords(),
-                s.getWarnings(), s.getModelName(), s.getSeed(), s.getPromptHash());
+                s.getWarnings(), s.getModelName(), s.getSeed(), s.getPromptHash(), s.getEditedText(), s.getEditedBy(),
+                s.getEditedAt());
     }
 }

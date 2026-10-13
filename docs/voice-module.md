@@ -98,6 +98,10 @@ Tudatosan **külön táblák, nem `statement`** (mint a `clinical_summary`).
   kulcsszavak (pillanatkép). A modell mondatonként megszólalás-sorszámra hivatkozik; a Python és a
   Spring is ellenőrzi, hogy a hivatkozott `turn_id` létezik. Forrás nélküli mondat, az átiratban nem
   szereplő szám, kimaradt kulcsszó → figyelmeztetés.
+- **Szerkesztés (V29)**: az orvos átírhatja (`PUT /api/recordings/{id}/summaries/{sid}/edited-text`, csak
+  `DOCTOR`, csak `DONE`). Az AI eredeti szövege és hivatkozásai (`summary`, `points`) nem változnak —
+  az `edited_text` kerül előre („Orvos szerkesztette”), az eredeti lenyitható. Újraszerkesztés
+  felülírja az előző szerkesztést; újragenerálás új sort ad (a szerkesztést nem viszi át).
 
 ## Leképezés a fő adatmodellre
 

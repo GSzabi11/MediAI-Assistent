@@ -82,14 +82,14 @@ export function HangprofilPanel({ felhasznaloId, szerkesztheto }: { felhasznaloI
         (aktiv.state.data ? (
           <ProfilAdatok p={aktiv.state.data} />
         ) : (
-          <p className="meta">
-            Nincs aktív hangprofil — amíg nincs, egyik betegnél sem indítható hangfelvétel.
-          </p>
+          <p className="meta">Nincs aktív hangprofil — amíg nincs, egyik betegnél sem indítható hangfelvétel.</p>
         ))}
 
       {elozmeny.state.status === 'ok' && elozmeny.state.data.some((p) => !p.aktiv && p.allapot === 'kesz') && (
         <details className="subsection__more">
-          <summary>Korábbi profilok ({elozmeny.state.data.filter((p) => !p.aktiv && p.allapot === 'kesz').length})</summary>
+          <summary>
+            Korábbi profilok ({elozmeny.state.data.filter((p) => !p.aktiv && p.allapot === 'kesz').length})
+          </summary>
           <ul className="itemlist">
             {elozmeny.state.data
               .filter((p) => !p.aktiv && p.allapot === 'kesz')
@@ -276,9 +276,7 @@ function HangmintaFelvetel({
   }
 
   async function mentes() {
-    const p = await run(() =>
-      api.createHangprofil({ felhasznaloId, mondatok, csend, mikrofon: mikrofonRef.current }),
-    );
+    const p = await run(() => api.createHangprofil({ felhasznaloId, mondatok, csend, mikrofon: mikrofonRef.current }));
     if (p) {
       mikrofonElengedese(streamRef.current);
       streamRef.current = null;
@@ -385,7 +383,14 @@ export function SzintMero({ szint }: { szint: number }) {
   // RMS → kb. 0–1 skála (beszédnél jellemzően 0,02–0,2)
   const arany = Math.min(1, szint * 8);
   return (
-    <div className="levelmeter" role="meter" aria-label="Hangerő" aria-valuemin={0} aria-valuemax={1} aria-valuenow={arany}>
+    <div
+      className="levelmeter"
+      role="meter"
+      aria-label="Hangerő"
+      aria-valuemin={0}
+      aria-valuemax={1}
+      aria-valuenow={arany}
+    >
       <div className="levelmeter__bar" style={{ width: `${Math.round(arany * 100)}%` }} />
     </div>
   );

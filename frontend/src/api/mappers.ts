@@ -539,4 +539,7 @@ export const toFelvetelOsszefoglalo = (s: RecordingSummaryDto): FelvetelOsszefog
   kulcsszavak: s.keywords ?? [],
   figyelmeztetesek: s.warnings ?? [],
   modell: s.modelName,
+  szerkesztett: s.editedText ?? null,
+  szerkesztette: s.editedBy ?? null,
+  szerkesztve: s.editedAt ?? null,
 });

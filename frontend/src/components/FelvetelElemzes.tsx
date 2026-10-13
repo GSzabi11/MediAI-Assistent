@@ -109,16 +109,19 @@ export function KulcsszoPanel({
               </button>
             </form>
           ) : (
-            <button type="button" className="chip chip--add" onClick={() => setUjNyitva(true)} aria-label="Kulcsszó hozzáadása">
+            <button
+              type="button"
+              className="chip chip--add"
+              onClick={() => setUjNyitva(true)}
+              aria-label="Kulcsszó hozzáadása"
+            >
               <Icon name="plus" size={14} strokeWidth={2.6} />
             </button>
           )}
         </li>
       </ul>
       {elutasitott.length > 0 && (
-        <p className="meta">
-          Elutasított AI-javaslat: {elutasitott.map((k) => k.kifejezes).join(', ')}
-        </p>
+        <p className="meta">Elutasított AI-javaslat: {elutasitott.map((k) => k.kifejezes).join(', ')}</p>
       )}
       {error && (
         <p className="form-error" role="alert">
@@ -161,13 +164,29 @@ export function FelvetelOsszefoglaloPanel({
     .map((k) => k.kifejezes.toLowerCase())
     .sort()
     .join('|');
-  const akkor = (legfrissebb?.kulcsszavak ?? []).map((k) => k.toLowerCase()).sort().join('|');
+  const akkor = (legfrissebb?.kulcsszavak ?? [])
+    .map((k) => k.toLowerCase())
+    .sort()
+    .join('|');
   const elavult = legfrissebb?.allapot === 'kesz' && most !== akkor;
 
   const ujra = () =>
     run(async () => {
       await api.kerFelvetelOsszefoglalo(felvetelId);
       await lista.refresh();
+    });
+
+  // Szerkesztés: az orvos szövege kerül előre, az AI eredetije megnézhető marad
+  const [szerkeszt, setSzerkeszt] = useState<string | null>(null);
+  const szerkesztoId = useId();
+  const kezdSzerkesztes = (s: FelvetelOsszefoglalo) =>
+    setSzerkeszt(s.szerkesztett ?? s.pontok.map((p) => p.szoveg).join('\n'));
+  const ment = (s: FelvetelOsszefoglalo) =>
+    run(async () => {
+      if (!szerkeszt?.trim()) throw new Error('Az összefoglaló nem lehet üres.');
+      await api.szerkesztFelvetelOsszefoglalo(felvetelId, s.id, szerkeszt);
+      await lista.refresh();
+      setSzerkeszt(null);
     });
 
   return (
@@ -185,8 +204,8 @@ export function FelvetelOsszefoglaloPanel({
       {lista.state.status === 'ok' && !legfrissebb && <p className="meta">Még nem készült összefoglaló.</p>}
       {keszul && (
         <p className="meta" role="status">
-          <span className="stat stat--feldolgozas">Készül</span> a teljes átiratból és{' '}
-          {legfrissebb.kulcsszavak.length} kulcsszóból…
+          <span className="stat stat--feldolgozas">Készül</span> a teljes átiratból és {legfrissebb.kulcsszavak.length}{' '}
+          kulcsszóból…
         </p>
       )}
       {legfrissebb?.allapot === 'hiba' && (
@@ -202,18 +221,85 @@ export function FelvetelOsszefoglaloPanel({
               figyelembe vegye őket.
             </p>
           )}
-          <ul className="itemlist summarypoints">
-            {legfrissebb.pontok.map((p, i) => (
-              <li key={i}>
-                {p.szoveg}{' '}
-                {p.turnIds.length > 0 && (
-                  <button type="button" className="linkbtn mono" onClick={() => onUgras(p.turnIds)}>
-                    [{p.turnIds.map((t) => `#${String(t).padStart(2, '0')}`).join(', ')}]
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
+          {szerkeszt !== null ? (
+            <div className="tabform tabform--inset">
+              <label htmlFor={szerkesztoId}>Összefoglaló szerkesztése</label>
+              <textarea
+                id={szerkesztoId}
+                className="textarea summary-editor"
+                rows={Math.min(24, Math.max(8, szerkeszt.split('\n').length + 2))}
+                maxLength={8000}
+                value={szerkeszt}
+                onChange={(e) => setSzerkeszt(e.target.value)}
+              />
+              <span className="meta">Az AI eredeti szövege megmarad, a mentett változat jelenik meg.</span>
+              <div className="actions">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => void ment(legfrissebb)}
+                  disabled={busy}
+                >
+                  <Icon name="check" size={14} strokeWidth={2.6} />
+                  {busy ? 'Mentés…' : 'Mentés'}
+                </button>
+                <button type="button" className="btn" onClick={() => setSzerkeszt(null)} disabled={busy}>
+                  Mégse
+                </button>
+              </div>
+            </div>
+          ) : legfrissebb.szerkesztett !== null ? (
+            <>
+              <p className="meta">
+                <span className="badge badge--ai">Orvos szerkesztette</span>{' '}
+                {legfrissebb.szerkesztve && formatDatumIdo(legfrissebb.szerkesztve)}
+              </p>
+              <ul className="itemlist summarypoints">
+                {legfrissebb.szerkesztett
+                  .split('\n')
+                  .filter((l) => l.trim())
+                  .map((l, i) => (
+                    <li key={i}>{l}</li>
+                  ))}
+              </ul>
+              <details className="turn__orig">
+                <summary>Eredeti (AI) összefoglaló</summary>
+                <ul className="itemlist summarypoints">
+                  {legfrissebb.pontok.map((p, i) => (
+                    <li key={i}>
+                      {p.szoveg}{' '}
+                      {p.turnIds.length > 0 && (
+                        <button type="button" className="linkbtn mono" onClick={() => onUgras(p.turnIds)}>
+                          [{p.turnIds.map((t) => `#${String(t).padStart(2, '0')}`).join(', ')}]
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </>
+          ) : (
+            <ul className="itemlist summarypoints">
+              {legfrissebb.pontok.map((p, i) => (
+                <li key={i}>
+                  {p.szoveg}{' '}
+                  {p.turnIds.length > 0 && (
+                    <button type="button" className="linkbtn mono" onClick={() => onUgras(p.turnIds)}>
+                      [{p.turnIds.map((t) => `#${String(t).padStart(2, '0')}`).join(', ')}]
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {szerkeszt === null && (
+            <div className="actions">
+              <button type="button" className="btn btn--sm" onClick={() => kezdSzerkesztes(legfrissebb)}>
+                <Icon name="pencil" size={14} />
+                Szerkesztés
+              </button>
+            </div>
+          )}
           {legfrissebb.figyelmeztetesek.length > 0 && (
             <ul className="itemlist">
               {legfrissebb.figyelmeztetesek.map((w, i) => (

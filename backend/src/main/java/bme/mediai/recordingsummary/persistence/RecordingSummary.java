@@ -62,6 +62,13 @@ public class RecordingSummary {
 
     private String promptHash;
 
+    // V29: az orvos szerkesztett változata; az AI eredeti szövege (summary, points) nem változik
+    private String editedText;
+
+    private Long editedBy;
+
+    private OffsetDateTime editedAt;
+
     protected RecordingSummary() {
     }
 
@@ -85,6 +92,19 @@ public class RecordingSummary {
         this.promptHash = promptHash;
         this.status = RecordingSummaryStatus.DONE;
         this.completedAt = OffsetDateTime.now();
+    }
+
+    public void edit(String text, Long userId) {
+        if (status != RecordingSummaryStatus.DONE) {
+            throw new IllegalStateException("Csak kész összefoglaló szerkeszthető");
+        }
+        String t = text == null ? "" : text.strip();
+        if (t.isEmpty()) {
+            throw new IllegalArgumentException("A szerkesztett összefoglaló nem lehet üres");
+        }
+        this.editedText = t;
+        this.editedBy = userId;
+        this.editedAt = OffsetDateTime.now();
     }
 
     public void fail(String error) {
@@ -150,5 +170,17 @@ public class RecordingSummary {
 
     public String getPromptHash() {
         return promptHash;
+    }
+
+    public String getEditedText() {
+        return editedText;
+    }
+
+    public Long getEditedBy() {
+        return editedBy;
+    }
+
+    public OffsetDateTime getEditedAt() {
+        return editedAt;
     }
 }

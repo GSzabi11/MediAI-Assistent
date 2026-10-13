@@ -452,4 +452,7 @@ export interface RecordingSummaryDto {
   keywords: string[];
   warnings: string[];
   modelName: string | null;
+  editedText: string | null;
+  editedBy: number | null;
+  editedAt: string | null;
 }

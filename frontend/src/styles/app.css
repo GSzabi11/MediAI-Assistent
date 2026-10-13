@@ -415,6 +415,32 @@ a:hover {
   color: var(--c-accent-strong);
   letter-spacing: 0.04em;
 }
+.rail__vertical--ink {
+  color: var(--c-ink);
+}
+/* a jobb szélen az összecsukott Állítások és asszisztens sávja egymás alatt */
+.rail-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+.rail-stack > .rail {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.rail--claims {
+  gap: 12px;
+}
+.rail__badge {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-ink-inverse);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
 
 .sources {
   display: flex;
@@ -2261,4 +2287,11 @@ select.input {
 }
 .summarypoints > li {
   line-height: 1.5;
+}
+/* az összefoglaló szerkesztője: soronként egy pont, jól olvashatóan */
+.summary-editor {
+  width: 100%;
+  min-height: 14em;
+  line-height: 1.6;
+  font-size: var(--fs-base);
 }

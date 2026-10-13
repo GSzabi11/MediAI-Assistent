@@ -24,6 +24,8 @@ import bme.mediai.recordingsummary.persistence.RecordingSummary;
 import bme.mediai.recordingsummary.persistence.RecordingSummaryRepository;
 import bme.mediai.recordingsummary.persistence.RecordingSummaryStatus;
 import bme.mediai.user.exception.UserNotFoundException;
+import bme.mediai.user.persistence.Role;
+import bme.mediai.user.persistence.User;
 import bme.mediai.user.persistence.UserRepository;
 import bme.mediai.utterance.persistence.Utterance;
 import bme.mediai.utterance.persistence.UtteranceRepository;
@@ -143,6 +145,24 @@ public class RecordingSummaryService {
         RecordingSummaryResultRequest.Model m = result.model();
         summary.complete(result.summary().strip(), points, result.warnings() == null ? List.of() : result.warnings(),
                 m.modelName(), m.seed(), m.promptHash());
+        return RecordingSummaryResponse.from(summary);
+    }
+
+    // Az orvos szerkesztése (csak DOCTOR, csak DONE). Az AI szövege megmarad, a válasz mindkettőt adja.
+    @Transactional
+    public RecordingSummaryResponse edit(Long recordingId, Long id, Long userId, String text) {
+        RecordingSummary summary = repository.findById(id)
+                .filter(s -> s.getRecordingId().equals(recordingId))
+                .orElseThrow(() -> new RecordingSummaryNotFoundException(id));
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        if (user.getRole() != Role.DOCTOR) {
+            throw new RecordingSummaryConflictException("Összefoglalót csak orvos (DOCTOR) szerkeszthet");
+        }
+        try {
+            summary.edit(text, userId);
+        } catch (IllegalStateException e) {
+            throw new RecordingSummaryConflictException(e.getMessage());
+        }
         return RecordingSummaryResponse.from(summary);
     }
 

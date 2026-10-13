@@ -306,6 +306,15 @@ export const api = {
       await http.post<RecordingSummaryDto>(`/recordings/${felvetelId}/summaries`, { userId: requireUser().id }),
     ),
 
+  /** PUT /recordings/{id}/summaries/{sid}/edited-text — az orvos szerkesztése; az AI eredetije megmarad */
+  szerkesztFelvetelOsszefoglalo: async (felvetelId: number, osszefoglaloId: number, szoveg: string) =>
+    toFelvetelOsszefoglalo(
+      await http.put<RecordingSummaryDto>(`/recordings/${felvetelId}/summaries/${osszefoglaloId}/edited-text`, {
+        userId: requireUser().id,
+        text: szoveg,
+      }),
+    ),
+
   /** PATCH /recordings/{id}/status — PROCESSING-hez kötelező a hossz (másodperc) */
   setFelvetelAllapot: async (id: number, allapot: FelvetelAllapot, hosszMp?: number) =>
     toFelvetel(

@@ -51,9 +51,7 @@ export function AtiratFul({ felvetelId, turnIds }: { felvetelId: number | undefi
           </button>
         </div>
       )}
-      {felvetelId !== undefined && (
-        <TranscriptView key={felvetelId} felvetelId={felvetelId} kiemeltTurnIds={turnIds} />
-      )}
+      {felvetelId !== undefined && <TranscriptView key={felvetelId} felvetelId={felvetelId} kiemeltTurnIds={turnIds} />}
     </>
   );
 }
