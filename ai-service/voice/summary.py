@@ -40,7 +40,7 @@ RULES = """SZABÁLYOK:
 - Számot csak pontosan úgy írj, ahogy az átiratban áll.
 - Legfeljebb {n} rövid mondat, mindegyik külön sorban, "- " kezdettel.
 - Minden mondat végére írd szögletes zárójelben azoknak a megszólalásoknak a sorszámát, amelyekből az adat
-  származik, pl. [3] vagy [3, 5].
+  származik — az átirat sorainak elején álló szám, pl. [3] vagy [3, 5]; ne a saját mondataidat számozd.
 {keywords}Csak a felsorolást írd, bevezetés és cím nélkül."""
 
 _REF = re.compile(r"\[(\d+(?:\s*,\s*\d+)*)\]")
@@ -65,7 +65,13 @@ _STOP = {"beteg", "betegnek", "orvos", "panasz", "panaszkodik", "szerint", "elmo
 
 
 def _stems(text: str) -> set[str]:
-    return {w[:_STEM] for w in re.findall(r"[0-9a-záéíóöőúüű]{4,}", text.lower()) if w not in _STOP}
+    """Összevetési jegyek: a legalább 4 betűs szavak szótöve (első 5 betű), a nagybetűs rövidítések
+    ("IVS", "HF", "LVF") és a számok — az echo-összefoglaló sorai ("IVS 9 mm") gyakran csak ezekből
+    állnak, szótő nélkül semmihez nem kötődtek volna."""
+    stems = {w[:_STEM] for w in re.findall(r"[0-9a-záéíóöőúüű]{4,}", text.lower()) if w not in _STOP}
+    stems |= {w.lower() for w in re.findall(r"[A-ZÁÉÍÓÖŐÚÜŰ]{2,}", text)}
+    stems |= {n.replace(",", ".") for n in _NUMBER.findall(text)}
+    return stems
 
 
 def ground(sentence: str, utterances: list[dict]) -> list[int]:
@@ -104,12 +110,16 @@ def parse(text: str, utterances: list[dict], warnings: list[str]) -> list[dict]:
             continue  # a korábbi pontok egybefűzött ismétlése
         valid = sorted({r for r in refs if r in turn_ids})
         invalid = sorted({r for r in refs if r not in turn_ids})
-        if invalid:
-            warnings.append(f"„{sentence[:80]}”: nem létező megszólalásra hivatkozott ({invalid}), a hivatkozás kimaradt")
         if not valid:
+            # A rossz sorszám (a modell gyakran a saját mondatait számozza) helyett a szótő-egyezés
+            # dönt; csak akkor figyelmeztetünk, ha így sem köthető megszólaláshoz
             valid = ground(sentence, utterances)
             if not valid:
-                warnings.append(f"„{sentence[:80]}”: nem köthető megszólaláshoz — forrás nélküli mondat, ellenőrizendő")
+                reason = f"nem létező megszólalásra hivatkozott ({invalid}), és " if invalid else ""
+                warnings.append(f"„{sentence[:80]}”: {reason}nem köthető megszólaláshoz — forrás nélküli mondat, "
+                                f"ellenőrizendő")
+        elif invalid:
+            log.info("„%s”: a nem létező hivatkozás (%s) kimaradt, a többi megmaradt", sentence[:80], invalid)
         for n in _NUMBER.findall(sentence):
             if n not in transcript and n.replace(",", ".") not in transcript and n.replace(".", ",") not in transcript:
                 warnings.append(f"„{sentence[:80]}”: a(z) {n} szám nem szerepel az átiratban — ellenőrizendő")
