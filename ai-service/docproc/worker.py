@@ -8,6 +8,7 @@ Egy dokumentum végén a callback elmegy, és csak utána jön a következő.
 import itertools
 import logging
 import queue
+import sys
 import threading
 import time
 from dataclasses import dataclass
@@ -25,6 +26,9 @@ import locate
 import summarize
 import llm
 from pdf_text import NoTextLayerError, extract_text
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from gpulock import gpu_lock  # noqa: E402
 
 log = logging.getLogger("docproc")
 
@@ -126,12 +130,14 @@ class JobQueue:
             with self._lock:
                 self._current = job.label
             try:
-                if isinstance(job, ChatJob):
-                    payload = run_chat(job)
-                elif isinstance(job, SummaryJob):
-                    payload = summarize.summarize(job.facts)
-                else:
-                    payload = process(job)
+                # a hangszolgáltatással (ai-service/voice) közös GPU-zár: egyszerre egy GPU-feladat a gépen
+                with gpu_lock(job.label):
+                    if isinstance(job, ChatJob):
+                        payload = run_chat(job)
+                    elif isinstance(job, SummaryJob):
+                        payload = summarize.summarize(job.facts)
+                    else:
+                        payload = process(job)
             except Exception as e:  # noqa: BLE001 — minden hiba FAILED callback, a sor nem állhat le
                 log.exception("A(z) %s feldolgozása sikertelen", job.label)
                 payload = {"status": "FAILED", "error": _error_message(e)}

@@ -25,6 +25,8 @@ import type {
   VoiceProfileDto,
   ClinicalSummaryDto,
   ChatMessageDto,
+  KeywordDto,
+  RecordingSummaryDto,
 } from './dto';
 import type {
   Allergia,
@@ -53,6 +55,8 @@ import type {
   RagDarab,
   KlinikaiOsszefoglalo,
   ChatValasz,
+  FelvetelOsszefoglalo,
+  Kulcsszo,
 } from './types';
 
 // ---------- beteg + felhasználó ----------
@@ -74,14 +78,20 @@ export const toFelhasznalo = (u: UserDto): Felhasznalo => ({
   letrehozva: u.createdAt,
 });
 
+const hangprofilAllapotOf = { PROCESSING: 'feldolgozas', READY: 'kesz', FAILED: 'hiba' } as const;
+
 export const toHangprofil = (v: VoiceProfileDto): Hangprofil => ({
   id: v.id,
   felhasznaloId: v.userId,
-  wavUt: v.wavPath,
+  allapot: hangprofilAllapotOf[v.status],
+  hiba: v.error,
+  aktiv: v.active,
+  hasznalhato: v.usableForRecording,
   embeddingModell: v.embeddingModel,
   kuszob: v.threshold === null ? null : Number(v.threshold),
-  aktiv: v.active,
   nettoBeszedMp: v.netSpeechSec === null ? null : Number(v.netSpeechSec),
+  mondatok: v.sentencesUsed,
+  figyelmeztetesek: v.warnings ?? [],
   mikrofon: v.microphone,
   rogzitve: v.recordedAt,
   letrehozva: v.createdAt,
@@ -286,6 +296,12 @@ export const toFelvetel = (r: RecordingDto): FelvetelResponse => ({
   asrModell: r.asrModel,
   kezdes: r.recordedAt,
   hosszMp: r.durationSec ?? 0,
+  // a hangszolgáltatás tárolójának útja (AudioStorage: recordings/{beteg}/…); a kézi rögzítésé tetszőleges
+  automatikus: r.audioPath.startsWith('recordings/'),
+  hiba: r.processingError ?? null,
+  figyelmeztetesek: r.processingWarnings ?? [],
+  atnezoModell: r.reviewModel ?? null,
+  hangTorolve: r.audioDeleted ?? false,
 });
 
 const beszelo: Record<UtteranceDto['speaker'], MegszolalasResponse['beszelo']> = {
@@ -301,6 +317,12 @@ export const toMegszolalas = (u: UtteranceDto): MegszolalasResponse => ({
   beszelo: beszelo[u.speaker],
   kezdetMp: Math.round(u.startMs / 1000),
   szoveg: u.text,
+  hasonlosag: u.similarity,
+  eredetiSzoveg: u.asrText ?? null,
+  eredetiBeszelo: u.asrSpeaker ? beszelo[u.asrSpeaker] : null,
+  javito: u.correctedBy ?? null,
+  javitasOka: u.correctionReason ?? null,
+  megjegyzes: u.reviewNote ?? null,
 });
 
 // ---------- labor ----------
@@ -493,4 +515,28 @@ export const toChatValasz = (m: ChatMessageDto): ChatValasz => ({
     embedding: m.model.embeddingModel,
   },
   kontextus: m.contextCounts ?? {},
+});
+
+// ---------- felvétel: kulcsszó, összefoglaló ----------
+
+export const toKulcsszo = (k: KeywordDto): Kulcsszo => ({
+  id: k.id,
+  felvetelId: k.recordingId,
+  kifejezes: k.term,
+  forras: k.origin === 'MODEL' ? 'ai' : 'orvos',
+  allapot: k.status === 'SUGGESTED' ? 'javaslat' : k.status === 'ACCEPTED' ? 'elfogadva' : 'elutasitva',
+  modell: k.modelName,
+});
+
+export const toFelvetelOsszefoglalo = (s: RecordingSummaryDto): FelvetelOsszefoglalo => ({
+  id: s.id,
+  felvetelId: s.recordingId,
+  allapot: s.status === 'PROCESSING' ? 'feldolgozas' : s.status === 'DONE' ? 'kesz' : 'hiba',
+  kerve: s.requestedAt,
+  hiba: s.error,
+  szoveg: s.summary,
+  pontok: (s.points ?? []).map((p) => ({ szoveg: p.text, turnIds: p.turnIds })),
+  kulcsszavak: s.keywords ?? [],
+  figyelmeztetesek: s.warnings ?? [],
+  modell: s.modelName,
 });

@@ -2,6 +2,25 @@
 import os
 from pathlib import Path
 
+
+def _load_env_file(path: Path) -> None:
+    """A repó gyökerében lévő közös .env betöltése (sablon: .env.example). A már beállított
+    környezeti változót nem írja felül — így a Springgel ugyanazt a fájlt látjuk."""
+    if not path.is_file():
+        return
+    with open(path, encoding="utf-8-sig") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            value = value.strip().strip('"').strip("'")
+            if value:  # üres sor a sablonból → marad a kódbeli alapérték
+                os.environ.setdefault(key.strip(), value)
+
+
+_load_env_file(Path(__file__).resolve().parents[2] / ".env")
+
 # A Spring ↔ Python közös titka, mindkét irányban az X-Internal-Token fejlécben. Nincs alapérték:
 # beállítás nélkül nem indulunk (fail-closed) — üres tokennel egy üres fejléc is átmenne.
 TOKEN = os.environ.get("MEDIAI_AI_TOKEN", "").strip()
@@ -32,9 +51,13 @@ LLM_MAX_OUTPUT_TOKENS = int(os.environ.get("DOC_LLM_MAX_OUTPUT_TOKENS", "4096"))
 # a laborlelet szakaszonként megy, arra nem vonatkozik
 LLM_MAX_CHARS = int(os.environ.get("DOC_LLM_MAX_CHARS", "40000"))
 
-EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "BAAI/bge-m3")
-# "cuda" / "cpu"; üresen: cuda, ha elérhető
-EMBEDDING_DEVICE = os.environ.get("EMBEDDING_DEVICE") or None
+# Az Ollamában helyben letöltött embedding-modell neve (pl. qwen3-embedding:4b). Nincs alapérték:
+# beállítás nélkül nem indulunk — ne essünk csendben vissza egy másik (letöltendő) modellre, és a
+# document_chunk.embedding_model is ebből jön (különböző modellek vektorai nem keverhetők).
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "").strip()
+if not EMBEDDING_MODEL:
+    raise RuntimeError("Az EMBEDDING_MODEL környezeti változó nincs beállítva (az Ollamában letöltött"
+                       " embedding-modell neve, pl. qwen3-embedding:4b — ld. .env.example)")
 
 CHUNK_TARGET_CHARS = int(os.environ.get("CHUNK_TARGET_CHARS", "800"))
 CHUNK_OVERLAP_CHARS = int(os.environ.get("CHUNK_OVERLAP_CHARS", "150"))

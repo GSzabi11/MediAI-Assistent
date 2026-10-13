@@ -1,9 +1,15 @@
 faster-whisper>=1.1
+# a faster-whisper 1.2 decode_audio-ja a PyAV 19 open()-jával nem kompatibilis (metadata_errors)
+av<19
 pyannote.audio>=3.3
 silero-vad>=5.1
 sounddevice>=0.5
 numpy>=1.26
 requests>=2.32
 python-dotenv>=1.0
+# hangszolgáltatás (service.py)
+fastapi>=0.115
+uvicorn>=0.30
+pydantic>=2.7
 # GPU-hoz a CUDA-s torch külön telepítendő (RTX 50xx: CUDA 12.8+), ld. docproc/README.md
 torch>=2.7

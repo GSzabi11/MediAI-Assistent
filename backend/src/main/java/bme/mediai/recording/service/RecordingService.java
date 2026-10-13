@@ -15,13 +15,23 @@ import bme.mediai.recording.persistence.RecordingRepository;
 import bme.mediai.recording.persistence.RecordingStatus;
 import bme.mediai.user.exception.UserNotFoundException;
 import bme.mediai.user.persistence.UserRepository;
-import bme.mediai.voiceprofile.persistence.VoiceProfile;
-import bme.mediai.voiceprofile.persistence.VoiceProfileRepository;
+import bme.mediai.voiceprofile.service.VoiceProfileService;
 
+import bme.mediai.common.storage.AudioStorage;
+import bme.mediai.processing.service.VoiceServiceClient;
+import bme.mediai.recording.api.RecordingJobRequest;
+import bme.mediai.recording.persistence.RecordingMode;
+import bme.mediai.voiceprofile.persistence.VoiceProfile;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class RecordingService {
@@ -29,17 +39,69 @@ public class RecordingService {
     private final RecordingRepository repository;
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
-    private final VoiceProfileRepository voiceProfileRepository;
+    private final VoiceProfileService voiceProfileService;
     private final MedicalCareRepository medicalCareRepository;
+    private final AudioStorage storage;
+    private final VoiceServiceClient voiceService;
+    private final ApplicationEventPublisher events;
+    private final String defaultAsrModel;
 
     public RecordingService(RecordingRepository repository, PatientRepository patientRepository,
-            UserRepository userRepository, VoiceProfileRepository voiceProfileRepository,
-            MedicalCareRepository medicalCareRepository) {
+            UserRepository userRepository, VoiceProfileService voiceProfileService,
+            MedicalCareRepository medicalCareRepository, AudioStorage storage, VoiceServiceClient voiceService,
+            ApplicationEventPublisher events, @Value("${mediai.voice-service.asr-model}") String defaultAsrModel) {
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
-        this.voiceProfileRepository = voiceProfileRepository;
+        this.voiceProfileService = voiceProfileService;
         this.medicalCareRepository = medicalCareRepository;
+        this.storage = storage;
+        this.voiceService = voiceService;
+        this.events = events;
+        this.defaultAsrModel = defaultAsrModel;
+    }
+
+    // A böngészőben készült felvétel feltöltése (docs/voice-module.md): a hang a Spring tárolójába
+    // kerül, a felvétel rögtön PROCESSING, és a commit után a Python hangszolgáltatás kapja meg az
+    // orvos (felvételkor aktív) hanglenyomatával. A nyers hangot a feldolgozás után töröljük.
+    @Transactional
+    public RecordingResponse upload(Long patientId, Long userId, Long medicalCareId, RecordingMode mode,
+            Integer durationSec, MultipartFile audio) {
+        if (mode == null) {
+            throw new IllegalArgumentException("A mód (mode) kötelező: SBO vagy ECHO");
+        }
+        if (durationSec == null || durationSec < 1) {
+            throw new IllegalArgumentException("A felvétel hossza (durationSec) legalább 1 mp kell legyen");
+        }
+        requirePatientExists(patientId);
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(userId);
+        }
+        if (medicalCareId != null) {
+            requireOpenMedicalCareOfPatient(medicalCareId, patientId);
+        }
+        VoiceProfile profile = voiceProfileService.requireUsableProfile(userId);
+
+        String dir = "recordings/" + patientId;
+        String audioPath = storage.save(audio, dir, UUID.randomUUID().toString());
+        try {
+            Recording recording = new Recording(patientId, userId, medicalCareId, profile.getId(), mode, audioPath,
+                    defaultAsrModel);
+            recording.changeStatus(RecordingStatus.PROCESSING, durationSec);
+            Recording saved = repository.saveAndFlush(recording);
+
+            List<Float> embedding = new ArrayList<>();
+            for (float v : profile.getEmbedding()) {
+                embedding.add(v);
+            }
+            events.publishEvent(new RecordingUploadedEvent(new RecordingJobRequest(saved.getId(),
+                    storage.resolve(audioPath).toString(), mode.name(), embedding,
+                    voiceService.callbackUrl("/api/recordings/" + saved.getId() + "/processing-result"))));
+            return RecordingResponse.from(repository.findById(saved.getId()).orElseThrow());
+        } catch (RuntimeException e) {
+            storage.deleteQuietly(audioPath);
+            throw e;
+        }
     }
 
     @Transactional
@@ -52,11 +114,10 @@ public class RecordingService {
             requireOpenMedicalCareOfPatient(request.medicalCareId(), request.patientId());
         }
 
-        // A kliens nem választhat profilt: mindig az orvos aktuálisan aktív profilja,
-        // így nem kerülhet be más orvosé vagy egy régi (.bak) profil.
-        Long voiceProfileId = voiceProfileRepository.findByUserIdAndActiveTrue(request.userId())
-                .map(VoiceProfile::getId)
-                .orElse(null);
+        // A kliens nem választhat profilt: mindig az orvos aktuálisan aktív profilja, így nem kerülhet
+        // be más orvosé vagy egy régi. Hangprofil nélkül nincs felvétel (409): a szerepkiosztás
+        // (ki az orvos?) a hanglenyomatra épül.
+        Long voiceProfileId = voiceProfileService.requireUsableProfile(request.userId()).getId();
 
         Recording recording = new Recording(
                 request.patientId(),

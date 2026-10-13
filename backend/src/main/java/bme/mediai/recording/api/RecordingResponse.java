@@ -1,6 +1,7 @@
 package bme.mediai.recording.api;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import bme.mediai.recording.persistence.Recording;
 import bme.mediai.recording.persistence.RecordingMode;
@@ -17,13 +18,20 @@ public record RecordingResponse(
         String audioPath,
         Integer durationSec,
         String asrModel,
-        OffsetDateTime recordedAt
+        OffsetDateTime recordedAt,
+        String processingError,
+        List<String> processingWarnings,
+        OffsetDateTime processedAt,
+        boolean audioDeleted,
+        String reviewModel
 ) {
     public static RecordingResponse from(Recording recording) {
         return new RecordingResponse(
                 recording.getId(), recording.getPatientId(), recording.getUserId(),
                 recording.getMedicalCareId(), recording.getVoiceProfileId(), recording.getMode(),
                 recording.getStatus(), recording.getAudioPath(), recording.getDurationSec(),
-                recording.getAsrModel(), recording.getRecordedAt());
+                recording.getAsrModel(), recording.getRecordedAt(), recording.getProcessingError(),
+                recording.getProcessingWarnings(), recording.getProcessedAt(), recording.getAudioDeletedAt() != null,
+                recording.getReviewModel());
     }
 }

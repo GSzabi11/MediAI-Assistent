@@ -1,0 +1,159 @@
+"""A felvétel összefoglalója a teljes átiratból és az orvos által jóváhagyott / hozzáadott
+kulcsszavakból (POST /recording-summaries).
+
+Egyszerű szöveges hívás (nem kötött JSON): a docproc mérése szerint a 4B-s modell a JSON-kimenetben
+hosszabb szövegnél hurokba esett (docproc/summarize.py). A modell mondatonként megszólalás-
+sorszámra hivatkozik ([3] vagy [3, 5]); ezt determinisztikusan feldolgozzuk és ellenőrizzük:
+  - a hivatkozott sorszám létezik (ha nem, a hivatkozás kimarad, figyelmeztetéssel);
+  - hivatkozás nélküli mondatnál a forrást szótő-egyezéssel keressük meg (ground); ha így sincs,
+    figyelmeztetést kap (nincs mögötte forrás);
+  - az összefoglaló minden száma szerepel az átiratban (kitalált érték ellen).
+"""
+import hashlib
+import json
+import logging
+import re
+
+import requests
+
+import beszed_pipeline as bp
+import keywords as kw
+import review
+
+log = logging.getLogger("voice.summary")
+
+SEED = 42
+MAX_POINTS = 12
+SPEAKER_LABEL = {"DOCTOR": "ORVOS", "PATIENT": "BETEG", "OTHER": "EGYÉB"}
+
+PROMPT = {
+    "sbo": """Sürgősségi osztályos orvos–beteg beszélgetés átiratát kapod, sorszámozott megszólalásokkal.
+Írj belőle rövid, tárgyszerű klinikai összefoglalót egy orvosnak: fő panasz, a tünetek részletei (kezdet,
+lokalizáció, jelleg), a tagadott tünetek, gyógyszerek, allergiák, előzmények.""",
+    "echo": """Echokardiográfiás vizsgálat diktálásának átiratát kapod, sorszámozott megszólalásokkal.
+Írj belőle rövid, tárgyszerű leletösszefoglalót egy orvosnak: a mért paraméterek értékkel és mértékegységgel,
+pontosan úgy, ahogy elhangzottak, majd a szöveges megfigyelések.""",
+}
+
+RULES = """SZABÁLYOK:
+- KIZÁRÓLAG az átiratban elhangzottakat használd. Ne állíts fel diagnózist, ne javasolj kezelést, ne találj ki adatot.
+- Számot csak pontosan úgy írj, ahogy az átiratban áll.
+- Legfeljebb {n} rövid mondat, mindegyik külön sorban, "- " kezdettel.
+- Minden mondat végére írd szögletes zárójelben azoknak a megszólalásoknak a sorszámát, amelyekből az adat
+  származik, pl. [3] vagy [3, 5].
+{keywords}Csak a felsorolást írd, bevezetés és cím nélkül."""
+
+_REF = re.compile(r"\[(\d+(?:\s*,\s*\d+)*)\]")
+_NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def _keywords_line(keywords: list[str]) -> str:
+    if not keywords:
+        return ""
+    return ("- Az orvos ezeket a kulcsszavakat emelte ki — ha elhangzottak, mindegyikre térj ki: "
+            + "; ".join(keywords) + "\n")
+
+
+def prompt_hash(mode: str) -> str:
+    payload = json.dumps({"kind": "recording-summary", "prompt": PROMPT[mode], "rules": RULES, "options": _OPTIONS,
+                          "model": review.REVIEW_MODEL}, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+_STEM = 5
+_STOP = {"beteg", "betegnek", "orvos", "panasz", "panaszkodik", "szerint", "elmondta", "mondta", "jelenleg"}
+
+
+def _stems(text: str) -> set[str]:
+    return {w[:_STEM] for w in re.findall(r"[0-9a-záéíóöőúüű]{4,}", text.lower()) if w not in _STOP}
+
+
+def ground(sentence: str, utterances: list[dict]) -> list[int]:
+    """Determinisztikus forrás: azok a megszólalások, amelyekkel a mondat a legtöbb szótövet
+    (első 5 betű) osztja — legalább 2-t (rövid mondatnál 1-et). A modell hivatkozása helyett /
+    mellett: a kis modell gyakran nem ad, vagy rossz sorszámot ad."""
+    stems = _stems(sentence)
+    if not stems:
+        return []
+    need = 1 if len(stems) <= 2 else 2
+    scored = [(len(stems & _stems(u["text"])), u["turnId"]) for u in utterances]
+    best = max((n for n, _ in scored), default=0)
+    if best < need:
+        return []
+    return sorted(t for n, t in scored if n == best)[:5]
+
+
+def parse(text: str, utterances: list[dict], warnings: list[str]) -> list[dict]:
+    turn_ids = {u["turnId"] for u in utterances}
+    transcript = " ".join(u["text"] for u in utterances)
+    points: list[dict] = []
+    for line in text.splitlines():
+        line = line.replace("**", "").replace("__", "").strip().lstrip("-•*#").strip()
+        if not line or line.endswith(":"):
+            continue  # üres sor, fejléc ("Összefoglaló:")
+        refs: list[int] = []
+        for m in _REF.finditer(line):
+            refs.extend(int(x) for x in m.group(1).split(","))
+        sentence = re.sub(r"\s+([.,;:!?])", r"\1", _REF.sub("", line)).strip().rstrip(" ,;")
+        if not sentence:
+            continue
+        low = sentence.lower()
+        if any(p["text"].lower() == low for p in points):
+            continue  # a kis modell hajlamos ugyanazt a sort ismételni
+        if sum(1 for p in points if p["text"].lower() in low) >= 2:
+            continue  # a korábbi pontok egybefűzött ismétlése
+        valid = sorted({r for r in refs if r in turn_ids})
+        invalid = sorted({r for r in refs if r not in turn_ids})
+        if invalid:
+            warnings.append(f"„{sentence[:80]}”: nem létező megszólalásra hivatkozott ({invalid}), a hivatkozás kimaradt")
+        if not valid:
+            valid = ground(sentence, utterances)
+            if not valid:
+                warnings.append(f"„{sentence[:80]}”: nem köthető megszólaláshoz — forrás nélküli mondat, ellenőrizendő")
+        for n in _NUMBER.findall(sentence):
+            if n not in transcript and n.replace(",", ".") not in transcript and n.replace(".", ",") not in transcript:
+                warnings.append(f"„{sentence[:80]}”: a(z) {n} szám nem szerepel az átiratban — ellenőrizendő")
+        points.append({"text": sentence[:1000], "turnIds": valid[:20]})
+        if len(points) >= MAX_POINTS:
+            break
+    return points
+
+
+# Ismétlés-büntetés szélesebb ablakon (mint a docproc/summarize.py): a medgemma1.5:4b nélküle a
+# felsorolás egy sorát hurokban ismételte; a kimenet hossza is korlátozott
+_OPTIONS = {"temperature": 0, "seed": SEED, "repeat_penalty": 1.2, "repeat_last_n": 256, "num_ctx": 8192,
+            "num_predict": 900}
+
+
+def _generate(content: str) -> str:
+    resp = requests.post(bp.OLLAMA_URL, json={
+        "model": review.REVIEW_MODEL, "stream": False, "keep_alive": 0, "options": _OPTIONS,
+        "messages": [{"role": "user", "content": content}]}, timeout=(10, bp.LLM_DEADLINE))
+    resp.raise_for_status()
+    data = resp.json()
+    if "error" in data:
+        raise RuntimeError(f"Ollama hiba: {data['error']}")
+    return data.get("message", {}).get("content", "")
+
+
+def summarize(mode: str, utterances: list[dict], keywords: list[str]) -> dict:
+    mode = mode.lower()
+    dialog = "\n".join(f"[{u['turnId']}] {SPEAKER_LABEL.get(u['speaker'], 'EGYÉB')}: {u['text']}" for u in utterances)
+    content = (PROMPT[mode] + "\n" + RULES.format(n=MAX_POINTS, keywords=_keywords_line(keywords))
+               + "\n\n--- ÁTIRAT ---\n" + dialog + "\n--- ÁTIRAT VÉGE ---")
+    raw = _generate(content)
+    warnings: list[str] = []
+    points = parse(raw, utterances, warnings)
+    if not points:
+        raise RuntimeError("a modell nem adott értelmezhető összefoglalót")
+    missing = [k for k in keywords if not kw.occurs(k, [{"text": raw}])]
+    if missing:
+        warnings.append(f"Az összefoglaló nem tér ki ezekre a kulcsszavakra: {', '.join(missing)}"[:500])
+    log.info("Összefoglaló: %d pont, %d figyelmeztetés", len(points), len(warnings))
+    return {
+        "status": "DONE",
+        "summary": "\n".join(p["text"] for p in points),
+        "points": points,
+        "warnings": [w[:500] for w in warnings][:30],
+        "model": {"modelName": review.REVIEW_MODEL, "seed": SEED, "promptHash": prompt_hash(mode)},
+    }

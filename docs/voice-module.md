@@ -10,42 +10,135 @@ Ez a fájl csak azt rögzíti, ami a **backend-integrációt** érinti — a
 hangmodul fejlesztési részleteit a fenti dokumentum tartalmazza, azt ne
 duplikáld ide.
 
-## A határ: a hangfolyam NEM megy át a Spring backenden
+## A határ: feltöltés a felvétel végén, nem élő hangfolyam (2026-10, V26–V28)
 
-Böngésző → WebSocket → Python ASR-szolgáltatás közvetlenül. A Spring csak
-a validált végeredményt kapja (megszólalások + kinyert `allitas`-ok).
-A Spring a nyilvántartás rendszere, nem audio-relay.
+Korábbi terv: böngésző → WebSocket → Python, a Spring csak a végeredményt kapja. **Módosítva**:
+
+```
+Böngésző (MediaRecorder, WebM/Opus) ──multipart──▶ Spring (data/voice/…, gitignore)
+   Spring ──{fájl útja, mód, az orvos hanglenyomata}──▶ Python hangszolgáltatás (ai-service/voice/service.py, :8002)
+   Python: Whisper → pyannote → szerepkiosztás → MedGemma-átnézés → kulcsszavak
+   Python ──callback (X-Internal-Token)──▶ Spring: megszólalások + kulcsszó-javaslatok, egy tranzakcióban
+   Spring: a nyers hangot törli; commit után összefoglalót kér (Python, ugyanaz a sor)
+```
+
+Oka: (1) a böngésző nem kaphatja meg a belső tokent, a Python pedig nem végez autentikációt — a
+Springen át a hozzáférési napló és a betegazonosítás is a meglévő úton működik; (2) a prototípus
+fájl-alapú (offline Whisper + diarizáció), élő átírás nincs; (3) ugyanaz a minta, mint a
+dokumentum-feldolgozásnál (`docs/document-processing.md`). A Spring nem audio-relay: a hang a
+lemezre kerül, a Python a **fájl útját** kapja (egy gépen fut a kettő), és feldolgozás után törlődik.
+
+A Spring sosem hívja az Ollamát. GPU (8 GB): a Python saját soros sora + a docproc-kal közös
+folyamatközi fájlzár (`ai-service/gpulock.py`) — egyszerre egy GPU-feladat fut a gépen; a Whisper és
+a diarizáció modellje a lépés után felszabadul, hogy a MedGemma elférjen.
+
+## Hangprofil (V26) — felvétel feltétele
+
+- A Profil oldalon a böngészőben: 2 mp csend (zajszint), majd a prototípus 8 mondata
+  (`profil_core.ENROLL_SENTENCES`), mondatonként azonnali durva ellenőrzéssel (hossz, hangerő).
+- `POST /api/voice-profiles` (multipart: `userId`, `sentences[]`, `noise`, `microphone`) → 202,
+  `voice_profile.status = PROCESSING`, nem aktív. Csak `DOCTOR`. Felhasználónként egy készülő profil.
+- Python (`enrollment.py`, a CLI-vel közös `profil_core.py`): VAD, mondatonkénti minőségellenőrzés,
+  összhang-ellenőrzés (a többitől eltérő hangú mondat kimarad), hanglenyomat (wespeaker, 256 dim),
+  a kiszűrt beszéd `profile.wav`-ként marad (modellváltáskor újraszámolható); a mondat-fájlok törlődnek.
+- Callback → `READY` + aktív (a régi aktív inaktív lesz), vagy `FAILED` az okkal.
+- **Felvétel csak használható profillal** (aktív, `READY`, van hanglenyomat): különben 409
+  (`VoiceProfileRequiredException`), a frontenden zárolt üzenet. A V4-es, kézzel rögzített
+  (hanglenyomat nélküli) profilokat újra kell venni.
+- A hanglenyomat a válaszban nem szerepel (biometrikus adat).
+
+## Felvétel feldolgozása (V27)
+
+- `POST /api/recordings` (multipart: `patientId`, `userId`, `medicalCareId?`, `mode`, `durationSec`,
+  `audio`) → 202, a felvétel rögtön `PROCESSING`. A profil a felvételkor aktív, nem a kliensé.
+- A régi JSON-os `POST /api/recordings` + `PATCH …/status` + `POST …/utterances` megmaradt a
+  CLI-prototípus kimenetének kézi importjához (a frontend a „kézi” felvételnél ezt mutatja).
+- Python (`transcription.py`): faster-whisper (szó-valószínűséggel), pyannote diarizáció
+  (memóriában dekódolt hanggal), szerepkiosztás az orvos hanglenyomatához mérve, és
+  **megszólalásonkénti** hasonlóság (`utterance.similarity`, ≥ 1,5 mp-es megszólalásnál).
+  Ha a legjobb hasonlóság is 0,3 alatt van, figyelmeztetés (a küszöb még nincs behangolva).
+  Az sbo mód fix 2 beszélőt kér: ha a „másik” beszélő is ≥ 0,75-ös hasonlóságú az orvoshoz (mért:
+  egybeszélős felvételen 0,96), az is az orvos hangja — figyelmeztetéssel összevonjuk.
+
+## MedGemma-átnézés (`review.py`)
+
+**Célzott kérdések, nem „javítsd az egészet”** — mérve: a teljes átiratot kapó 4B modell vagy
+semmit sem javított, vagy tartalmat hagyott el. A bizonytalan helyeket determinisztikusan jelöljük ki:
+
+| Kérdés | Mikor | Mit tehet a modell |
+|---|---|---|
+| szó | Whisper szó-valószínűség < 0,5 | a szakaszt cserélheti (szétszakadt szónál választhat: «rami prilt» / «ramiprilt») |
+| beszélő | a megszólalás hangja ±0,2-vel eltér a beszélője átlagától, vagy a tartalom nem illik a szerephez | orvos / beteg / egyéb |
+| érték | echo: **minden** szám+mértékegység; sbo: a bizonytalan | **nem írhatja át**, csak „gyanús” jelölés → `review_note` |
+
+Őrök (a modell válasza után, kódban): szám, mértékegység, tagadás nem változhat; a csere legfeljebb
+2 szóval hosszabb és hasonlít az eredetire. Elvetett javítás → figyelmeztetés. Az eredeti ASR-szöveg
+és -beszélő az `utterance.asr_text` / `asr_speaker`-ben marad, a `corrected_by` + `correction_reason`
+mutatja, ki és miért javította; a frontend „AI-javított” jelöléssel és az eredeti megnézhetőségével
+mutatja. **Ismert korlát**: a megszólalást nem bonthatja (ha a diarizáció egy kérdést és a választ
+egy megszólalásba vonta, az egész egy beszélőé marad). Visszaállítás az eredetire jelenleg nincs
+(a megszólalás megváltoztathatatlan).
+
+Modell: `VOICE_REVIEW_MODEL` (üresen az `LLM_MODEL`; ajánlott: `medgemma:latest`). Mérés (2026-10-12, 8 megszólalásos
+próba): `medgemma:latest` — 3 szójavítás + 1 beszélőcsere helyes, az echo „555 százalék” gyanúsként
+jelölve; `medgemma1.5:4b` — 1 javítás, beszélőcsere nincs, a válaszai többször a kérdéshez sem illettek.
+Ha az Ollama nem érhető el, a felvétel javítás nélkül kész lesz (figyelmeztetéssel).
+
+## Kulcsszavak és összefoglaló (V28)
+
+Tudatosan **külön táblák, nem `statement`** (mint a `clinical_summary`).
+
+- **Kulcsszó** (`recording_keyword`): a MedGemma javasolja (`MODEL`, `SUGGESTED` az orvos döntéséig),
+  vagy az orvos adja hozzá a + gombbal / kijelölésből (`DOCTOR`, `ACCEPTED`). A javaslat csak akkor
+  marad meg, ha elhangzott: szótő-alapú visszakeresés (minden szó első 5 betűje, egymás után), és
+  **az átiratban álló alakot** tároljuk (nem a modellét). A frontend kiemelése ugyanezt a szabályt
+  használja (`lib/atiratKiemeles.tsx`).
+- **Összefoglaló** (`recording_summary`): a felvétel elkészültekor automatikusan, utána gombbal
+  újragenerálható (az előzmény megmarad). Bemenet: a teljes (javított) átirat + a nem elutasított
+  kulcsszavak (pillanatkép). A modell mondatonként megszólalás-sorszámra hivatkozik; a Python és a
+  Spring is ellenőrzi, hogy a hivatkozott `turn_id` létezik. Forrás nélküli mondat, az átiratban nem
+  szereplő szám, kimaradt kulcsszó → figyelmeztetés.
 
 ## Leképezés a fő adatmodellre
 
-| Hangmodul (Python, `validate()`) | Fő rendszer (`allitas`) |
+| Hangmodul (Python) | Fő rendszer |
 |---|---|
-| `forras_turn_ids` | `forras` JSONB: `{felvetel_id, turn_id}` |
-| kinyert tünet/mérés | `allitas`, `tipus = 'modell'` |
-| KITALÁLT / ÁTVETT → null | az `allitas` nem jön létre |
-| ROSSZ FORRÁS / NÉV NEM EGYEZIK | létrejön, `sulyossag = 'warning'` |
-| orvosi jóváhagyás | `allitas_jovahagyas` sor |
-| `LLM_MODEL`, ASR-modell neve | `eloallito` JSONB — MINDKETTŐ rögzítve,
-  nem csak a kinyerő LLM |
+| `chat` megszólalások | `utterance` (+ `asr_*` eredeti, `review_note`) |
+| ASR-modell, átnéző modell | `recording.asr_model`, `recording.review_model` |
+| kulcsszó-javaslat | `recording_keyword` (`MODEL`) |
+| összefoglaló | `recording_summary` (modell, seed, prompt-hash) |
+| orvosi jóváhagyás | kulcsszónál `ACCEPTED`/`REJECTED`; állításnál `statement_approval` |
+
+A prototípus `extract()`-je (tünet / gyógyszer / mérés → `statement` `MODEL_INFERENCE`, AUDIO
+forrással) **még nincs bekötve** — következő lépés lehet.
 
 ## `doctor_id`
 
-Az `app_user.id` — a hangprofil a felhasználói fiók adata, nem külön
-azonosítási réteg (`voice_profile.user_id` FK). A Python `doctor_id`-je
-(pl. `drkovacs`) jelenleg a felhasználónév, nem a numerikus id — az
-integrációnál ezt le kell képezni.
+Az `app_user.id` — a hangprofil a felhasználói fiók adata (`voice_profile.user_id` FK). Bejelentkezés
+még nincs: a `userId` a kérésből jön.
 
 ## Szerepkiosztás: háromértékű, nem bináris
 
-`utterance.speaker`: `DOCTOR | PATIENT | OTHER` (a Python `orvos | beteg |
-egyéb` kimenete). Az SBO-eset explicit tartalmaz hozzátartozót — kétértékű
-felosztásnál a hozzátartozó kijelentése kényszerűen a beteghez kerülne, ami
-anamnézis-hibát okoz; ő az `OTHER`. (Korábban `bizonytalan` szerepelt itt;
-a Python-kód valójában `egyéb`-et ad, ahhoz igazodtunk. Bizonytalan
-hozzárendelés jelölésére jelenleg nincs érték.)
+`utterance.speaker`: `DOCTOR | PATIENT | OTHER` (a Python `orvos | beteg | egyéb` kimenete). Az SBO-eset
+explicit tartalmaz hozzátartozót — kétértékű felosztásnál a hozzátartozó kijelentése kényszerűen a
+beteghez kerülne, ami anamnézis-hibát okoz; ő az `OTHER`.
 
-## Amíg nincs integrálva
+## Futtatás — internet nélkül
 
-Ne feltételezd, hogy a `felvetel`/`megszolalas` tábla vagy bármilyen Java
-osztály már létezik ehhez — a `projekt_atadas.md` állapota szerint ez egy
-önálló Python prototípus, integráció még nem történt.
+```
+cd ai-service/voice
+ai_env\Scripts\activate          # CUDA-s torch + requirements.txt
+python download_models.py        # EGYSZER, internettel: ai-service/models/ (gitignore)
+python service.py                # http://127.0.0.1:8002 — innentől offline
+```
+
+Futás közben **semmi nem töltődik le** (`local_models.py`): a modellek a projekt `ai-service/models/`
+mappájából jönnek (faster-whisper, pyannote diarizáció, wespeaker), a Silero VAD a pip-csomagban van, az
+LLM az Ollamán. A Hugging Face Hub offline módban fut (`HF_HUB_OFFLINE=1`), és **a pyannote telemetria
+ki van kapcsolva** (`PYANNOTE_METRICS_ENABLED=false` — a pyannote 4 alapból az otel.pyannote.ai-ra küld
+használati adatot). Hiányzó modellnél érthető hibával áll le, nem kezd letölteni. Futás közben a
+`HF_TOKEN` sem kell, csak a letöltéshez.
+
+A `.env`: `MEDIAI_AI_TOKEN`, `HF_TOKEN` (pyannote), `ASR_MODEL`, `VOICE_REVIEW_MODEL`,
+`MEDIAI_VOICE_SERVICE_URL` (Spring), opcionálisan `MEDIAI_VOICE_ROOT` (a Spring `data/voice`-a
+abszolút úttal: csak ez alatti fájl olvasható).

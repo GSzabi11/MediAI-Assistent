@@ -3,6 +3,4 @@ uvicorn>=0.30
 pydantic>=2.7
 requests>=2.32
 pymupdf>=1.24
-sentence-transformers>=3.0
-# GPU-hoz a CUDA-s torch külön telepítendő (RTX 50xx: CUDA 12.8+), ld. README.md
-torch>=2.7
+# Az embedding is az Ollamán fut (embedding.py), torch / sentence-transformers nem kell

@@ -11,8 +11,9 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
 ## Stack
 
 - **backend/** — Java 25, Spring Boot 4.1.x, Maven. Postgres (pgvector), Flyway.
-- **ai-service/voice/** — Python, önálló prototípus (faster-whisper, pyannote, Ollama).
-  Még NEM kötött be a backendbe.
+- **ai-service/voice/** — Python (faster-whisper, pyannote, Ollama). A CLI-prototípus mellett
+  `service.py` (FastAPI, :8002): hangprofil, felvétel-feldolgozás, MedGemma-átnézés, kulcsszó,
+  összefoglaló — a Springgel callbackkel, mint a docproc. Ld. `docs/voice-module.md`.
 - **ai-service/docproc/** — Python (FastAPI) dokumentum-feldolgozó: PDF → labor /
   ambuláns adatok, Ollama-val. A Spring REST-en adja át, a Python callbackkel válaszol;
   a Spring sosem hívja az Ollamát. Ld. `docs/document-processing.md`. Ugyanez a szolgáltatás
@@ -96,10 +97,9 @@ Hibernate csak ellenőriz.
 - `patient`/`pacient` névinkonzisztencia (entitás angol, tábla félig magyar
   maradt) — ismert, egyelőre nem prioritás.
 - `hozzajarulas` (GDPR beleegyezés) tábla még nincs migrálva.
-- A hangmodul (voice/) teljesen külön fut, nincs Spring-integráció; a
-  tervezett határ: a hangfolyam NEM megy át a Spring backenden, a Python
-  szolgáltatás közvetlenül kommunikál a frontenddel, a Spring csak a
-  validált végeredményt (megszollalas + allitas sorok) kapja meg.
+- A hangmodul a felvétel végén feltöltött hangot dolgozza fel (a Spring
+  tárolja és a feldolgozás után törli), élő átírás nincs. A prototípus
+  `extract()`-je (tünet / gyógyszer / mérés → `allitas`) még nincs bekötve.
 
 ## Amikor bizonytalan vagy egy döntésben
 

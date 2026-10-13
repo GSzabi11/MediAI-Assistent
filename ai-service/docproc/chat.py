@@ -106,7 +106,7 @@ def retrieve(retrieve_url: str, question: str, history: list[dict]) -> list[dict
     """A kérdéshez legközelebbi dokumentum-darabok a Springtől. Visszautaló kérdésnél ("és a
     vesefunkció?") az előző kérdés is a keresőszövegbe kerül."""
     query = question if not history else history[-1]["question"] + "\n" + question
-    vector = embedding.embed([query])[0]
+    vector = embedding.embed_query(query)
     resp = requests.post(retrieve_url, json={"embedding": vector, "embeddingModel": config.EMBEDDING_MODEL},
                          headers={"X-Internal-Token": config.TOKEN}, timeout=RETRIEVE_TIMEOUT_SEC)
     resp.raise_for_status()

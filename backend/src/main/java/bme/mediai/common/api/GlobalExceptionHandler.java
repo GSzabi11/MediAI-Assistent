@@ -22,6 +22,10 @@ import bme.mediai.document.exception.DocumentProcessingException;
 import bme.mediai.document.exception.DuplicateDocumentException;
 import bme.mediai.document.exception.ExtractedTextAlreadySetException;
 import bme.mediai.document.exception.ExtractedTextMissingException;
+import bme.mediai.keyword.exception.KeywordConflictException;
+import bme.mediai.recordingsummary.exception.RecordingSummaryConflictException;
+import bme.mediai.recordingsummary.exception.RecordingSummaryNotFoundException;
+import bme.mediai.keyword.exception.KeywordNotFoundException;
 import bme.mediai.lab.exception.LabDocumentPatientMismatchException;
 import bme.mediai.lab.exception.LabResultNotFoundException;
 import bme.mediai.medicalcare.exception.MedicalCareClosedException;
@@ -37,6 +41,7 @@ import bme.mediai.summary.exception.ClinicalSummaryNotFoundException;
 import bme.mediai.summary.exception.SummaryConflictException;
 import bme.mediai.patient.exception.TajConflictException;
 import bme.mediai.recording.exception.InvalidStatusTransitionException;
+import bme.mediai.recording.exception.RecordingConflictException;
 import bme.mediai.recording.exception.RecordingNotFoundException;
 import bme.mediai.statement.exception.ApproverNotDoctorException;
 import bme.mediai.statement.exception.RuleStatementNotModifiableException;
@@ -49,7 +54,9 @@ import bme.mediai.user.exception.UserNotFoundException;
 import bme.mediai.user.exception.UsernameConflictException;
 import bme.mediai.utterance.exception.RecordingNotProcessingException;
 import bme.mediai.utterance.exception.UtterancesAlreadyExistException;
+import bme.mediai.voiceprofile.exception.VoiceProfileConflictException;
 import bme.mediai.voiceprofile.exception.VoiceProfileNotFoundException;
+import bme.mediai.voiceprofile.exception.VoiceProfileRequiredException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -84,13 +91,38 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler({VoiceProfileConflictException.class, VoiceProfileRequiredException.class})
+    ProblemDetail handleVoiceProfileConflict(RuntimeException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(RecordingSummaryNotFoundException.class)
+    ProblemDetail handleRecordingSummaryNotFound(RecordingSummaryNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(RecordingSummaryConflictException.class)
+    ProblemDetail handleRecordingSummaryConflict(RecordingSummaryConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(KeywordNotFoundException.class)
+    ProblemDetail handleKeywordNotFound(KeywordNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(KeywordConflictException.class)
+    ProblemDetail handleKeywordConflict(KeywordConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(RecordingNotFoundException.class)
     ProblemDetail handleRecordingNotFound(RecordingNotFoundException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler(InvalidStatusTransitionException.class)
-    ProblemDetail handleInvalidTransition(InvalidStatusTransitionException ex) {
+    @ExceptionHandler({InvalidStatusTransitionException.class, RecordingConflictException.class})
+    ProblemDetail handleInvalidTransition(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

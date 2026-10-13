@@ -10,4 +10,6 @@ public interface VoiceProfileRepository extends JpaRepository<VoiceProfile, Long
     Optional<VoiceProfile> findByUserIdAndActiveTrue(Long userId);
 
     List<VoiceProfile> findByUserIdOrderByRecordedAtDesc(Long userId);
+
+    boolean existsByUserIdAndStatus(Long userId, VoiceProfileStatus status);
 }

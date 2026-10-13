@@ -25,6 +25,14 @@ import os
 import re
 import time
 
+# Helyi futás, internet nélkül (local_models.py): a Hugging Face Hub offline (csak helyi modellt tölt
+# be, nem keres frissítést), és a pyannote / HF telemetria ki — a pyannote 4 alapból az
+# otel.pyannote.ai-ra küld használati adatot. A Hub ezeket importáláskor olvassa, ezért itt, az
+# importok előtt. Felülírható (a download_models.py online-ra állítja).
+for _key, _value in (("HF_HUB_OFFLINE", "1"), ("HF_HUB_DISABLE_TELEMETRY", "1"),
+                     ("PYANNOTE_METRICS_ENABLED", "false"), ("DO_NOT_TRACK", "1")):
+    os.environ.setdefault(_key, _value)
+
 import numpy as np
 import requests
 import torch
@@ -32,12 +40,16 @@ from faster_whisper import WhisperModel
 from pyannote.audio import Inference, Model, Pipeline
 from pyannote.core import Segment
 
+import local_models
+
 def _load_env_file():
     """.env betöltése (pl. HF_TOKEN=hf_...). A már beállított környezeti
     változókat nem írja felül. A python-dotenv-et használja, ha telepítve van,
     különben egy egyszerű beépített olvasót."""
     candidates = [os.path.join(os.getcwd(), ".env"),
-                  os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")]
+                  os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"),
+                  # a repó gyökerében lévő közös .env (sablon: .env.example)
+                  os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env")]
     for path in dict.fromkeys(candidates):
         if not os.path.isfile(path):
             continue
@@ -185,7 +197,7 @@ SYSTEM_PROMPTS = {
 # ---------------------------------------------------------------------------
 def transcribe(path: str, mode: str) -> list[dict]:
     compute_type = "float16" if DEVICE == "cuda" else "int8"
-    model = WhisperModel(ASR_MODEL, device=DEVICE, compute_type=compute_type)
+    model = WhisperModel(local_models.asr_model(ASR_MODEL), device=DEVICE, compute_type=compute_type)
     segments, _ = model.transcribe(
         path,
         language="hu",
@@ -205,9 +217,7 @@ def transcribe(path: str, mode: str) -> list[dict]:
 # 3. BESZÉLŐ-SZÉTVÁLASZTÁS (diarizáció)
 # ---------------------------------------------------------------------------
 def diarize(path: str, mode: str) -> list[tuple[float, float, str]]:
-    pipe = Pipeline.from_pretrained(
-        "pyannote/speaker-diarization-community-1", token=HF_TOKEN
-    )
+    pipe = Pipeline.from_pretrained(local_models.diarization_model())
     pipe.to(torch.device(DEVICE))
     kwargs = {}
     if MODES[mode]["num_speakers"]:
@@ -258,7 +268,7 @@ def assign_roles(path: str, diar: list[tuple], doctor_sample: str | None) -> dic
         counts = {s: sum(1 for *_, x in diar if x == s) for s in speakers}
         doctor = max(counts, key=counts.get)
     else:
-        emb_model = Model.from_pretrained("pyannote/wespeaker-voxceleb-resnet34-LM", token=HF_TOKEN)
+        emb_model = Model.from_pretrained(local_models.embedding_model())
         inference = Inference(emb_model, window="whole")
         inference.to(torch.device(DEVICE))
         doc_emb = inference(doctor_sample)

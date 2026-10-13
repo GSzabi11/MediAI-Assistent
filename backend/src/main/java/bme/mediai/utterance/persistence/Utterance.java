@@ -35,6 +35,18 @@ public class Utterance {
 
     private Float asrConfidence;
 
+    // AI-javítás (V27): az eredeti ASR-szöveg / -beszélő, ha a modell javította
+    private String asrText;
+
+    @Enumerated(EnumType.STRING)
+    private Speaker asrSpeaker;
+
+    private String correctedBy;
+
+    private String correctionReason;
+
+    private String reviewNote;
+
     protected Utterance() {
     }
 
@@ -48,6 +60,27 @@ public class Utterance {
         this.endMs = endMs;
         this.text = text;
         this.asrConfidence = asrConfidence;
+    }
+
+    // A hangszolgáltatás eredménye: text/speaker a megjelenített változat; ha a modell javította,
+    // az eredeti az asrText/asrSpeaker-ben (csak az, ami eltér), a javító modellel és az okkal
+    public static Utterance reviewed(Long recordingId, Integer turnId, Speaker speaker, Float similarity,
+            Integer startMs, Integer endMs, String text, String asrText, Speaker asrSpeaker, String correctedBy,
+            String correctionReason, String reviewNote) {
+        Utterance u = new Utterance(recordingId, turnId, speaker, similarity, startMs, endMs, text, null);
+        u.reviewNote = reviewNote == null || reviewNote.isBlank() ? null : reviewNote.strip();
+        boolean textChanged = asrText != null && !asrText.equals(text);
+        boolean speakerChanged = asrSpeaker != null && asrSpeaker != speaker;
+        if (textChanged || speakerChanged) {
+            if (correctedBy == null || correctedBy.isBlank()) {
+                throw new IllegalArgumentException("A(z) " + turnId + " javított megszólalásnál hiányzik a javító modell");
+            }
+            u.asrText = textChanged ? asrText : null;
+            u.asrSpeaker = speakerChanged ? asrSpeaker : null;
+            u.correctedBy = correctedBy;
+            u.correctionReason = correctionReason;
+        }
+        return u;
     }
 
     public Long getId() {
@@ -84,5 +117,25 @@ public class Utterance {
 
     public Float getAsrConfidence() {
         return asrConfidence;
+    }
+
+    public String getAsrText() {
+        return asrText;
+    }
+
+    public Speaker getAsrSpeaker() {
+        return asrSpeaker;
+    }
+
+    public String getCorrectedBy() {
+        return correctedBy;
+    }
+
+    public String getCorrectionReason() {
+        return correctionReason;
+    }
+
+    public String getReviewNote() {
+        return reviewNote;
     }
 }

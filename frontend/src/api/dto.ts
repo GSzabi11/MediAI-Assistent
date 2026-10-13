@@ -62,27 +62,23 @@ export interface UserSearchDto {
 }
 
 // ---------- voice profile ----------
+export type VoiceProfileStatusDto = 'PROCESSING' | 'READY' | 'FAILED';
+
 export interface VoiceProfileDto {
   id: number;
   userId: number;
-  wavPath: string;
-  embeddingModel: string;
-  threshold: number | null;
+  status: VoiceProfileStatusDto;
+  error: string | null;
   active: boolean;
+  usableForRecording: boolean;
+  embeddingModel: string | null;
+  threshold: number | null;
   netSpeechSec: number | null;
+  sentencesUsed: number | null;
+  warnings: string[];
   microphone: string | null;
   recordedAt: string;
   createdAt: string;
-}
-
-export interface VoiceProfileCreateDto {
-  userId: number;
-  wavPath: string;
-  embeddingModel: string;
-  threshold: number | null;
-  netSpeechSec: number | null;
-  microphone: string | null;
-  recordedAt: string;
 }
 
 // ---------- medical care ----------
@@ -220,6 +216,11 @@ export interface RecordingDto {
   durationSec: number | null;
   asrModel: string;
   recordedAt: string;
+  processingError: string | null;
+  processingWarnings: string[];
+  processedAt: string | null;
+  audioDeleted: boolean;
+  reviewModel: string | null;
 }
 
 export interface RecordingCreateDto {
@@ -248,6 +249,11 @@ export interface UtteranceDto {
   endMs: number;
   text: string;
   asrConfidence: number | null;
+  asrText: string | null;
+  asrSpeaker: SpeakerDto | null;
+  correctedBy: string | null;
+  correctionReason: string | null;
+  reviewNote: string | null;
 }
 
 export interface UtteranceCreateDto {
@@ -419,4 +425,31 @@ export interface ChatMessageDto {
     embeddingModel: string | null;
   } | null;
   contextCounts: Record<string, number>;
+}
+
+export interface KeywordDto {
+  id: number;
+  recordingId: number;
+  term: string;
+  origin: 'MODEL' | 'DOCTOR';
+  status: 'SUGGESTED' | 'ACCEPTED' | 'REJECTED';
+  modelName: string | null;
+  userId: number | null;
+  createdAt: string;
+  decidedAt: string | null;
+}
+
+export interface RecordingSummaryDto {
+  id: number;
+  recordingId: number;
+  status: 'PROCESSING' | 'DONE' | 'FAILED';
+  requestedBy: number | null;
+  requestedAt: string;
+  completedAt: string | null;
+  error: string | null;
+  summary: string | null;
+  points: { text: string; turnIds: number[] }[];
+  keywords: string[];
+  warnings: string[];
+  modelName: string | null;
 }

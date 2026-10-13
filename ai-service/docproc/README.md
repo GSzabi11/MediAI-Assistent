@@ -1,7 +1,7 @@
 # docproc — dokumentum-feldolgozó szolgáltatás
 
 A Spring backend által beküldött PDF-ek feldolgozása (szöveg, típus, dátum, labor /
-ambuláns adatok, RAG-darabok + BGE-M3 embedding), sorban, egyszerre egy dokumentum.
+ambuláns adatok, RAG-darabok + embedding az Ollamán), sorban, egyszerre egy dokumentum.
 Interfész és döntések: [`docs/document-processing.md`](../../docs/document-processing.md).
 
 | Fájl | Feladat |
@@ -13,7 +13,7 @@ Interfész és döntések: [`docs/document-processing.md`](../../docs/document-p
 | `llm.py` | Ollama-hívás, típusfüggő prompt + JSON-séma, prompt-hash |
 | `extract.py` | a modell-kimenet determinisztikus visszakeresése, szám/dátum értelmezés |
 | `textutil.py` | normalizálás, idézet → code-point offset |
-| `chunking.py`, `embedding.py` | RAG-darabolás, BGE-M3 (1024 dim) |
+| `chunking.py`, `embedding.py` | RAG-darabolás, embedding Ollamán (`EMBEDDING_MODEL`, 1024 dimre kérve) |
 | `summarize.py` | Klinikai státusz összefoglaló ([`docs/clinical-summary.md`](../../docs/clinical-summary.md)) |
 | `chat.py` | Klinikai asszisztens (RAG-chat, [`docs/clinical-chat.md`](../../docs/clinical-chat.md)) |
 
@@ -22,18 +22,20 @@ Interfész és döntések: [`docs/document-processing.md`](../../docs/document-p
 ```bash
 cd ai-service/docproc
 python -m venv .venv && .venv\Scripts\activate
-# GPU (RTX 50xx: CUDA 12.8+) — előbb a CUDA-s torch, utána a többi:
-pip install torch --index-url https://download.pytorch.org/whl/cu128
 pip install -r requirements.txt
-ollama pull medgemma:4b        # vagy más letöltött modell, ld. DOC_LLM_MODEL
+ollama pull medgemma:4b          # vagy más letöltött modell, ld. DOC_LLM_MODEL
+ollama pull qwen3-embedding:4b   # az EMBEDDING_MODEL
 ```
 
-Első futáskor a BGE-M3 (~2 GB) letöltődik a Hugging Face-ről.
+Modellt a szolgáltatás nem tölt le (Hugging Face-ről sem): az embedding is az Ollamán fut, ha a
+`EMBEDDING_MODEL` nincs beállítva, nem indul, ha nincs letöltve, a feldolgozás hibával áll le.
 
 ## Indítás
 
+A beállítások a repó gyökerében lévő `.env`-ből jönnek (sablon: `.env.example`, a Spring is
+ezt olvassa); a valódi környezeti változó felülírja.
+
 ```bash
-set MEDIAI_AI_TOKEN=<közös titok>           # kötelező, ugyanaz, mint a Springnél
 python app.py                                # http://127.0.0.1:8001
 ```
 
@@ -48,7 +50,7 @@ python app.py                                # http://127.0.0.1:8001
 | `DOC_LLM_SEED` | `42` | a producer-be is bekerül |
 | `DOC_LLM_NUM_CTX` | `16384` | az Ollama alapértéke egy leletet levágna |
 | `DOC_LLM_MAX_CHARS` | `40000` | ennél hosszabb szöveg vége nem megy a modellhez |
-| `EMBEDDING_MODEL` / `EMBEDDING_DEVICE` | `BAAI/bge-m3` / auto | |
+| `EMBEDDING_MODEL` | — (kötelező) | Ollama-modellnév, pl. `qwen3-embedding:4b`; 1024 dimre kérjük (pgvector oszlop) |
 
 A prompt vagy az utófeldolgozás érdemi módosításakor emeld a `config.EXTRACTOR_VERSION`-t:
 a prompt-hash változik, így a régi és új kinyerések megkülönböztethetők.

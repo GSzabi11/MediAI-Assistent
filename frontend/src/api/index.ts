@@ -25,6 +25,8 @@ import type {
   VoiceProfileDto,
   ClinicalSummaryDto,
   ChatMessageDto,
+  KeywordDto,
+  RecordingSummaryDto,
 } from './dto';
 import { http } from './http';
 import { parseMegszolalasok, parseRagDarabok } from './importok';
@@ -51,6 +53,8 @@ import {
   toSourceDto,
   toOsszefoglalo,
   toChatValasz,
+  toFelvetelOsszefoglalo,
+  toKulcsszo,
 } from './mappers';
 import {
   ApiError,
@@ -58,6 +62,7 @@ import {
   type ClaimResponse,
   type EllatasTipus,
   type FelvetelAllapot,
+  type FelvetelFeltoltes,
   type Hangprofil,
   type JovahagyasRequest,
   type PatientSearch,
@@ -118,6 +123,14 @@ function toSearchDto(q: PatientSearch): PatientSearchDto {
 
 const toCurrentUser = (u: UserDto): CurrentUser => ({ id: u.id, username: u.username, role: u.role });
 
+/** A MediaRecorder típusa szerinti kiterjesztés (a backend úgyis a bájtokból dönt) */
+function hangKiterjesztes(b: Blob): string {
+  if (b.type.includes('ogg')) return 'ogg';
+  if (b.type.includes('mp4')) return 'm4a';
+  if (b.type.includes('wav')) return 'wav';
+  return 'webm';
+}
+
 export const api = {
   // ======================= belépés, felhasználók =======================
 
@@ -162,19 +175,21 @@ export const api = {
   listHangprofilok: async (userId: number) =>
     (await http.get<VoiceProfileDto[]>(`/voice-profiles/${userId}/history`)).map(toHangprofil),
 
-  /** POST /voice-profiles — a korábbi aktív profil automatikusan inaktív lesz */
-  createHangprofil: async (req: UjHangprofil) =>
-    toHangprofil(
-      await http.post<VoiceProfileDto>('/voice-profiles', {
-        userId: req.felhasznaloId,
-        wavPath: req.wavUt,
-        embeddingModel: req.embeddingModell,
-        threshold: req.kuszob,
-        netSpeechSec: req.nettoBeszedMp,
-        microphone: req.mikrofon,
-        recordedAt: req.rogzitve,
-      }),
-    ),
+  /** GET /voice-profiles/{id} — a készülő profil állapotának követése */
+  getHangprofil: async (id: number) => toHangprofil(await http.get<VoiceProfileDto>(`/voice-profiles/${id}`)),
+
+  /**
+   * POST /voice-profiles (multipart, 202) — a felolvasott mondatokból a Python hangszolgáltatás
+   * számolja a hanglenyomatot; kész profilnál a korábbi aktív automatikusan inaktív lesz.
+   */
+  createHangprofil: async (req: UjHangprofil) => {
+    const form = new FormData();
+    form.append('userId', String(req.felhasznaloId));
+    req.mondatok.forEach((b, i) => form.append('sentences', b, `mondat-${i + 1}.${hangKiterjesztes(b)}`));
+    if (req.csend) form.append('noise', req.csend, `csend.${hangKiterjesztes(req.csend)}`);
+    if (req.mikrofon) form.append('microphone', req.mikrofon);
+    return toHangprofil(await http.postForm<VoiceProfileDto>('/voice-profiles', form));
+  },
 
   // ======================= beteg =======================
 
@@ -242,6 +257,53 @@ export const api = {
         audioPath: f.hangfajl.trim(),
         asrModel: f.asrModell.trim(),
       }),
+    ),
+
+  /**
+   * POST /recordings (multipart, 202) — a böngészőben rögzített hang; a hangszolgáltatás átírja,
+   * szétválasztja a beszélőket, a MedGemma átnézi. Hangprofil nélkül 409.
+   */
+  feltoltFelvetel: async (f: FelvetelFeltoltes) => {
+    const form = new FormData();
+    form.append('patientId', String(f.patientId));
+    form.append('userId', String(requireUser().id));
+    if (f.ellatasId !== null) form.append('medicalCareId', String(f.ellatasId));
+    form.append('mode', f.mod === 'surgossegi' ? 'SBO' : 'ECHO');
+    form.append('durationSec', String(Math.max(1, Math.round(f.hosszMp))));
+    form.append('audio', f.hang, `felvetel.${hangKiterjesztes(f.hang)}`);
+    return toFelvetel(await http.postForm<RecordingDto>('/recordings', form));
+  },
+
+  /** GET /recordings/{id}/keywords — az AI-javaslatok és az orvos kulcsszavai */
+  listKulcsszavak: async (felvetelId: number) =>
+    (await http.get<KeywordDto[]>(`/recordings/${felvetelId}/keywords`)).map(toKulcsszo),
+
+  /** POST /recordings/{id}/keywords — a + gomb; csak orvos, csak kész felvételhez */
+  addKulcsszo: async (felvetelId: number, kifejezes: string) =>
+    toKulcsszo(
+      await http.post<KeywordDto>(`/recordings/${felvetelId}/keywords`, {
+        userId: requireUser().id,
+        term: kifejezes.trim(),
+      }),
+    ),
+
+  /** POST /recordings/{id}/keywords/{kid}/decision — AI-javaslat elfogadása / elutasítása */
+  dontKulcsszo: async (felvetelId: number, kulcsszoId: number, elfogad: boolean) =>
+    toKulcsszo(
+      await http.post<KeywordDto>(`/recordings/${felvetelId}/keywords/${kulcsszoId}/decision`, {
+        userId: requireUser().id,
+        status: elfogad ? 'ACCEPTED' : 'REJECTED',
+      }),
+    ),
+
+  /** GET /recordings/{id}/summaries — a legfrissebb elöl */
+  listFelvetelOsszefoglalok: async (felvetelId: number) =>
+    (await http.get<RecordingSummaryDto[]>(`/recordings/${felvetelId}/summaries`)).map(toFelvetelOsszefoglalo),
+
+  /** POST /recordings/{id}/summaries (202) — újragenerálás a teljes átiratból + a kulcsszavakból */
+  kerFelvetelOsszefoglalo: async (felvetelId: number) =>
+    toFelvetelOsszefoglalo(
+      await http.post<RecordingSummaryDto>(`/recordings/${felvetelId}/summaries`, { userId: requireUser().id }),
     ),
 
   /** PATCH /recordings/{id}/status — PROCESSING-hez kötelező a hossz (másodperc) */

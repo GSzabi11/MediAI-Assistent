@@ -2121,3 +2121,144 @@ select.input {
   opacity: 0.35;
   cursor: not-allowed;
 }
+
+/* ---------- hangfelvétel (hangprofil, betegfelvétel) ---------- */
+.levelmeter {
+  height: 8px;
+  max-width: 320px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-muted);
+  border: 1px solid var(--c-line);
+  overflow: hidden;
+}
+.levelmeter__bar {
+  height: 100%;
+  background: var(--c-accent);
+  transition: width 80ms linear;
+}
+.recbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.recbar__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-critical);
+  animation: recbar-pulse 1.2s ease-in-out infinite;
+}
+@keyframes recbar-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .recbar__dot {
+    animation: none;
+  }
+}
+
+/* ---------- átirat: AI-javítás, ellenőrizendő érték, kulcsszó ---------- */
+.badge {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  line-height: 18px;
+  font-weight: 600;
+}
+.badge--ai {
+  background: var(--c-accent-tint);
+  color: var(--c-accent-strong);
+  border: 1px solid var(--c-accent);
+}
+.turn__note {
+  margin: 4px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--c-warning-ink);
+  background: var(--c-warning-tint);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+}
+.turn__orig {
+  margin-top: 4px;
+  font-size: var(--fs-sm);
+}
+.turn__orig > summary {
+  cursor: pointer;
+  color: var(--c-ink-muted);
+}
+.mark-ertek {
+  background: var(--c-accent-tint);
+  color: inherit;
+  border-bottom: 2px solid var(--c-accent);
+  padding: 0 1px;
+}
+.mark-kulcsszo {
+  background: var(--c-highlight);
+  color: inherit;
+  padding: 0 1px;
+}
+
+/* ---------- felvétel: kulcsszavak, összefoglaló ---------- */
+.kwpanel {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--c-line);
+}
+.chip--ai,
+.chip--orvos {
+  cursor: default;
+  background: var(--c-highlight);
+  border-color: var(--c-warning-ink);
+}
+.chip--javaslat {
+  background: var(--c-surface);
+  border-style: dashed;
+}
+.chip__tag {
+  font-size: var(--fs-xs);
+  color: var(--c-accent-strong);
+  margin-right: 4px;
+}
+.chip__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--c-line-strong);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+.chip__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.chip--add {
+  width: 36px;
+  justify-content: center;
+  padding: 0;
+  border-style: dashed;
+}
+.chip--form {
+  cursor: default;
+  padding-right: 6px;
+}
+.input--chip {
+  height: 26px;
+  min-width: 0;
+  width: 14em;
+  max-width: 50vw;
+  border: none;
+  padding: 0 4px;
+  font: inherit;
+}
+.summarypoints > li {
+  line-height: 1.5;
+}

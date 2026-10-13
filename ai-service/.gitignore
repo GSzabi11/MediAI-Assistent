@@ -162,3 +162,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Helyi modellek (download_models.py) — nagy bináris fájlok, nem a gitbe
+models/

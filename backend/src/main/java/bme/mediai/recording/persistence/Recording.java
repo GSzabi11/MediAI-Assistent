@@ -1,8 +1,11 @@
 package bme.mediai.recording.persistence;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import bme.mediai.recording.exception.InvalidStatusTransitionException;
 import jakarta.persistence.Column;
@@ -46,6 +49,17 @@ public class Recording {
     @Column(insertable = false, updatable = false)
     private OffsetDateTime recordedAt;
 
+    private String processingError;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<String> processingWarnings = List.of();
+
+    private OffsetDateTime processedAt;
+
+    private OffsetDateTime audioDeletedAt;
+
+    private String reviewModel;
+
     protected Recording() {
     }
 
@@ -72,6 +86,31 @@ public class Recording {
             this.durationSec = durationSec;
         }
         this.status = next;
+    }
+
+    // A Python hangszolgáltatás eredménye (V27). Az ASR-modellt a Python adja meg (azt használta),
+    // a felvételkor beírt érték csak a beállított alapérték volt.
+    public void completeProcessing(String asrModel, String reviewModel, List<String> warnings) {
+        changeStatus(RecordingStatus.DONE, null);
+        this.asrModel = asrModel;
+        this.reviewModel = reviewModel;
+        this.processingWarnings = List.copyOf(warnings);
+        this.processedAt = OffsetDateTime.now();
+    }
+
+    public void failProcessing(String error) {
+        if (!status.canTransitionTo(RecordingStatus.FAILED)) {
+            return;
+        }
+        this.processingError = error;
+        this.processedAt = OffsetDateTime.now();
+        changeStatus(RecordingStatus.FAILED, null);
+    }
+
+    public void markAudioDeleted() {
+        if (audioDeletedAt == null) {
+            this.audioDeletedAt = OffsetDateTime.now();
+        }
     }
 
     public Long getId() {
@@ -116,6 +155,26 @@ public class Recording {
 
     public OffsetDateTime getRecordedAt() {
         return recordedAt;
+    }
+
+    public String getProcessingError() {
+        return processingError;
+    }
+
+    public List<String> getProcessingWarnings() {
+        return processingWarnings == null ? List.of() : processingWarnings;
+    }
+
+    public OffsetDateTime getProcessedAt() {
+        return processedAt;
+    }
+
+    public OffsetDateTime getAudioDeletedAt() {
+        return audioDeletedAt;
+    }
+
+    public String getReviewModel() {
+        return reviewModel;
     }
 
 }

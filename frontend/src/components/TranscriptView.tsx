@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { readJsonFile } from '../api/importok';
 import type { Beszelo, FelvetelAllapot, FelvetelResponse } from '../api/types';
+import { kiemel } from '../lib/atiratKiemeles';
 import { allapotFelirat } from '../lib/feliratok';
 import { formatDatumIdo, formatMp } from '../lib/format';
 import { kijeloltMegszolalas } from '../lib/kijeles';
@@ -9,6 +10,7 @@ import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
 import { IdezetForm } from './allitas/IdezetForm';
+import { FelvetelOsszefoglaloPanel, KulcsszoPanel } from './FelvetelElemzes';
 import { Icon, type IconName } from './Icon';
 import { ErrorState, Loading, PatientMatch } from './shell';
 
@@ -35,6 +37,32 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
   const [kijeloles, setKijeloles] = useState<{ turn: number; szoveg: string } | null>(null);
   const [idezet, setIdezet] = useState<{ turn: number; szoveg: string } | null>(null);
   const kiemeltKulcs = kiemeltTurnIds.join(',');
+  const kulcsszoLista = useAsync(() => api.listKulcsszavak(felvetelId), [felvetelId]);
+  const kulcsszavak = kulcsszoLista.state.status === 'ok' ? kulcsszoLista.state.data : [];
+  const aktivKulcsszavak = kulcsszavak.filter((k) => k.allapot !== 'elutasitva').map((k) => k.kifejezes);
+  // az összefoglaló hivatkozására kattintva kiemelt megszólalások (az URL-es kiemelés mellett)
+  const [ugrott, setUgrott] = useState<number[]>([]);
+  const [kwHiba, setKwHiba] = useState<string | null>(null);
+  const ugras = (turnIds: number[]) => {
+    setUgrott(turnIds);
+    listRef.current?.querySelector(`[data-turn="${turnIds[0]}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  };
+
+  // A hangszolgáltatás dolgozik: amíg kész nem lesz, csendben frissítünk
+  const automatikusFeldolgozas =
+    felvetelAllapot.state.status === 'ok' &&
+    felvetelAllapot.state.data.automatikus &&
+    felvetelAllapot.state.data.allapot === 'feldolgozas';
+  useEffect(() => {
+    if (!automatikusFeldolgozas) return;
+    const t = window.setInterval(() => {
+      void Promise.all([felvetelAllapot.refresh(), refresh(), kulcsszoLista.refresh()])
+        .then(() => frissit())
+        .catch(() => undefined);
+    }, 3000);
+    return () => window.clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [automatikusFeldolgozas]);
 
   useEffect(() => {
     firstRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -74,10 +102,35 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
           </span>
         </div>
         <span className="meta mono">
-          {felvetel.hangfajl} · ASR: {felvetel.asrModell}
+          {felvetel.automatikus ? (felvetel.hangTorolve ? 'nyers hang törölve' : 'hang a feldolgozásig tárolva') : felvetel.hangfajl}{' '}
+          · ASR: {felvetel.asrModell}
+          {felvetel.automatikus && ` · AI-átnézés: ${felvetel.atnezoModell ?? 'nem futott'}`}
         </span>
+        {automatikusFeldolgozas && (
+          <p className="meta" role="status">
+            <span className="stat stat--feldolgozas">Feldolgozás alatt</span> Beszédfelismerés, beszélő-szétválasztás,
+            majd MedGemma-átnézés — az átirat magától megjelenik.
+          </p>
+        )}
+        {felvetel.hiba && (
+          <p className="form-error" role="alert">
+            {felvetel.hiba}
+          </p>
+        )}
+        {felvetel.figyelmeztetesek.length > 0 && (
+          <details className="subsection__more">
+            <summary>Feldolgozási megjegyzések ({felvetel.figyelmeztetesek.length})</summary>
+            <ul className="itemlist">
+              {felvetel.figyelmeztetesek.map((w, i) => (
+                <li key={i} className="meta">
+                  {w}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
         <PatientMatch active={patient} contentPatientId={felvetel.patientId} what="Felvétel" />
-        {sameP && (
+        {sameP && !felvetel.automatikus && (
           <AllapotLepesek
             felvetel={felvetel}
             vanAtirat={state.status === 'ok' && state.data.length > 0}
@@ -91,14 +144,28 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
               {beszeloMeta[b].label}
             </span>
           ))}
+          {felvetel.mod === 'echo_diktalas' && (
+            <span className="legend__item">
+              <mark className="mark-ertek">52 mm</mark> diktált érték
+            </span>
+          )}
+          <span className="legend__item">
+            <span className="badge badge--ai">AI-javított</span> MedGemma módosította (az eredeti megnézhető)
+          </span>
         </div>
       </div>
       {state.status === 'loading' && <Loading what="Átirat" />}
       {state.status === 'error' && <ErrorState error={state.error} onRetry={reload} />}
-      {state.status === 'ok' && sameP && state.data.length === 0 && (
+      {state.status === 'ok' && sameP && state.data.length === 0 && !felvetel.automatikus && (
         <p className="empty docview__hint">
           Még nincs átirat. Feldolgozás alatti felvételhez a Python hangmodul kimenete importálható.
         </p>
+      )}
+      {state.status === 'ok' && sameP && state.data.length > 0 && felvetel.allapot === 'kesz' && (
+        <div className="docview__hint">
+          <KulcsszoPanel felvetelId={felvetel.id} kulcsszavak={kulcsszavak} onValtozott={kulcsszoLista.refresh} />
+          <FelvetelOsszefoglaloPanel felvetelId={felvetel.id} kulcsszavak={kulcsszavak} onUgras={ugras} />
+        </div>
       )}
       {state.status === 'ok' && sameP && state.data.length > 0 && (
         <>
@@ -107,7 +174,7 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
               .slice()
               .sort((a, b) => a.sorszam - b.sorszam)
               .map((m) => {
-                const kiemelt = kiemeltTurnIds.includes(m.sorszam);
+                const kiemelt = kiemeltTurnIds.includes(m.sorszam) || ugrott.includes(m.sorszam);
                 const first =
                   kiemelt && m.sorszam === kiemeltTurnIds.find((t) => state.data.some((x) => x.sorszam === t));
                 const meta = beszeloMeta[m.beszelo];
@@ -121,13 +188,37 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
                           #{String(m.sorszam).padStart(2, '0')} · {formatMp(m.kezdetMp)}
                         </span>
                         {kiemelt && <span className="turn__ref">hivatkozott megszólalás</span>}
+                        {m.javito && (
+                          <span className="badge badge--ai" title={`${m.javito}: ${m.javitasOka ?? ''}`}>
+                            AI-javított
+                          </span>
+                        )}
                       </span>
                       <p
                         data-turn={m.sorszam}
                         className={`bubble bubble--${m.beszelo}${kiemelt ? ' bubble--ref' : ''}`}
                       >
-                        {m.szoveg}
+                        {kiemel(m.szoveg, aktivKulcsszavak, felvetel.mod === 'echo_diktalas')}
                       </p>
+                      {m.megjegyzes && (
+                        <p className="turn__note" role="note">
+                          <Icon name="alert" size={13} /> {m.megjegyzes}
+                        </p>
+                      )}
+                      {m.javito && (
+                        <details className="turn__orig">
+                          <summary>Eredeti (beszédfelismerés)</summary>
+                          <p className="meta">
+                            {m.eredetiBeszelo && (
+                              <>
+                                <strong>{beszeloMeta[m.eredetiBeszelo].label}:</strong>{' '}
+                              </>
+                            )}
+                            {m.eredetiSzoveg ?? m.szoveg}
+                          </p>
+                          {m.javitasOka && <p className="meta">{m.javitasOka}</p>}
+                        </details>
+                      )}
                     </div>
                   </li>
                 );
@@ -142,9 +233,29 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
                 <Icon name="quote" size={14} />
                 Idézet állításként…
               </button>
+              {felvetel.allapot === 'kesz' && kijeloles.szoveg.trim().length <= 200 && (
+                <button
+                  type="button"
+                  className="btn btn--sm"
+                  onClick={() =>
+                    void api
+                      .addKulcsszo(felvetel.id, kijeloles.szoveg)
+                      .then(() => kulcsszoLista.refresh())
+                      .then(() => {
+                        setKwHiba(null);
+                        setKijeloles(null);
+                      })
+                      .catch((e: Error) => setKwHiba(e.message))
+                  }
+                >
+                  <Icon name="plus" size={14} />
+                  Kulcsszóként
+                </button>
+              )}
               <button type="button" className="btn btn--sm" onClick={() => setKijeloles(null)}>
                 Mégse
               </button>
+              {kwHiba && <span className="form-error">{kwHiba}</span>}
             </div>
           )}
           {idezet && (

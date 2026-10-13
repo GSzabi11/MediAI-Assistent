@@ -19,6 +19,18 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 `lab_result` (= `labor`), `medication` (= `gyogyszer`), `allergy` (= `allergia`),
 `access_log` (= `hozzaferes_naplo`).
 
+**V26–V28: hangmodul-integráció** (részletek: `docs/voice-module.md`):
+- V26 `voice_profile`: `status` (`PROCESSING | READY | FAILED`), `error`, `sentences_used`, `warnings`;
+  az `embedding` V26 óta a Spring is leképezi (a Python callbackje írja). CHECK: aktív csak `READY`
+  lehet; felhasználónként egy `PROCESSING` (részleges egyedi index). A V4-es sorok `READY`-k maradtak,
+  de hanglenyomat nélkül nem engednek felvételt (a service ellenőrzi).
+- V27 `recording`: `processing_error`, `processing_warnings`, `processed_at`, `audio_deleted_at`
+  (a nyers hang a feldolgozás után törlődik), `review_model`. `utterance`: `asr_text`, `asr_speaker`,
+  `corrected_by`, `correction_reason`, `review_note` — **a megszólalás továbbra is egyszer, egyben
+  töltődik be és megváltoztathatatlan**: az AI-javítás a betöltéskor kerül mellé, az eredeti megmarad.
+- V28 `recording_keyword`, `recording_summary` — **külön táblák, nem `statement`** (ugyanaz a
+  kivétel, mint a `clinical_summary`-nél; a felhasználó jóváhagyására vár).
+
 V24: `chat_message` — a Klinikai asszisztens (RAG-chat) kérdései és válaszai; ugyanaz a kivétel,
 **külön tábla, nem `statement`** (a felhasználó döntése). A válasz forrásai csak a modellnek átadott
 tények (`context`, `retrieved`) lehetnek — részletek: `docs/clinical-chat.md`.

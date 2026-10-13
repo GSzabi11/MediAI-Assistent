@@ -37,27 +37,32 @@ export interface Felhasznalo {
   letrehozva: string;
 }
 
+export type HangprofilAllapot = 'feldolgozas' | 'kesz' | 'hiba';
+
 export interface Hangprofil {
   id: number;
   felhasznaloId: number;
-  wavUt: string;
-  embeddingModell: string;
-  kuszob: number | null;
+  allapot: HangprofilAllapot;
+  hiba: string | null;
   aktiv: boolean;
+  /** aktív, kész, és van hanglenyomata — enélkül nem indítható felvétel */
+  hasznalhato: boolean;
+  embeddingModell: string | null;
+  kuszob: number | null;
   nettoBeszedMp: number | null;
+  mondatok: number | null;
+  figyelmeztetesek: string[];
   mikrofon: string | null;
   rogzitve: string;
   letrehozva: string;
 }
 
+/** A böngészőben felolvasott mondatok (MediaRecorder-blobok) + egy rövid csend a zajszinthez */
 export interface UjHangprofil {
   felhasznaloId: number;
-  wavUt: string;
-  embeddingModell: string;
-  kuszob: number | null;
-  nettoBeszedMp: number | null;
+  mondatok: Blob[];
+  csend: Blob | null;
   mikrofon: string | null;
-  rogzitve: string; // ISO időpont
 }
 
 // ---------- ellátás ----------
@@ -207,6 +212,13 @@ export interface FelvetelResponse {
   asrModell: string;
   kezdes: string; // ISO datetime
   hosszMp: number;
+  /** a böngészőből feltöltött, a hangszolgáltatás által feldolgozott felvétel (nem kézi import) */
+  automatikus: boolean;
+  hiba: string | null;
+  figyelmeztetesek: string[];
+  /** a MedGemma-átnézés modellje; null: nem futott */
+  atnezoModell: string | null;
+  hangTorolve: boolean;
 }
 
 export interface UjFelvetel {
@@ -217,6 +229,15 @@ export interface UjFelvetel {
   asrModell: string;
 }
 
+/** A böngészőben rögzített felvétel feltöltése (a hangszolgáltatás dolgozza fel) */
+export interface FelvetelFeltoltes {
+  patientId: number;
+  ellatasId: number | null;
+  mod: FelvetelResponse['mod'];
+  hang: Blob;
+  hosszMp: number;
+}
+
 export interface MegszolalasResponse {
   id: number;
   felvetelId: number;
@@ -225,6 +246,15 @@ export interface MegszolalasResponse {
   beszelo: Beszelo;
   kezdetMp: number;
   szoveg: string;
+  /** hasonlóság az orvos hanglenyomatához (-1–1), ha a hangszolgáltatás számolta */
+  hasonlosag: number | null;
+  /** AI-javítás: az ASR eredeti szövege / beszélője, ha a MedGemma módosította */
+  eredetiSzoveg: string | null;
+  eredetiBeszelo: Beszelo | null;
+  javito: string | null;
+  javitasOka: string | null;
+  /** az AI megjegyzése módosítás nélkül (pl. ellenőrizendő érték) */
+  megjegyzes: string | null;
 }
 
 // ---------- labor ----------
@@ -432,4 +462,30 @@ export interface KlinikaiOsszefoglalo {
   modell: { nev: string; seed: number; promptHash: string; verzio: string } | null;
   bemenet: Record<string, number>;
   elavult: boolean;
+}
+
+// ---------- felvétel: kulcsszó, összefoglaló ----------
+export interface Kulcsszo {
+  id: number;
+  felvetelId: number;
+  kifejezes: string;
+  /** ai: a MedGemma javasolta; orvos: a + gombbal hozzáadva */
+  forras: 'ai' | 'orvos';
+  /** az AI-javaslat az orvos döntéséig 'javaslat' */
+  allapot: 'javaslat' | 'elfogadva' | 'elutasitva';
+  modell: string | null;
+}
+
+export interface FelvetelOsszefoglalo {
+  id: number;
+  felvetelId: number;
+  allapot: 'feldolgozas' | 'kesz' | 'hiba';
+  kerve: string;
+  hiba: string | null;
+  szoveg: string | null;
+  /** mondatonként a hivatkozott megszólalások (turnId) */
+  pontok: { szoveg: string; turnIds: number[] }[];
+  kulcsszavak: string[];
+  figyelmeztetesek: string[];
+  modell: string | null;
 }
