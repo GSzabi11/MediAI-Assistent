@@ -26,6 +26,10 @@ PORT = int(os.environ.get("VOICE_PORT", "8002"))
 # abszolút úttal). Védelem arra az esetre, ha a token kiszivárogna.
 _root = os.environ.get("MEDIAI_VOICE_ROOT", "").strip()
 VOICE_ROOT = Path(_root).resolve() if _root else None
+# A betegfelvételek a dokumentumok mellett vannak ({documents-dir}/{beteg}/hangfelvetelek/): ha a
+# docproc-nak meg van adva a MEDIAI_DOCUMENTS_ROOT, az is megengedett gyökér
+_docs = os.environ.get("MEDIAI_DOCUMENTS_ROOT", "").strip()
+DOCUMENTS_ROOT = Path(_docs).resolve() if _docs else None
 
 # A hangszolgáltatás kódjának verziója: a producer/extractor mezőbe kerül
 SERVICE_VERSION = "voice-1"

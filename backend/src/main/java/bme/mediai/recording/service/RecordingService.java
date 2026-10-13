@@ -36,6 +36,9 @@ import java.util.UUID;
 @Service
 public class RecordingService {
 
+    // a beteg dokumentum-mappáján belül (mint a leletek típusmappái)
+    public static final String RECORDINGS_FOLDER = "hangfelvetelek";
+
     private final RecordingRepository repository;
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
@@ -49,21 +52,24 @@ public class RecordingService {
     public RecordingService(RecordingRepository repository, PatientRepository patientRepository,
             UserRepository userRepository, VoiceProfileService voiceProfileService,
             MedicalCareRepository medicalCareRepository, AudioStorage storage, VoiceServiceClient voiceService,
-            ApplicationEventPublisher events, @Value("${mediai.voice-service.asr-model}") String defaultAsrModel) {
+            ApplicationEventPublisher events, @Value("${mediai.voice-service.asr-model}") String defaultAsrModel,
+            @Value("${mediai.storage.documents-dir}") java.nio.file.Path documentsDir) {
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
         this.voiceProfileService = voiceProfileService;
         this.medicalCareRepository = medicalCareRepository;
-        this.storage = storage;
+        // A felvétel a beteg dokumentumai mellé kerül (a hangprofil-minták külön, a voice-dir alatt)
+        this.storage = new AudioStorage(documentsDir);
         this.voiceService = voiceService;
         this.events = events;
         this.defaultAsrModel = defaultAsrModel;
     }
 
-    // A böngészőben készült felvétel feltöltése (docs/voice-module.md): a hang a Spring tárolójába
-    // kerül, a felvétel rögtön PROCESSING, és a commit után a Python hangszolgáltatás kapja meg az
-    // orvos (felvételkor aktív) hanglenyomatával. A nyers hangot a feldolgozás után töröljük.
+    // A böngészőben készült felvétel feltöltése (docs/voice-module.md): a hang a beteg dokumentum-
+    // mappájába kerül ({documents-dir}/{patientId}/hangfelvetelek/), az útja a recording.audio_path-ban;
+    // a felvétel rögtön PROCESSING, és a commit után a Python hangszolgáltatás kapja meg az orvos
+    // (felvételkor aktív) hanglenyomatával. Az eredeti hang a feldolgozás után is megmarad.
     @Transactional
     public RecordingResponse upload(Long patientId, Long userId, Long medicalCareId, RecordingMode mode,
             Integer durationSec, MultipartFile audio) {
@@ -82,7 +88,7 @@ public class RecordingService {
         }
         VoiceProfile profile = voiceProfileService.requireUsableProfile(userId);
 
-        String dir = "recordings/" + patientId;
+        String dir = patientId + "/" + RECORDINGS_FOLDER;
         String audioPath = storage.save(audio, dir, UUID.randomUUID().toString());
         try {
             Recording recording = new Recording(patientId, userId, medicalCareId, profile.getId(), mode, audioPath,

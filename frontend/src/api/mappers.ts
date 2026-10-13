@@ -296,8 +296,9 @@ export const toFelvetel = (r: RecordingDto): FelvetelResponse => ({
   asrModell: r.asrModel,
   kezdes: r.recordedAt,
   hosszMp: r.durationSec ?? 0,
-  // a hangszolgáltatás tárolójának útja (AudioStorage: recordings/{beteg}/…); a kézi rögzítésé tetszőleges
-  automatikus: r.audioPath.startsWith('recordings/'),
+  // a böngészőből feltöltött felvétel útja: {beteg}/hangfelvetelek/… (a régebbiek: recordings/{beteg}/…);
+  // a kézi rögzítésé tetszőleges
+  automatikus: /^(\d+\/hangfelvetelek\/|recordings\/)/.test(r.audioPath),
   hiba: r.processingError ?? null,
   figyelmeztetesek: r.processingWarnings ?? [],
   atnezoModell: r.reviewModel ?? null,

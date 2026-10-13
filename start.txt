@@ -11,3 +11,8 @@ ai:
  $env:DOC_LLM_MODEL = "medgemma:latest"      
  python app.py    
  .venv\Scripts\python app.py
+
+cd .\ai-service\
+cd .\voice\
+ai_env\Scripts\activate 
+python service.py   

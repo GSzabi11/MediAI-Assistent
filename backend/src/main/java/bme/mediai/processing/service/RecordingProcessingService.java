@@ -1,6 +1,5 @@
 package bme.mediai.processing.service;
 
-import bme.mediai.common.storage.AudioStorage;
 import bme.mediai.keyword.service.KeywordService;
 import bme.mediai.recording.api.RecordingResponse;
 import bme.mediai.recording.api.RecordingResultRequest;
@@ -27,8 +26,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 // A Python hangszolgáltatás eredményének rögzítése (docs/voice-module.md). Egy callback = egy
-// tranzakció: a megszólalások egyben kerülnek be (vagy egyik sem), és a felvétel DONE lesz. A nyers
-// hangot mindkét kimenetnél töröljük: betegadat, a feldolgozás után nem kell.
+// tranzakció: a megszólalások egyben kerülnek be (vagy egyik sem), és a felvétel DONE lesz. Az eredeti
+// hangfelvétel megmarad (recording.audio_path) — a felhasználó döntése: visszahallgatható, újra feldolgozható.
 @Service
 public class RecordingProcessingService {
 
@@ -36,17 +35,15 @@ public class RecordingProcessingService {
 
     private final RecordingRepository recordingRepository;
     private final UtteranceRepository utteranceRepository;
-    private final AudioStorage storage;
     private final KeywordService keywordService;
     private final ApplicationEventPublisher events;
     private final Validator validator;
 
     public RecordingProcessingService(RecordingRepository recordingRepository,
-            UtteranceRepository utteranceRepository, AudioStorage storage, KeywordService keywordService,
+            UtteranceRepository utteranceRepository, KeywordService keywordService,
             ApplicationEventPublisher events, Validator validator) {
         this.recordingRepository = recordingRepository;
         this.utteranceRepository = utteranceRepository;
-        this.storage = storage;
         this.keywordService = keywordService;
         this.events = events;
         this.validator = validator;
@@ -99,7 +96,6 @@ public class RecordingProcessingService {
                 result.warnings() == null ? List.of() : result.warnings());
         keywordService.addModelSuggestions(id, result.keywords(),
                 result.keywordModel() == null || result.keywordModel().isBlank() ? null : result.keywordModel().strip());
-        deleteAudio(recording);
         recordingRepository.flush();
         // commit után: az első összefoglaló a teljes átiratból + az AI kulcsszavaiból
         events.publishEvent(new RecordingTranscribedEvent(id));
@@ -118,11 +114,5 @@ public class RecordingProcessingService {
     private void failRecording(Recording recording, String error) {
         String message = error == null || error.isBlank() ? "Ismeretlen hiba" : error.strip();
         recording.failProcessing(message.length() > MAX_ERROR_LENGTH ? message.substring(0, MAX_ERROR_LENGTH) : message);
-        deleteAudio(recording);
-    }
-
-    private void deleteAudio(Recording recording) {
-        storage.deleteQuietly(recording.getAudioPath());
-        recording.markAudioDeleted();
     }
 }

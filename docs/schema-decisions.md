@@ -24,8 +24,10 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
   az `embedding` V26 óta a Spring is leképezi (a Python callbackje írja). CHECK: aktív csak `READY`
   lehet; felhasználónként egy `PROCESSING` (részleges egyedi index). A V4-es sorok `READY`-k maradtak,
   de hanglenyomat nélkül nem engednek felvételt (a service ellenőrzi).
-- V27 `recording`: `processing_error`, `processing_warnings`, `processed_at`, `audio_deleted_at`
-  (a nyers hang a feldolgozás után törlődik), `review_model`. `utterance`: `asr_text`, `asr_speaker`,
+- V27 `recording`: `processing_error`, `processing_warnings`, `processed_at`, `audio_deleted_at`,
+  `review_model`. **A hangfelvétel megmarad** (2026-10-13 óta, a felhasználó döntése): `audio_path` =
+  `{patientId}/hangfelvetelek/{uuid}.{ext}` a documents-dir alatt; az `audio_deleted_at` csak a korábbi,
+  még törölt hangú felvételeknél van kitöltve. `utterance`: `asr_text`, `asr_speaker`,
   `corrected_by`, `correction_reason`, `review_note` — **a megszólalás továbbra is egyszer, egyben
   töltődik be és megváltoztathatatlan**: az AI-javítás a betöltéskor kerül mellé, az eredeti megmarad.
 - V28 `recording_keyword`, `recording_summary` — **külön táblák, nem `statement`** (ugyanaz a

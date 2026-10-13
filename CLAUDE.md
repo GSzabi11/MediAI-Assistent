@@ -98,7 +98,7 @@ Hibernate csak ellenőriz.
   maradt) — ismert, egyelőre nem prioritás.
 - `hozzajarulas` (GDPR beleegyezés) tábla még nincs migrálva.
 - A hangmodul a felvétel végén feltöltött hangot dolgozza fel (a Spring
-  tárolja és a feldolgozás után törli), élő átírás nincs. A prototípus
+  a beteg `data/documents/{id}/hangfelvetelek/` mappájába menti, és megtartja), élő átírás nincs. A prototípus
   `extract()`-je (tünet / gyógyszer / mérés → `allitas`) még nincs bekötve.
 
 ## Amikor bizonytalan vagy egy döntésben

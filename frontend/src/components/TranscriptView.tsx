@@ -104,11 +104,7 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
           </span>
         </div>
         <span className="meta mono">
-          {felvetel.automatikus
-            ? felvetel.hangTorolve
-              ? 'nyers hang törölve'
-              : 'hang a feldolgozásig tárolva'
-            : felvetel.hangfajl}{' '}
+          {felvetel.hangTorolve ? 'a hang törölve (korábbi felvétel)' : `hang: ${felvetel.hangfajl}`}{' '}
           · ASR: {felvetel.asrModell}
           {felvetel.automatikus && ` · AI-átnézés: ${felvetel.atnezoModell ?? 'nem futott'}`}
         </span>

@@ -15,18 +15,22 @@ duplikáld ide.
 Korábbi terv: böngésző → WebSocket → Python, a Spring csak a végeredményt kapja. **Módosítva**:
 
 ```
-Böngésző (MediaRecorder, WebM/Opus) ──multipart──▶ Spring (data/voice/…, gitignore)
+Böngésző (MediaRecorder, WebM/Opus) ──multipart──▶ Spring (data/documents/{beteg}/hangfelvetelek/, gitignore)
    Spring ──{fájl útja, mód, az orvos hanglenyomata}──▶ Python hangszolgáltatás (ai-service/voice/service.py, :8002)
    Python: Whisper → pyannote → szerepkiosztás → MedGemma-átnézés → kulcsszavak
    Python ──callback (X-Internal-Token)──▶ Spring: megszólalások + kulcsszó-javaslatok, egy tranzakcióban
-   Spring: a nyers hangot törli; commit után összefoglalót kér (Python, ugyanaz a sor)
+   Spring: commit után összefoglalót kér (Python, ugyanaz a sor); az eredeti hang megmarad
 ```
 
 Oka: (1) a böngésző nem kaphatja meg a belső tokent, a Python pedig nem végez autentikációt — a
 Springen át a hozzáférési napló és a betegazonosítás is a meglévő úton működik; (2) a prototípus
 fájl-alapú (offline Whisper + diarizáció), élő átírás nincs; (3) ugyanaz a minta, mint a
 dokumentum-feldolgozásnál (`docs/document-processing.md`). A Spring nem audio-relay: a hang a
-lemezre kerül, a Python a **fájl útját** kapja (egy gépen fut a kettő), és feldolgozás után törlődik.
+lemezre kerül, a Python a **fájl útját** kapja (egy gépen fut a kettő). **Az eredeti hangfelvétel
+megmarad** (a felhasználó döntése, 2026-10-13): a beteg dokumentum-mappájában,
+`{documents-dir}/{patientId}/hangfelvetelek/{uuid}.{webm|ogg|m4a|wav}`, az útja (a documents-dir-hez
+relatívan) a `recording.audio_path`. A `recording.audio_deleted_at` csak a korábbi (törölt hangú)
+felvételeknél van kitöltve. Ismert rés (mint a dokumentumoknál): a beteg törlésekor a fájl a lemezen marad.
 
 A Spring sosem hívja az Ollamát. GPU (8 GB): a Python saját soros sora + a docproc-kal közös
 folyamatközi fájlzár (`ai-service/gpulock.py`) — egyszerre egy GPU-feladat fut a gépen; a Whisper és
@@ -50,7 +54,8 @@ a diarizáció modellje a lépés után felszabadul, hogy a MedGemma elférjen.
 ## Felvétel feldolgozása (V27)
 
 - `POST /api/recordings` (multipart: `patientId`, `userId`, `medicalCareId?`, `mode`, `durationSec`,
-  `audio`) → 202, a felvétel rögtön `PROCESSING`. A profil a felvételkor aktív, nem a kliensé.
+  `audio`) → 202, a felvétel rögtön `PROCESSING`. A profil a felvételkor aktív, nem a kliensé. A hang
+  sikeres és sikertelen feldolgozás után is megmarad (újra feldolgozható, visszahallgatható).
 - A régi JSON-os `POST /api/recordings` + `PATCH …/status` + `POST …/utterances` megmaradt a
   CLI-prototípus kimenetének kézi importjához (a frontend a „kézi” felvételnél ezt mutatja).
 - Python (`transcription.py`): faster-whisper (szó-valószínűséggel), pyannote diarizáció
@@ -144,5 +149,6 @@ használati adatot). Hiányzó modellnél érthető hibával áll le, nem kezd l
 `HF_TOKEN` sem kell, csak a letöltéshez.
 
 A `.env`: `MEDIAI_AI_TOKEN`, `HF_TOKEN` (pyannote), `ASR_MODEL`, `VOICE_REVIEW_MODEL`,
-`MEDIAI_VOICE_SERVICE_URL` (Spring), opcionálisan `MEDIAI_VOICE_ROOT` (a Spring `data/voice`-a
-abszolút úttal: csak ez alatti fájl olvasható).
+`MEDIAI_VOICE_SERVICE_URL` (Spring), opcionálisan `MEDIAI_VOICE_ROOT` (a Spring `data/voice`-a: a
+hangprofil-minták) és `MEDIAI_DOCUMENTS_ROOT` (a `data/documents`: a felvételek) abszolút úttal — ha
+bármelyik meg van adva, csak ezek alatti fájl olvasható.

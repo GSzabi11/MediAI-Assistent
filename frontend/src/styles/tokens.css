@@ -1,45 +1,71 @@
 /*
  * MediAI design tokens — egyetlen forrás a vizuális értékekhez.
  * Komponensben ne legyen nyers hex: mindig ezekre a változókra hivatkozz.
+ *
+ * Világos és sötét megjelenés a rendszer beállítása szerint (prefers-color-scheme) — nincs
+ * alkalmazáson belüli kapcsoló (Apple HIG, dark-mode.md › Best practices). A kontrasztértékek
+ * (WCAG) a felületükhöz mérve a megjegyzésekben; a szöveg mindenhol ≥ 4,5:1.
  */
 :root {
-  /* Felületek */
-  --c-ground: #f4f5f3;
+  color-scheme: light;
+
+  /* Felületek: semleges, enyhén hideg szürke alap, fehér kártyák */
+  --c-ground: #f5f5f7;
   --c-surface: #ffffff;
-  --c-surface-muted: #f1f2ef;
-  --c-surface-sunken: #fbfbfa;
+  --c-surface-muted: #eef0f3; /* másodlagos kitöltés: gomb-hover, táblázatfej */
+  --c-surface-sunken: #fafafb; /* átirat, panelfül háttere */
 
   /* Tinta (szöveg) */
-  --c-ink: #17212b;
-  --c-ink-2: #2e3945;
-  --c-ink-muted: #4a5561; /* >= 4.5:1 fehéren */
-  --c-ink-disabled: #5e6873;
+  --c-ink: #1d1d1f; /* 16,8:1 fehéren */
+  --c-ink-2: #3a3a3f; /* 11,3:1 */
+  --c-ink-muted: #5b6068; /* 6,3:1 fehéren, 5,8:1 az alapon */
+  --c-ink-disabled: #6b7078; /* 5,0:1 */
   --c-ink-inverse: #ffffff;
   --c-ink-inverse-muted: #b7c2cc;
 
-  /* Vonalak */
-  --c-line: #d5d9dd;
-  --c-line-strong: #9aa4ae;
-  --c-line-input: #8894a0;
-  --c-line-soft: #c7cdd3;
+  /* Vonalak: hajszálvonal a csoportosításhoz, erősebb a beviteli mezőkhöz (≥ 3:1) */
+  --c-line: #e3e5e9;
+  --c-line-strong: #a1a6ad;
+  --c-line-input: #80868f; /* 3,6:1 fehéren */
+  --c-line-soft: #d6d9de;
 
-  /* Akcent: az emberi döntést és az AI-t jelöli (jóváhagyás, modell-állítás) */
-  --c-accent: #1f5a8c;
-  --c-accent-strong: #123e63;
-  --c-accent-tint: #e4edf6;
-  --c-accent-tint-2: #eff4fa;
+  /* Akcent: az emberi döntést és az AI-t jelöli (jóváhagyás, modell-állítás, elsődleges művelet) */
+  --c-accent: #0b62c4; /* 5,9:1 fehéren; fehér szöveg rajta 5,9:1 */
+  --c-accent-strong: #084a94; /* 8,7:1 */
+  --c-accent-tint: #e8f1fc; /* accent-strong szöveg rajta 7,6:1 */
+  --c-accent-tint-2: #f2f7fd;
+  --c-accent-line: #b9cfe8;
 
   /* Súlyosság — mindig ikonnal + felirattal együtt */
-  --c-critical: #a3261b;
+  --c-critical: #b3261e; /* 6,5:1 */
+  --c-critical-tint: #fdecea;
+  --c-critical-line: #f1b8b3;
   --c-warning: #f2c44f;
-  --c-warning-ink: #7a4800;
+  --c-warning-ink: #7a4800; /* 7,6:1 */
   --c-warning-tint: #fff6dc;
+  --c-warning-line: #9a5b00;
+  --c-on-warning: #1d1d1f; /* sárga sávon mindkét megjelenésben sötét szöveg: 10,2:1 (sötétben 8,5:1) */
+  --c-success: #1b7a4b; /* 5,3:1 */
 
   /* Dokumentum-kiemelés */
   --c-highlight: #ffe39a;
+  --c-highlight-soft: rgba(255, 213, 0, 0.35);
+  --c-on-highlight: #1d1d1f;
 
   /* Labor-diagram */
   --c-ref-band: #e6eaec;
+
+  /* Aktív beteg sáv — az alkalmazás jelképe: mindig látszik, kinek az adatát nézed */
+  --c-band: #14202c;
+  --c-band-ink: #ffffff; /* 16,5:1 */
+  --c-band-ink-muted: #aeb9c4; /* 8,3:1 */
+  --c-band-hover: rgba(255, 255, 255, 0.1);
+  --c-band-empty-1: #e9ebee;
+  --c-band-empty-2: #e1e4e8;
+
+  /* Árnyékok: a kártya nem kerettel, hanem finom mélységgel válik el */
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.04);
+  --shadow-2: 0 4px 16px rgba(16, 24, 40, 0.1);
 
   /* Tipográfia */
   --font-body: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
@@ -52,9 +78,9 @@
   --fs-xl: 22px;
 
   /* Méretek */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --touch: 44px; /* minimális érintési célméret */
   --gap: 20px;
   --rail-w: 56px;
@@ -62,8 +88,61 @@
   --claims-w: 520px;
   --chat-w: 440px;
 
-  /* Szegélytípusok (állítás-típus jelzői) */
-  --border-szabaly: 2.5px solid var(--c-ink);
-  --border-forras: 1.5px solid var(--c-line-strong);
-  --border-modell: 2.5px dashed var(--c-accent);
+  /* Szegélytípusok (állítás-típus jelzői — a szemantika marad: szabály tömör, forrás vékony, modell szaggatott) */
+  --border-szabaly: 2px solid var(--c-ink);
+  --border-forras: 1px solid var(--c-line-strong);
+  --border-modell: 2px dashed var(--c-accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --c-ground: #111113;
+    --c-surface: #1c1c1e;
+    --c-surface-muted: #2a2a2d;
+    --c-surface-sunken: #161618;
+
+    --c-ink: #f2f2f4; /* 15,2:1 a felületen */
+    --c-ink-2: #d6d7db;
+    --c-ink-muted: #a3a8b0; /* 7,1:1 */
+    --c-ink-disabled: #8e939b; /* 5,5:1 */
+    --c-ink-inverse: #111113;
+    --c-ink-inverse-muted: #3a3a3f;
+
+    --c-line: #2f3035;
+    --c-line-strong: #5d6168;
+    --c-line-input: #6b7079; /* 3,4:1 */
+    --c-line-soft: #3a3b40;
+
+    --c-accent: #5aa2f5; /* 6,4:1; sötét szöveg rajta 7,0:1 */
+    --c-accent-strong: #8cc0ff;
+    --c-accent-tint: #15304f;
+    --c-accent-tint-2: #11253b;
+    --c-accent-line: #2c4d73;
+
+    --c-critical: #ff7b72;
+    --c-critical-tint: #3a1715;
+    --c-critical-line: #7a2e28;
+    --c-warning: #e0b23e;
+    --c-warning-ink: #f5c66b;
+    --c-warning-tint: #33270c;
+    --c-warning-line: #b98a2a;
+    --c-success: #5fd39a;
+
+    --c-highlight: #6b5410;
+    --c-on-highlight: #f2f2f4;
+    --c-highlight-soft: rgba(224, 178, 62, 0.3);
+    --c-ref-band: #2a2f33;
+
+    --c-band: #0b1520;
+    --c-band-ink: #f2f2f4;
+    --c-band-ink-muted: #9fb0c0;
+    --c-band-hover: rgba(255, 255, 255, 0.08);
+    --c-band-empty-1: #1f2023;
+    --c-band-empty-2: #18191b;
+
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.55);
+  }
 }

@@ -130,7 +130,8 @@ class SummaryJob:
 
 def resolve(raw: str, must_exist: bool = True) -> Path:
     path = Path(raw).resolve()
-    if config.VOICE_ROOT and not path.is_relative_to(config.VOICE_ROOT):
+    roots = [r for r in (config.VOICE_ROOT, config.DOCUMENTS_ROOT) if r]
+    if roots and not any(path.is_relative_to(r) for r in roots):
         raise JobError("A hangfájl a megengedett könyvtáron kívül van")
     if must_exist and not path.is_file():
         raise JobError("A hangfájl nem található")

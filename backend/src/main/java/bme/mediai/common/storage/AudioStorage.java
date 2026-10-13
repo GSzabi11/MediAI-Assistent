@@ -14,8 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-// Hangfájlok a lemezen (hangprofil-minta, felvétel). A hangprofil biometrikus adat, a felvétel
-// betegadat: mindkettő a gitignore-olt data/ alatt, és a feldolgozás után töröljük, ami nem kell.
+// Hangfájlok a lemezen. Beanként a voice-dir (hangprofil-minták: biometrikus adat, a felolvasott
+// mondatok a hanglenyomat után törlődnek); a felvételekhez a RecordingService a documents-dir-rel
+// példányosítja ({patientId}/hangfelvetelek/, megmarad). Mindkettő a gitignore-olt data/ alatt.
 // A formátumot a bájtokból állapítjuk meg (mint a dokumentumnál), nem a kliens Content-Type-jából.
 @Component
 public class AudioStorage {
