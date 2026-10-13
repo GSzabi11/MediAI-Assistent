@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import type { ClaimResponse, DokumentumListItem, Forras } from '../api/types';
@@ -11,7 +11,7 @@ import { GyogyszerAllergiaPanel } from '../components/GyogyszerAllergiaPanel';
 import { KlinikaiStatusz } from '../components/KlinikaiStatusz';
 import { Icon, type IconName } from '../components/Icon';
 import { LabTrend } from '../components/LabTrend';
-import { AppBar, ErrorState, Loading, PatientBand, PlannedFeatures } from '../components/shell';
+import { AppBar, ErrorState, Loading, PatientBand } from '../components/shell';
 import { allapotFelirat } from '../lib/feliratok';
 import { formatDatum, formatIdo } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
@@ -180,14 +180,6 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
 
   return (
     <>
-      <div className="toolbar">
-        <span className="meta">
-          {patient.nev} · {dokumentumok.length} dokumentum · {felvetelek.length} felvétel · {allitasok.length} állítás
-        </span>
-        <div className="push-right">
-          <PlannedFeatures />
-        </div>
-      </div>
       <main className="workspace" style={{ gridTemplateColumns: cols }}>
         {forrasokNyitva ? (
           <SourcesPanel
@@ -396,41 +388,42 @@ function SourcesPanel({
   felvetelId?: number;
 }) {
   const { patient, dokumentumok, felvetelek } = usePatient();
-  const csoport = (label: string, items: DokumentumListItem[]) =>
-    items.length > 0 && (
-      <div className="navgroup">
-        <span className="label">{label}</span>
-        {items.map((d) => (
-          <Link
-            key={d.id}
-            to={dokLink(patient.id, d)}
-            className={`navitem${d.id === dokId ? ' navitem--on' : ''}`}
-            aria-current={d.id === dokId ? 'page' : undefined}
-          >
-            <strong>{d.cim}</strong>
-            <span className="meta">
-              {[
-                d.osztaly,
-                formatDatum(d.datum),
-                d.allapot === 'feldolgozas'
-                  ? 'AI-feldolgozás…'
-                  : d.allapot === 'hiba'
-                    ? 'feldolgozási hiba'
-                    : d.vanSzoveg
-                      ? null
-                      : 'nincs szöveg',
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </span>
-          </Link>
-        ))}
-      </div>
-    );
+  const feltoltes = `/betegek/${patient.id}?nezet=dokumentum&feltoltes=1`;
+  const dokSorok = (items: DokumentumListItem[], ikon: IconName) =>
+    items.map((d) => (
+      <Link
+        key={d.id}
+        to={dokLink(patient.id, d)}
+        className={`navitem${d.id === dokId ? ' navitem--on' : ''}`}
+        aria-current={d.id === dokId ? 'page' : undefined}
+      >
+        <Icon name={ikon} size={16} />
+        <span className="navitem__text">
+          <strong>{d.cim}</strong>
+          <span className="meta">
+            {[
+              d.osztaly,
+              formatDatum(d.datum),
+              d.allapot === 'feldolgozas'
+                ? 'AI-feldolgozás…'
+                : d.allapot === 'hiba'
+                  ? 'feldolgozási hiba'
+                  : d.vanSzoveg
+                    ? null
+                    : 'nincs szöveg',
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+        </span>
+      </Link>
+    ));
+  const egyebek = dokumentumok.filter((d) => d.tipus !== 'labor').sort(dokSorrend);
+  const laborok = dokumentumok.filter((d) => d.tipus === 'labor').sort(dokSorrend);
   return (
     <aside className="sources" aria-label="Források">
-      <div className="row-inline sources__head">
-        <span className="label">Források</span>
+      <div className="sources__head">
+        <h2 className="h2 h2--sm">Források</h2>
         <button
           type="button"
           className="iconbtn iconbtn--ghost iconbtn--sm push-right"
@@ -441,40 +434,87 @@ function SourcesPanel({
         </button>
       </div>
       {/* csoportonként időrendben, a legfrissebb elöl */}
-      {csoport('Dokumentumok', dokumentumok.filter((d) => d.tipus !== 'labor').sort(dokSorrend))}
-      {csoport(
-        `Laborleletek · ${dokumentumok.filter((d) => d.tipus === 'labor').length}`,
-        dokumentumok.filter((d) => d.tipus === 'labor').sort(dokSorrend),
-      )}
-      <Link to={`/betegek/${patient.id}?nezet=dokumentum&feltoltes=1`} className="navitem navitem--add">
-        <span className="row-inline">
-          <Icon name="upload" size={14} />
-          Dokumentum feltöltése
-        </span>
-      </Link>
-      <div className="navgroup">
-        <span className="label">Hangfelvételek</span>
+      <NavGroup cim="Dokumentumok" db={egyebek.length} aktiv={dokId} uj={{ to: feltoltes, label: 'Dokumentum feltöltése', ikon: 'upload' }}>
+        {dokSorok(egyebek, 'doc')}
+      </NavGroup>
+      <NavGroup cim="Laborleletek" db={laborok.length} aktiv={dokId} uj={{ to: feltoltes, label: 'Laborlelet feltöltése', ikon: 'upload' }}>
+        {dokSorok(laborok, 'flask')}
+      </NavGroup>
+      <NavGroup
+        cim="Hangfelvételek"
+        db={felvetelek.length}
+        aktiv={felvetelId}
+        uj={{ to: `/betegek/${patient.id}?nezet=atirat&uj=felvetel`, label: 'Új hangfelvétel', ikon: 'mic' }}
+      >
         {[...felvetelek].sort(ujabbElol((f) => f.kezdes)).map((f) => (
           <Link
             key={f.id}
             to={`/betegek/${patient.id}?nezet=atirat&felvetel=${f.id}`}
             className={`navitem${f.id === felvetelId ? ' navitem--on' : ''}`}
+            aria-current={f.id === felvetelId ? 'page' : undefined}
           >
-            <strong>Felvétel #{f.id}</strong>
-            <span className="meta">
-              {f.mod === 'surgossegi' ? 'Sürgősségi' : 'Echo diktálás'} · {formatDatum(f.kezdes)} {formatIdo(f.kezdes)}{' '}
-              · {allapotFelirat[f.allapot].toLowerCase()}
+            <Icon name="mic" size={16} />
+            <span className="navitem__text">
+              <strong>
+                {f.mod === 'surgossegi' ? 'Sürgősségi' : 'Echo diktálás'} <span className="meta">#{f.id}</span>
+              </strong>
+              <span className="meta">
+                {formatDatum(f.kezdes)} {formatIdo(f.kezdes)} · {allapotFelirat[f.allapot].toLowerCase()}
+              </span>
             </span>
           </Link>
         ))}
-        <Link to={`/betegek/${patient.id}?nezet=atirat&uj=felvetel`} className="navitem navitem--add">
-          <span className="row-inline">
-            <Icon name="mic" size={14} />
-            Új felvétel
-          </span>
+      </NavGroup>
+    </aside>
+  );
+}
+
+/**
+ * Egy forráscsoport: fejléc (cím, darabszám, új elem gomb) és a lista. A lista egy bizonyos magasság
+ * fölött külön görget, hogy a sok elemű csoport ne tolja le a többit; a kijelölt elemet a listán
+ * belül láthatóvá görgeti.
+ */
+function NavGroup({
+  cim,
+  db,
+  aktiv,
+  uj,
+  children,
+}: {
+  cim: string;
+  db: number;
+  aktiv?: number;
+  uj: { to: string; label: string; ikon: IconName };
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  // csak a kijelölés változásakor: a háttérfrissítés (5 mp) ne ugrassa vissza a görgetést
+  useEffect(() => {
+    const list = ref.current;
+    const on = list?.querySelector<HTMLElement>('.navitem--on');
+    if (list && on) list.scrollTop = on.offsetTop - list.clientHeight / 2 + on.clientHeight / 2;
+  }, [aktiv]);
+  return (
+    <section className="navgroup" aria-label={cim}>
+      <div className="navgroup__head">
+        <span className="label">{cim}</span>
+        <span className="navgroup__count" aria-label={`${db} elem`}>
+          {db}
+        </span>
+        <Link to={uj.to} className="iconbtn iconbtn--ghost iconbtn--sm push-right" aria-label={uj.label} title={uj.label}>
+          <Icon name={uj.ikon} size={16} />
         </Link>
       </div>
-    </aside>
+      {db > 0 ? (
+        <div ref={ref} className="navgroup__list">
+          {children}
+        </div>
+      ) : (
+        <Link to={uj.to} className="navgroup__empty">
+          Nincs még · {uj.label.toLowerCase()}
+        </Link>
+      )}
+    </section>
   );
 }
 

@@ -8,6 +8,9 @@ import '@fontsource/atkinson-hyperlegible-mono/400.css';
 import '@fontsource/atkinson-hyperlegible-mono/700.css';
 import './styles/tokens.css';
 import './styles/app.css';
+import { initTema } from './lib/tema';
+
+initTema();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

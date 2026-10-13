@@ -2,6 +2,7 @@ package bme.mediai.document.service;
 
 import bme.mediai.document.api.DocumentResponse;
 import bme.mediai.document.exception.DocumentNotFoundException;
+import bme.mediai.document.exception.DocumentNotRetryableException;
 import bme.mediai.document.exception.DuplicateDocumentException;
 import bme.mediai.document.exception.ExtractedTextAlreadySetException;
 import bme.mediai.document.exception.ExtractedTextMissingException;
@@ -168,6 +169,19 @@ public class DocumentService {
         if (repository.setExtractedText(id, text) == 0) {
             throw new ExtractedTextAlreadySetException(id);
         }
+        return DocumentResponse.from(getDocument(id));
+    }
+
+    // Sikertelen automatikus feldolgozás újraindítása: a dokumentum újra PROCESSING, és a commit
+    // után ugyanúgy a Python-sorba kerül, mint feltöltéskor (a fájl a PROCESSING mappában maradt).
+    @Transactional
+    public DocumentResponse reprocess(Long id) {
+        Document document = getDocument(id);
+        if (repository.restartProcessing(id) == 0) {
+            throw new DocumentNotRetryableException(id);
+        }
+        events.publishEvent(new DocumentUploadedEvent(id, document.getPatientId(),
+                storageDir.resolve(document.getStoragePath())));
         return DocumentResponse.from(getDocument(id));
     }
 

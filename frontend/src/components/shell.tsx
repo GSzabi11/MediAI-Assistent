@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { setCurrentUser, szerepkorFelirat, useCurrentUser } from '../api/currentUser';
 import type { PatientResponse } from '../api/types';
 import { eletkor, formatDatum, formatTaj } from '../lib/format';
+import { setTemaMod, useTemaMod, type TemaMod } from '../lib/tema';
 import { Icon } from './Icon';
 
 export function AppBar() {
@@ -20,12 +21,41 @@ export function AppBar() {
         </nav>
       )}
       <div className="appbar__right">
+        <TemaValaszto />
         <span className="lang" aria-label="Nyelv: magyar (angol még nem elérhető)">
           <strong>HU</strong> / EN
         </span>
         {user && <UserMenu />}
       </div>
     </header>
+  );
+}
+
+const temaOpciok: readonly (readonly [TemaMod, string, 'monitor' | 'sun' | 'moon'])[] = [
+  ['system', 'Rendszer szerint', 'monitor'],
+  ['light', 'Világos', 'sun'],
+  ['dark', 'Sötét', 'moon'],
+];
+
+/** Megjelenés választó: rendszer szerint (alapértelmezett), világos vagy sötét. */
+function TemaValaszto() {
+  const mod = useTemaMod();
+  return (
+    <div className="seg2 seg2--icon" role="group" aria-label="Megjelenés">
+      {temaOpciok.map(([v, felirat, ikon]) => (
+        <button
+          key={v}
+          type="button"
+          className={mod === v ? 'on' : ''}
+          aria-pressed={mod === v}
+          aria-label={felirat}
+          title={felirat}
+          onClick={() => setTemaMod(v)}
+        >
+          <Icon name={ikon} />
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -101,17 +131,6 @@ export function PatientBand({ patient }: { patient: PatientResponse | null }) {
         Beteg váltása
       </Link>
     </section>
-  );
-}
-
-/** Háttér nélküli funkciók: egy halványított, letiltott gomb. */
-export function PlannedFeatures() {
-  const list = 'Labor kérés, Beutaló, EESZT-import, Epikrízis másolása';
-  return (
-    <button type="button" className="btn btn--off" disabled title={`${list} — ebben a verzióban nem elérhető`}>
-      Tervezett funkciók (4)
-      <Icon name="chevronDown" size={14} />
-    </button>
   );
 }
 

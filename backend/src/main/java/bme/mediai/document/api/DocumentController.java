@@ -43,6 +43,12 @@ public class DocumentController {
         return ResponseEntity.created(location).body(created);
     }
 
+    // Sikertelen automatikus feldolgozás újraindítása (FAILED → PROCESSING), 202 — mint a feltöltés
+    @PostMapping("/{id}/reprocess")
+    public ResponseEntity<DocumentResponse> reprocess(@PathVariable Long id) {
+        return ResponseEntity.accepted().body(service.reprocess(id));
+    }
+
     @GetMapping("/{id}")
     public DocumentResponse get(@PathVariable Long id) {
         return service.findById(id);

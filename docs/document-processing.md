@@ -140,6 +140,16 @@ törzset sem tudta értelmezni).
   kezdte), és a kontextus végéig generált → 10 perces időtúllépés, `FAILED`. Fix seed miatt
   ugyanaz a PDF mindig elbukott. A `qwen3.5:9b` nem esett hurokba, de 8 GB VRAM-on ~8 percig
   futott — modellváltás nem megoldás.
+- **Ambuláns lap is szakaszonként** (bekezdéshatáron, ~2500 karakter / hívás, docproc-15). Oka: egy
+  4 oldalas (12 ezer karakteres) lapnál a 4B az 1. oldal néhány eleme után hurokba esett, a végén
+  álló „Javasolt gyógyszeres terápia” listáig el sem jutott (1 állítás, 0 gyógyszer). Előtte az
+  oldalszámlálós élőláb (`Név  3/4  Esetszám: …`, ami az oldalszám nélkül többször ismétlődik) a
+  körülötte álló üres sorokkal kimarad a modell bemenetéből, így az oldaltörés nem vág ketté
+  listát. Az offsetek továbbra is az eredeti szövegen.
+- **Gyógyszer a terápiás javaslatból is**: a `GYOGYSZER` mellett `TERAPIA`/`JAVASLAT` elemből is
+  (a modell a javasolt terápia sorait gyakran javaslatnak sorolta). Determinisztikus pótlás a
+  gyógyszerlista-sorból (`T. Controloc (pantoprazol) este 1x20 mg`): név, ha a modell nem adta,
+  a zárójeles hatóanyag; a dózis `1x1,25` alakjából az egyszeri adag (`1,25`).
 - **Streamelt hívás hurok-figyeléssel**: ha egy már kiadott elem (labor: név+érték, ambuláns:
   idézet) újra megjelenik, a hívás leáll, és a hurok előtti teljes elemek maradnak
   (figyelmeztetéssel). `num_predict` felső korlát (`DOC_LLM_MAX_OUTPUT_TOKENS`, 4096).
@@ -211,8 +221,14 @@ törzset sem tudta értelmezni).
   tárolt flag, hanem a forrás-állítás legfrissebb döntéséből számolódik (`ACCEPTED/MODIFIED`)
   — így egy későbbi elutasítás azonnal látszik. Ez **kivétel** a „csak jóváhagyott állításból”
   szabály alól, kizárólag a pipeline-nak; a kézi API-t továbbra is köti.
-- Ismétlődés: aktív, azonos nevű gyógyszert és meglévő allergiát nem vesz fel újra
-  (figyelmeztetéssel) — minden ambuláns lap felsorolja a szedett gyógyszereket.
+- Ismétlődés: meglévő allergiát nem vesz fel újra (figyelmeztetéssel). Azonos nevű aktív
+  gyógyszernél (`MedicationService.createFromPipeline`, a felhasználó döntése, 2026-10-13): adag
+  nélküli új tétel vagy ugyanaz az adag → nem veszi fel újra; adagos új tétel → a pipeline adag
+  nélküli tétele leáll (nem blokkolja az adagosat); más adagnál a régebbi forrású (`clinicalTime`)
+  adag leáll, az újabb aktív — régebbi dokumentum későbbi feldolgozásakor az ő adagja kerül fel
+  eleve leállítottként. Azonos időnél (egy lapon „Gyógyszerei”, majd „Javasolt terápia”) a
+  szövegben későbbi az érvényes. Kézi tételt a pipeline sosem állít le. Minden változás
+  figyelmeztetésként a dokumentumon.
 - Fájl-áthelyezés: másolás a tranzakcióban; a régi példány csak commit után törlődik,
   visszagörgetéskor az új. Betegnév nincs az útban (GDPR, névütközés).
 - PDF feltöltésekor a kliens nem adhat típust/dátumot (400); nem PDF-nél a típus kötelező,

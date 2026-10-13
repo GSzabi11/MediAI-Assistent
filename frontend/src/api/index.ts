@@ -362,6 +362,9 @@ export const api = {
     return toDokumentum(await http.postForm<DocumentDto>('/documents', form));
   },
 
+  /** POST /documents/{id}/reprocess — sikertelen automatikus feldolgozás újraindítása (202) */
+  ujraFeldolgoz: async (id: number) => toDokumentum(await http.post<DocumentDto>(`/documents/${id}/reprocess`)),
+
   /** PUT /documents/{id}/text — egyszer állítható be (utána 409) */
   setKinyertSzoveg: async (id: number, szoveg: string) =>
     toDokumentum(await http.put<DocumentDto>(`/documents/${id}/text`, { text: szoveg })),

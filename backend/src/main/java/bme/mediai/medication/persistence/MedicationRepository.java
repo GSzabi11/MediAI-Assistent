@@ -12,11 +12,12 @@ public interface MedicationRepository extends JpaRepository<Medication, Long> {
 
     List<Medication> findByPatientIdAndActiveTrueOrderByIdDesc(Long patientId);
 
-    // Kis-/nagybetű és szélső szóközök nélkül, mint az allergia egyedi indexe
+    // Azonos nevű aktív tételek — kis-/nagybetű és szélső szóközök nélkül, mint az allergia egyedi indexe
     @Query(value = """
-            SELECT EXISTS (SELECT 1 FROM medication
-                           WHERE patient_id = :patientId AND active
-                             AND lower(btrim(name)) = lower(btrim(:name)))
+            SELECT * FROM medication
+            WHERE patient_id = :patientId AND active
+              AND lower(btrim(name)) = lower(btrim(:name))
+            ORDER BY id
             """, nativeQuery = true)
-    boolean existsActiveForPatient(@Param("patientId") Long patientId, @Param("name") String name);
+    List<Medication> findActiveByPatientAndName(@Param("patientId") Long patientId, @Param("name") String name);
 }

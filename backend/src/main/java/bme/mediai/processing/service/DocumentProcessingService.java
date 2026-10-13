@@ -17,6 +17,7 @@ import bme.mediai.processing.api.ProcessingOutcome;
 import bme.mediai.processing.api.ProcessingResultRequest;
 import bme.mediai.processing.api.ProcessingResultRequest.ExtractedStatement;
 import bme.mediai.statement.api.StatementCreateRequest;
+import bme.mediai.statement.api.StatementResponse;
 import bme.mediai.statement.persistence.StatementProducer;
 import bme.mediai.statement.persistence.StatementSource;
 import bme.mediai.statement.persistence.StatementType;
@@ -154,17 +155,17 @@ public class DocumentProcessingService {
 
             // A StatementService ellenőrzi a beteget, a tartományt a kinyert szövegen, és a
             // MODEL_INFERENCE invariánsait (bizonytalanság, producer); clinicalTime = a lelet dátuma
-            Long statementId = statementService.createFromApi(new StatementCreateRequest(
+            StatementResponse statement = statementService.createFromApi(new StatementCreateRequest(
                     document.getPatientId(), StatementType.MODEL_INFERENCE, s.text(), s.label(), s.severity(),
                     s.uncertainty(), new StatementSource.Document(document.getId(), s.charStart(), s.charEnd()),
-                    producer, null)).id();
+                    producer, null));
+            Long statementId = statement.id();
 
             if (s.medication() != null) {
                 var m = s.medication();
-                if (medicationService.createFromPipeline(document.getPatientId(), m.name(), m.activeIngredient(),
-                        m.dose(), m.doseUnit(), m.route(), statementId).isEmpty()) {
-                    warnings.add("Gyógyszer már aktívan szerepel a listán, nem vettük fel újra: " + m.name().strip());
-                }
+                warnings.addAll(medicationService.createFromPipeline(document.getPatientId(), m.name(),
+                        m.activeIngredient(), m.dose(), m.doseUnit(), m.route(), statementId,
+                        statement.clinicalTime()).notes());
             }
             if (s.allergy() != null
                     && allergyService.createFromPipeline(document.getPatientId(), s.allergy().substance(), statementId)

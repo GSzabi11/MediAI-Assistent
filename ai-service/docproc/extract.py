@@ -18,10 +18,27 @@ _NUMERIC_DATE = re.compile(r"(?<!\d)(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{
 _TEXT_DATE = re.compile(r"(?<!\d)(\d{4})\.?\s*(" + "|".join(_HU_MONTHS) + r")\s*(\d{1,2})(?!\d)")
 # A születési dátum nem klinikai dátum: ha előtte ennyi karakteren belül "szül" áll, nem jelölt
 _BIRTH_WINDOW = 30
+_BIRTH_MARKERS = ("szul", "birth")
+# A vizsgálat idejét jelölő címke (ékezet nélkül) közvetlenül a dátum előtt, ugyanabban a sorban.
+# Ha több dátum is van (nyomtatás ideje, beágyazott képalkotó "Study date", aláírás), az
+# egyetlen ilyen címkéjű dátum a klinikai dátum.
+_CLINICAL_LABELS = ("vizsgalat datuma", "vizsgalat ideje", "vizsgalat napja", "mintavetel ideje",
+                    "mintavetel datuma", "ellatas datuma", "ellatas ideje")
 
 
-def dates_in_text(text: str) -> set[dt.date]:
-    found: set[dt.date] = set()
+def _to_date(m: re.Match) -> dt.date | None:
+    year, month, day = m.group(1), m.group(2), m.group(3)
+    month_num = _HU_MONTHS.index(month) + 1 if month in _HU_MONTHS else int(month)
+    try:
+        return dt.date(int(year), month_num, int(day))
+    except ValueError:
+        return None
+
+
+def _dates_with_prefix(text: str) -> list[tuple[dt.date, str]]:
+    """Minden (nem születési) dátum + a sorában előtte álló szöveg (ékezet nélkül, az előző
+    dátum végétől)."""
+    found: list[tuple[dt.date, str]] = []
     # Soronként: a "szül." csak a SAJÁT sorában, az előző dátum utáni részben jelöl születési
     # dátumot — különben a "Szül.: 1961.03.14.\nDátum: 2026.10.02." második dátuma is kiesne
     for line in text.splitlines():
@@ -30,34 +47,56 @@ def dates_in_text(text: str) -> set[dt.date]:
                          key=lambda m: m.start())
         prev_end = 0
         for m in matches:
-            prefix = folded[max(prev_end, m.start() - _BIRTH_WINDOW):m.start()]
+            before = folded[prev_end:m.start()]
             prev_end = m.end()
-            if "szul" in prefix:
+            if any(marker in before[-_BIRTH_WINDOW:] for marker in _BIRTH_MARKERS):
                 continue
-            year, month, day = m.group(1), m.group(2), m.group(3)
-            month_num = _HU_MONTHS.index(month) + 1 if month in _HU_MONTHS else int(month)
-            try:
-                found.add(dt.date(int(year), month_num, int(day)))
-            except ValueError:
-                pass
+            date = _to_date(m)
+            if date is not None:
+                found.append((date, before))
     return found
+
+
+def dates_in_text(text: str) -> set[dt.date]:
+    return {date for date, _ in _dates_with_prefix(text)}
+
+
+def _labeled_dates(text: str) -> set[dt.date]:
+    return {date for date, before in _dates_with_prefix(text)
+            if any(before.rstrip(" .:").endswith(label) for label in _CLINICAL_LABELS)}
+
+
+def _parse_model_date(raw: str) -> dt.date | None:
+    """ISO-dátum, vagy a szövegben használt alak ("2025.01.15.") — a kis modell nem mindig
+    tartja a kért formátumot."""
+    try:
+        return dt.date.fromisoformat(raw.strip())
+    except ValueError:
+        m = _NUMERIC_DATE.search(fold(raw))
+        return _to_date(m) if m else None
 
 
 def resolve_clinical_date(model_date: str | None, text: str, warnings: list[str]) -> dt.date | None:
     """A modell dátuma, ha szerepel a szövegben (nem születési dátumként); különben, ha a
-    szövegben egyetlen (nem születési) dátum van, az; különben None."""
+    szövegben egyetlen (nem születési) dátum van, az; különben az egyetlen „Vizsgálat
+    dátuma/ideje”-szerű címkéjű dátum; különben None."""
     candidates = dates_in_text(text)
     if model_date:
-        try:
-            proposed = dt.date.fromisoformat(model_date.strip())
-            if proposed in candidates:
-                return proposed
-            warnings.append(f"A modell által javasolt dátum ({model_date}) nem szerepel a dokumentumban")
-        except ValueError:
+        proposed = _parse_model_date(model_date)
+        if proposed is None:
             warnings.append(f"A modell által javasolt dátum nem értelmezhető: {model_date!r}")
+        elif proposed in candidates:
+            return proposed
+        else:
+            warnings.append(f"A modell által javasolt dátum ({model_date}) nem szerepel a dokumentumban")
     if len(candidates) == 1:
         only = next(iter(candidates))
         warnings.append(f"Klinikai dátum: a dokumentum egyetlen dátuma ({only.isoformat()})")
+        return only
+    labeled = _labeled_dates(text)
+    if len(labeled) == 1:
+        only = next(iter(labeled))
+        warnings.append(f"Klinikai dátum: a vizsgálat dátumaként jelölt dátum ({only.isoformat()})")
         return only
     return None
 
@@ -557,10 +596,21 @@ _LABELS = {
     "JAVASLAT": "Javaslat",
 }
 _UNCERTAINTY = {"LOW", "MEDIUM", "HIGH"}
+_DOSE_WITH_FREQUENCY = re.compile(r"^\s*\d+\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*$", re.IGNORECASE)
+# Gyógyszer a terápiás javaslatból is: a "Javasolt gyógyszeres terápia" sorait a modell gyakran
+# JAVASLAT-nak sorolja. A név és a dózis itt is csak az idézetből jöhet (_medication).
+_MEDICATION_CATEGORIES = {"GYOGYSZER", "TERAPIA", "JAVASLAT"}
+# Magyar gyógyszerlista-sor: gyógyszerforma-jel, név, zárójelben a hatóanyag
+# ("T. Controloc (pantoprazol) este 1x20 mg", "Caps. Omeprazol 20 mg")
+_DRUG_LINE = re.compile(r"^\s*(?:T|Tbl|Tabl|Caps|Kps|Drg|Inj|Supp)\.\s*([^\s(]+)(?:\s*\(([^)]{2,64})\))?", re.IGNORECASE)
 
 
-def _medication(item: dict, quote: str, text: str, warnings: list[str]) -> dict | None:
+def _medication(item: dict, quote: str, line: str, text: str, warnings: list[str]) -> dict | None:
+    """`line`: az idézet sora a sor elejétől (a modell a "T." jelet gyakran lehagyja az idézetből)."""
     name = _clean(item.get("gyogyszer_nev"), 255)
+    drug_line = _DRUG_LINE.match(line)
+    if not name and drug_line:
+        name = drug_line.group(1)  # a modell a "T. MgSO4 R-E: 2x500 mg" sornál nem adott nevet
     if not name:
         return None  # pl. gyógyszercsoport ("vérnyomáscsökkentő") név nélkül: csak állítás lesz
     if not contains_phrase(quote, name):
@@ -569,6 +619,8 @@ def _medication(item: dict, quote: str, text: str, warnings: list[str]) -> dict 
 
     dose = unit = None
     raw_dose = _clean(item.get("dozis"))
+    if raw_dose and (m := _DOSE_WITH_FREQUENCY.match(raw_dose)):
+        raw_dose = m.group(1)  # "1x1,25" → "1,25": az "1x" a napi gyakoriság, nem az adag
     if raw_dose:
         dose = parse_decimal(raw_dose, 7, 3)  # medication.dose NUMERIC(10,3)
         unit = _clean(item.get("dozis_egyseg"), 255)
@@ -582,6 +634,8 @@ def _medication(item: dict, quote: str, text: str, warnings: list[str]) -> dict 
     ingredient = _clean(item.get("hatoanyag"), 255)
     if ingredient and not contains_phrase(text, ingredient):
         ingredient = None
+    if ingredient is None and drug_line and drug_line.group(2) and fold(drug_line.group(1)) == fold(name):
+        ingredient = drug_line.group(2).strip()  # "T. Controloc (pantoprazol)": a lelet maga írja
     route = _clean(item.get("alkalmazas"), 255)
     if route and not contains_phrase(text, route):
         route = None
@@ -615,7 +669,9 @@ def ambulance_statements(data: dict, text: str, warnings: list[str]) -> list[dic
 
         # Gyógyszer/allergia csak a megfelelő kategóriánál: más kategóriájú elemhez csatolt
         # gyógyszer- vagy allergia-mezőt figyelmen kívül hagyunk
-        medication = _medication(item, quoted, text, warnings) if category == "GYOGYSZER" else None
+        line = text[text.rfind("\n", 0, start) + 1:end]
+        medication = (_medication(item, quoted, line, text, warnings)
+                      if category in _MEDICATION_CATEGORIES else None)
         allergy = None
         if category == "ALLERGIA":
             substance = _clean(item.get("allergen"), 255)

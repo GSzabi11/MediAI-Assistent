@@ -134,7 +134,13 @@ export function DocumentViewer({
 
       {sameP && (
         <div className="docview__section">
-          <FeldolgozasInfo doc={doc} />
+          <FeldolgozasInfo
+            doc={doc}
+            onUjraindult={() => {
+              reload();
+              void frissit();
+            }}
+          />
           {doc.mimeTipus === 'application/pdf' && (
             <Segmented
               label="Megjelenítés"
@@ -244,7 +250,13 @@ export function DocumentViewer({
 }
 
 /** Az automatikus (AI) feldolgozás állapota, kihagyásai és a kinyerő modell (HOGY). */
-function FeldolgozasInfo({ doc }: { doc: DokumentumResponse }) {
+function FeldolgozasInfo({ doc, onUjraindult }: { doc: DokumentumResponse; onUjraindult: () => void }) {
+  const ujra = useAkcio();
+  // Csak kinyert szöveg nélküli PDF indítható újra (a kézzel rögzített szövegre állítások hivatkozhatnak)
+  const ujraindithato = doc.allapot === 'hiba' && doc.mimeTipus === 'application/pdf' && !doc.vanSzoveg;
+  async function ujraindit() {
+    if (await ujra.run(() => api.ujraFeldolgoz(doc.id))) onUjraindult();
+  }
   if (doc.allapot === 'feldolgozas')
     return (
       <p className="meta" role="status">
@@ -257,6 +269,18 @@ function FeldolgozasInfo({ doc }: { doc: DokumentumResponse }) {
       {doc.allapot === 'hiba' && (
         <p className="form-error" role="alert">
           Az automatikus feldolgozás sikertelen: {doc.feldolgozasiHiba}
+        </p>
+      )}
+      {ujraindithato && (
+        <div className="actions">
+          <button type="button" className="btn btn--sm" onClick={() => void ujraindit()} disabled={ujra.busy}>
+            {ujra.busy ? 'Indítás…' : 'Feldolgozás újraindítása'}
+          </button>
+        </div>
+      )}
+      {ujra.error && (
+        <p className="form-error" role="alert">
+          {ujra.error}
         </p>
       )}
       {doc.kinyero && (

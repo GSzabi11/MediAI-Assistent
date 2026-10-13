@@ -18,6 +18,7 @@ import bme.mediai.allergy.exception.DuplicateAllergyException;
 import bme.mediai.document.exception.ChunksAlreadyExistException;
 import bme.mediai.document.exception.DocumentNotFoundException;
 import bme.mediai.document.exception.DocumentNotProcessingException;
+import bme.mediai.document.exception.DocumentNotRetryableException;
 import bme.mediai.document.exception.DocumentProcessingException;
 import bme.mediai.document.exception.DuplicateDocumentException;
 import bme.mediai.document.exception.ExtractedTextAlreadySetException;
@@ -163,7 +164,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({DuplicateDocumentException.class, ExtractedTextAlreadySetException.class,
             ExtractedTextMissingException.class, ChunksAlreadyExistException.class,
-            DocumentProcessingException.class, DocumentNotProcessingException.class})
+            DocumentProcessingException.class, DocumentNotProcessingException.class,
+            DocumentNotRetryableException.class})
     ProblemDetail handleDocumentConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }

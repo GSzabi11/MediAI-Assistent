@@ -10,11 +10,14 @@ import bme.mediai.medication.persistence.MedicationRepository;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.patient.persistence.PatientRepository;
 import bme.mediai.statement.service.StatementApprovalService;
+import bme.mediai.statement.service.StatementService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,12 +29,14 @@ public class MedicationService {
     private final MedicationRepository repository;
     private final PatientRepository patientRepository;
     private final StatementApprovalService approvalService;
+    private final StatementService statementService;
 
     public MedicationService(MedicationRepository repository, PatientRepository patientRepository,
-            StatementApprovalService approvalService) {
+            StatementApprovalService approvalService, StatementService statementService) {
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.approvalService = approvalService;
+        this.statementService = statementService;
     }
 
     @Transactional
@@ -57,17 +62,75 @@ public class MedicationService {
 
     // Az automatikus dokumentum-feldolgozás: a forrás-állítás még PENDING, ezért a tétel
     // "nem ellenőrzött" (verified = false), amíg az orvos el nem fogadja az állítást.
-    // Ha a betegnek már van ugyanilyen nevű aktív gyógyszere, nem veszi fel újra (üres Optional):
-    // minden ambuláns lap felsorolja a szedett gyógyszereket, különben minden lelet duplikálna.
+    // Azonos nevű aktív gyógyszer mellett (minden ambuláns lap felsorolja a szedett gyógyszereket):
+    // - adag nélküli új tétel, vagy ugyanaz az adag → nem veszi fel újra;
+    // - adagos új tétel: a pipeline adag nélküli tétele leáll (az adagos váltja); a pipeline más
+    //   adagú tétele leáll, ha a forrása nem újabb (clinicalTime) — különben az új (régebbi
+    //   dokumentumból jött) adag kerül fel eleve leállítottként, előzménynek. Kézi tételt a
+    //   pipeline sosem állít le: arról az orvos dönt.
     @Transactional
-    public Optional<MedicationResponse> createFromPipeline(Long patientId, String name, String activeIngredient,
-            BigDecimal dose, String doseUnit, String route, Long sourceStatementId) {
-        if (repository.existsActiveForPatient(patientId, name)) {
-            return Optional.empty();
+    public PipelineMedicationResult createFromPipeline(Long patientId, String name, String activeIngredient,
+            BigDecimal dose, String doseUnit, String route, Long sourceStatementId, OffsetDateTime clinicalTime) {
+        String stripped = name.strip();
+        List<Medication> sameName = repository.findActiveByPatientAndName(patientId, stripped);
+        List<String> notes = new ArrayList<>();
+        if (!sameName.isEmpty() && (dose == null || sameName.stream().anyMatch(m -> sameDose(m, dose, doseUnit)))) {
+            notes.add("Gyógyszer már aktívan szerepel a listán, nem vettük fel újra: " + stripped);
+            return new PipelineMedicationResult(Optional.empty(), notes);
         }
-        Medication medication = new Medication(patientId, name.strip(), activeIngredient, dose, doseUnit, route,
+
+        boolean newerDoseExists = false;
+        for (Medication existing : sameName) {
+            if (existing.getOrigin() != EntryOrigin.DOCUMENT_PIPELINE) {
+                continue;
+            }
+            if (existing.getDose() == null) {
+                existing.discontinue();
+                notes.add(stripped + ": az adag nélküli tétel helyére az adagos került (leállítva: #"
+                        + existing.getId() + ")");
+            } else if (!isNewer(existing, clinicalTime)) {
+                existing.discontinue();
+                notes.add(stripped + ": a korábbi adag (" + doseText(existing) + ") leállítva, az új adag: "
+                        + hu(dose) + " " + doseUnit);
+            } else {
+                newerDoseExists = true;
+            }
+        }
+
+        Medication medication = new Medication(patientId, stripped, activeIngredient, dose, doseUnit, route,
                 sourceStatementId, EntryOrigin.DOCUMENT_PIPELINE);
-        return Optional.of(MedicationResponse.from(repository.save(medication), false));
+        if (newerDoseExists) {
+            medication.discontinue();
+            notes.add(stripped + ": újabb dokumentumban más adaggal szerepel — ez az adag leállítottként került fel");
+        }
+        return new PipelineMedicationResult(Optional.of(MedicationResponse.from(repository.save(medication), false)),
+                notes);
+    }
+
+    public record PipelineMedicationResult(Optional<MedicationResponse> created, List<String> notes) {
+    }
+
+    private static boolean sameDose(Medication m, BigDecimal dose, String doseUnit) {
+        return m.getDose() != null && m.getDose().compareTo(dose) == 0
+                && m.getDoseUnit() != null && m.getDoseUnit().strip().equalsIgnoreCase(doseUnit.strip());
+    }
+
+    private static String hu(BigDecimal value) {
+        return value.stripTrailingZeros().toPlainString().replace('.', ',');
+    }
+
+    private static String doseText(Medication m) {
+        return hu(m.getDose()) + " " + m.getDoseUnit();
+    }
+
+    // A meglévő tétel forrása szigorúan újabb-e; azonos időnél (pl. ugyanaz a lelet: „Gyógyszerei”,
+    // majd „Javasolt terápia”) a később feldolgozott, vagyis a szövegben későbbi az érvényes
+    private boolean isNewer(Medication existing, OffsetDateTime clinicalTime) {
+        if (existing.getSourceStatementId() == null || clinicalTime == null) {
+            return false;
+        }
+        OffsetDateTime existingTime = statementService.findById(existing.getSourceStatementId()).clinicalTime();
+        return existingTime != null && existingTime.isAfter(clinicalTime);
     }
 
     @Transactional(readOnly = true)

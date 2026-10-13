@@ -2,9 +2,11 @@
  * MediAI design tokens — egyetlen forrás a vizuális értékekhez.
  * Komponensben ne legyen nyers hex: mindig ezekre a változókra hivatkozz.
  *
- * Világos és sötét megjelenés a rendszer beállítása szerint (prefers-color-scheme) — nincs
- * alkalmazáson belüli kapcsoló (Apple HIG, dark-mode.md › Best practices). A kontrasztértékek
- * (WCAG) a felületükhöz mérve a megjegyzésekben; a szöveg mindenhol ≥ 4,5:1.
+ * Világos és sötét megjelenés: alapból a rendszer beállítása (prefers-color-scheme), de az
+ * AppBar kapcsolójával felülírható (a felhasználó döntése — eltérés az Apple HIG
+ * dark-mode.md ajánlásától). Az érvényes témát a <html data-theme="light|dark"> hordozza, ezt a
+ * lib/tema.ts és az index.html induló szkriptje állítja (így nincs villanás betöltéskor).
+ * A kontrasztértékek (WCAG) a felületükhöz mérve a megjegyzésekben; a szöveg mindenhol ≥ 4,5:1.
  */
 :root {
   color-scheme: light;
@@ -94,55 +96,54 @@
   --border-modell: 2px dashed var(--c-accent);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+/* a „rendszer” módot is a JS oldja fel data-theme-re (lib/tema.ts), ezért itt nincs media query */
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-    --c-ground: #111113;
-    --c-surface: #1c1c1e;
-    --c-surface-muted: #2a2a2d;
-    --c-surface-sunken: #161618;
+  --c-ground: #111113;
+  --c-surface: #1c1c1e;
+  --c-surface-muted: #2a2a2d;
+  --c-surface-sunken: #161618;
 
-    --c-ink: #f2f2f4; /* 15,2:1 a felületen */
-    --c-ink-2: #d6d7db;
-    --c-ink-muted: #a3a8b0; /* 7,1:1 */
-    --c-ink-disabled: #8e939b; /* 5,5:1 */
-    --c-ink-inverse: #111113;
-    --c-ink-inverse-muted: #3a3a3f;
+  --c-ink: #f2f2f4; /* 15,2:1 a felületen */
+  --c-ink-2: #d6d7db;
+  --c-ink-muted: #a3a8b0; /* 7,1:1 */
+  --c-ink-disabled: #8e939b; /* 5,5:1 */
+  --c-ink-inverse: #111113;
+  --c-ink-inverse-muted: #3a3a3f;
 
-    --c-line: #2f3035;
-    --c-line-strong: #5d6168;
-    --c-line-input: #6b7079; /* 3,4:1 */
-    --c-line-soft: #3a3b40;
+  --c-line: #2f3035;
+  --c-line-strong: #5d6168;
+  --c-line-input: #6b7079; /* 3,4:1 */
+  --c-line-soft: #3a3b40;
 
-    --c-accent: #5aa2f5; /* 6,4:1; sötét szöveg rajta 7,0:1 */
-    --c-accent-strong: #8cc0ff;
-    --c-accent-tint: #15304f;
-    --c-accent-tint-2: #11253b;
-    --c-accent-line: #2c4d73;
+  --c-accent: #5aa2f5; /* 6,4:1; sötét szöveg rajta 7,0:1 */
+  --c-accent-strong: #8cc0ff;
+  --c-accent-tint: #15304f;
+  --c-accent-tint-2: #11253b;
+  --c-accent-line: #2c4d73;
 
-    --c-critical: #ff7b72;
-    --c-critical-tint: #3a1715;
-    --c-critical-line: #7a2e28;
-    --c-warning: #e0b23e;
-    --c-warning-ink: #f5c66b;
-    --c-warning-tint: #33270c;
-    --c-warning-line: #b98a2a;
-    --c-success: #5fd39a;
+  --c-critical: #ff7b72;
+  --c-critical-tint: #3a1715;
+  --c-critical-line: #7a2e28;
+  --c-warning: #e0b23e;
+  --c-warning-ink: #f5c66b;
+  --c-warning-tint: #33270c;
+  --c-warning-line: #b98a2a;
+  --c-success: #5fd39a;
 
-    --c-highlight: #6b5410;
-    --c-on-highlight: #f2f2f4;
-    --c-highlight-soft: rgba(224, 178, 62, 0.3);
-    --c-ref-band: #2a2f33;
+  --c-highlight: #6b5410;
+  --c-on-highlight: #f2f2f4;
+  --c-highlight-soft: rgba(224, 178, 62, 0.3);
+  --c-ref-band: #2a2f33;
 
-    --c-band: #0b1520;
-    --c-band-ink: #f2f2f4;
-    --c-band-ink-muted: #9fb0c0;
-    --c-band-hover: rgba(255, 255, 255, 0.08);
-    --c-band-empty-1: #1f2023;
-    --c-band-empty-2: #18191b;
+  --c-band: #0b1520;
+  --c-band-ink: #f2f2f4;
+  --c-band-ink-muted: #9fb0c0;
+  --c-band-hover: rgba(255, 255, 255, 0.08);
+  --c-band-empty-1: #1f2023;
+  --c-band-empty-2: #18191b;
 
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.55);
-  }
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.55);
 }

@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MediAI Assistant</title>
+    <!-- Téma az első kirajzolás előtt, hogy ne villanjon fel a másik megjelenés (src/lib/tema.ts) -->
+    <script>
+      (function () {
+        var m = null;
+        try { m = localStorage.getItem('mediai.theme'); } catch (e) {}
+        if (m !== 'light' && m !== 'dark') {
+          m = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = m;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

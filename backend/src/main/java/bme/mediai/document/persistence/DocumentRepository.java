@@ -55,4 +55,17 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
              WHERE id = :id AND status = 'PROCESSING'
             """, nativeQuery = true)
     int markFailed(@Param("id") Long id, @Param("error") String error);
+
+    // Újrafeldolgozás: FAILED → PROCESSING, a hiba törlődik. Csak PDF-re, és csak ha nincs kinyert
+    // szöveg (a kézzel rögzített szövegre már állítások hivatkozhatnak; a sikertelen callback
+    // visszagörgetett, így részleges adat nincs). Atomikus: kétszeri kattintás → második 0 sor.
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            UPDATE document
+               SET status = 'PROCESSING', processed_at = NULL, processing_error = NULL,
+                   processing_warnings = NULL
+             WHERE id = :id AND status = 'FAILED' AND extracted_text IS NULL
+               AND mime_type = 'application/pdf'
+            """, nativeQuery = true)
+    int restartProcessing(@Param("id") Long id);
 }
