@@ -16,3 +16,5 @@ cd .\ai-service\
 cd .\voice\
 ai_env\Scripts\activate 
 python service.py   
+
+Ollama is kell fusson

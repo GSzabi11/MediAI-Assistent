@@ -15,7 +15,8 @@ public record SummaryFacts(
         List<StatementFact> statements,
         List<MedicationFact> medications,
         List<AllergyFact> allergies,
-        List<DocumentFact> documents
+        List<DocumentFact> documents,
+        List<RecordingFact> recordings
 ) {
     // status: "felett" | "alatt" | "eltér" | null (a szabálymotor kiértékelése, nem a modellé)
     public record LabFact(Long id, String name, String value, String unit, String reference, LocalDate date,
@@ -38,5 +39,10 @@ public record SummaryFacts(
     }
 
     public record DocumentFact(Long id, String type, LocalDate date) {
+    }
+
+    // a hangfelvétel legutóbbi elkészült összefoglalója (az orvos szerkesztett szövege, ha van)
+    public record RecordingFact(Long recordingId, Long summaryId, String mode, LocalDate date, String text,
+            boolean edited) {
     }
 }

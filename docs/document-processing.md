@@ -146,6 +146,11 @@ törzset sem tudta értelmezni).
   oldalszámlálós élőláb (`Név  3/4  Esetszám: …`, ami az oldalszám nélkül többször ismétlődik) a
   körülötte álló üres sorokkal kimarad a modell bemenetéből, így az oldaltörés nem vág ketté
   listát. Az offsetek továbbra is az eredeti szövegen.
+- **Mikrobiológiai lelet** (`extract.microbiology`, docproc-16, a felhasználó döntése): laborsorként a
+  kimutatott mikroba kerül be szöveges eredményként (`Kimutatott mikroba (torokváladék)` =
+  `Staphylococcus aureus`, determinisztikusan a „Mintában kimutatott mikroba:” sorból), az antibiogram
+  (antibiotikumonkénti E/M/R érzékenység) nem — az nem a beteg mért értéke, a labor-idősorban
+  félrevezető. A kihagyás figyelmeztetésként látszik; az antibiogram a PDF-ben és a RAG-darabokban megmarad.
 - **Gyógyszer a terápiás javaslatból is**: a `GYOGYSZER` mellett `TERAPIA`/`JAVASLAT` elemből is
   (a modell a javasolt terápia sorait gyakran javaslatnak sorolta). Determinisztikus pótlás a
   gyógyszerlista-sorból (`T. Controloc (pantoprazol) este 1x20 mg`): név, ha a modell nem adta,

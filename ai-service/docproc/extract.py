@@ -585,7 +585,58 @@ def lab_results(data: dict, text: str, warnings: list[str]) -> list[dict]:
             "_value": value_text if value_text is not None else number_raw,
             "_comparator": comparator,
         })
-    return results
+    return microbiology(results, text, warnings)
+
+
+# ---------------------------------------------------------------- mikrobiológiai lelet
+
+# Antibiogram-sor: antibiotikum, majd az érzékenység betűje (EUCAST: E/S érzékeny, M/I megnövelt
+# expozícióra érzékeny, R rezisztens), utána a MIC oszlop ("-" vagy szám)
+_SUSCEPTIBILITY = {"e", "m", "r", "s", "i"}
+_ORGANISM = re.compile(r"(kimutatott\s+mikroba\s*:?)\s+(\S.*?)\s*$", re.IGNORECASE | re.MULTILINE)
+_SAMPLE = re.compile(r"^\s*Minta\s*:\s*(\S.*?)(?:\s{2,}|$)", re.IGNORECASE | re.MULTILINE)
+
+
+def microbiology(results: list[dict], text: str, warnings: list[str]) -> list[dict]:
+    """Mikrobiológiai leletnél a laborsorok közé a kimutatott mikroba kerül (a minta nevével), az
+    antibiogram (antibiotikumonkénti érzékenység) nem — a felhasználó döntése: az érzékenység nem
+    a beteg mért értéke, a labor-idősorban félrevezető. Az antibiogram a leletben (és a RAG
+    darabjaiban) megmarad; a kihagyás figyelmeztetésként látszik."""
+    if "mikrobiol" not in fold(text):
+        return results
+    lines = text.splitlines()
+    header = next((i for i, l in enumerate(lines)
+                   if any(fold(c[2]).startswith("erz") for c in cells(l))), None)
+    antibiotics: set[str] = set()
+    if header is not None:
+        for line in lines[header + 1:]:
+            if not line.strip():
+                continue
+            row = [c[2] for c in cells(line)]
+            if len(row) < 2 or fold(row[1]) not in _SUSCEPTIBILITY:
+                break
+            antibiotics.add(fold(row[0]))
+    kept = [r for r in results
+            if fold(r["name"]) not in antibiotics and not fold(r["name"]).startswith("erz")]
+    dropped = sum(1 for r in results if fold(r["name"]) in antibiotics)
+    if dropped:
+        warnings.append(f"Mikrobiológiai lelet: az antibiogram ({dropped} antibiotikum) nem került a "
+                        f"laborsorok közé — a leletben megtekinthető")
+
+    sample_match = _SAMPLE.search(text)
+    sample = sample_match.group(1).strip() if sample_match else None
+    for m in _ORGANISM.finditer(text):
+        organism = m.group(2).strip()
+        if len(organism) > 64 or any(fold(organism) == fold(r.get("valueText") or "") for r in kept):
+            continue
+        kept.insert(0, {
+            "groupName": "Mikrobiológia",
+            "name": f"Kimutatott mikroba ({sample})" if sample else "Kimutatott mikroba",
+            "value": None, "comparator": None, "valueText": organism, "unit": None,
+            "refLow": None, "refHigh": None, "refText": None, "measuredAt": None, "code": None,
+            "_head": m.group(1), "_value": organism, "_comparator": None,
+        })
+    return kept
 
 
 # ---------------------------------------------------------------- ambuláns lap

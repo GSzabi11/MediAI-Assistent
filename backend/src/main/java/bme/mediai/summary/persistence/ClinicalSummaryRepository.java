@@ -41,6 +41,9 @@ public interface ClinicalSummaryRepository extends JpaRepository<ClinicalSummary
     @Query(value = """
             SELECT EXISTS (SELECT 1 FROM document WHERE patient_id = :patientId AND uploaded_at > :since)
                 OR EXISTS (SELECT 1 FROM statement WHERE patient_id = :patientId AND created_at > :since)
+                OR EXISTS (SELECT 1 FROM recording_summary rs JOIN recording r ON r.id = rs.recording_id
+                           WHERE r.patient_id = :patientId AND rs.status = 'DONE'
+                             AND (rs.completed_at > :since OR rs.edited_at > :since))
             """, nativeQuery = true)
     boolean hasNewDataSince(@Param("patientId") Long patientId, @Param("since") OffsetDateTime since);
 }

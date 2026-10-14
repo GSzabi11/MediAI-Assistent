@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,12 @@ import bme.mediai.lab.persistence.LabResultRepository;
 import bme.mediai.lab.service.LabTestNames;
 import bme.mediai.medication.service.MedicationService;
 import bme.mediai.patient.persistence.Patient;
+import bme.mediai.recording.persistence.Recording;
+import bme.mediai.recording.persistence.RecordingRepository;
+import bme.mediai.recording.persistence.RecordingStatus;
+import bme.mediai.recordingsummary.persistence.RecordingSummary;
+import bme.mediai.recordingsummary.persistence.RecordingSummaryRepository;
+import bme.mediai.recordingsummary.persistence.RecordingSummaryStatus;
 import bme.mediai.rule.service.LabReferenceRangeRule;
 import bme.mediai.statement.api.ReviewStatus;
 import bme.mediai.statement.api.StatementResponse;
@@ -28,7 +35,9 @@ import bme.mediai.summary.api.SummaryFacts;
 
 // A modell bemenetének összeállítása: a beteg adatai a megadott időszakban. Csak strukturált,
 // már ellenőrzött adat megy (laborsorok, állítások, gyógyszer, allergia) — a leletek nyers
-// szövege nem (hosszú, és a belőle kinyert állítások már itt vannak).
+// szövege nem (hosszú, és a belőle kinyert állítások már itt vannak). A hangfelvételekből a
+// felvétel összefoglalója megy (a felhasználó döntése), nem az átirat: a teljes átirat a 4B-s
+// modell kontextusát szétfeszítené, az összefoglaló pedig már forráshoz kötött.
 @Component
 public class SummaryFactsBuilder {
 
@@ -42,10 +51,15 @@ public class SummaryFactsBuilder {
     private final MedicationService medicationService;
     private final AllergyService allergyService;
     private final DocumentRepository documentRepository;
+    private final RecordingRepository recordingRepository;
+    private final RecordingSummaryRepository recordingSummaryRepository;
 
     public SummaryFactsBuilder(LabResultRepository labResultRepository, StatementService statementService,
             MedicationService medicationService, AllergyService allergyService,
-            DocumentRepository documentRepository) {
+            DocumentRepository documentRepository, RecordingRepository recordingRepository,
+            RecordingSummaryRepository recordingSummaryRepository) {
+        this.recordingRepository = recordingRepository;
+        this.recordingSummaryRepository = recordingSummaryRepository;
         this.labResultRepository = labResultRepository;
         this.statementService = statementService;
         this.medicationService = medicationService;
@@ -93,9 +107,17 @@ public class SummaryFactsBuilder {
                 .map(d -> new SummaryFacts.DocumentFact(d.getId(), d.getType().name(), d.getClinicalDate()))
                 .toList();
 
+        List<SummaryFacts.RecordingFact> recordings = recordingRepository.findByPatientIdOrderByRecordedAtDesc(patientId)
+                .stream()
+                .filter(r -> r.getStatus() == RecordingStatus.DONE)
+                .filter(r -> inPeriod(r.getRecordedAt().atZoneSameInstant(CLINICAL_ZONE).toLocalDate(), start, end))
+                .map(this::recordingFact)
+                .flatMap(Optional::stream)
+                .toList();
+
         Integer age = patient.getBirthDate() == null ? null : Period.between(patient.getBirthDate(), end).getYears();
         SummaryFacts facts = new SummaryFacts(start, end, age, labFacts, findings, statementFacts, medications,
-                allergies, documentFacts);
+                allergies, documentFacts, recordings);
 
         Map<String, List<Long>> ids = new LinkedHashMap<>();
         ids.put("labResultIds", labs.stream().map(LabResult::getId).toList());
@@ -103,6 +125,7 @@ public class SummaryFactsBuilder {
         ids.put("medicationIds", medications.stream().map(SummaryFacts.MedicationFact::id).toList());
         ids.put("allergyIds", allergies.stream().map(SummaryFacts.AllergyFact::id).toList());
         ids.put("documentIds", documents.stream().map(Document::getId).toList());
+        ids.put("recordingSummaryIds", recordings.stream().map(SummaryFacts.RecordingFact::summaryId).toList());
         return new Built(facts, ids);
     }
 
@@ -123,6 +146,19 @@ public class SummaryFactsBuilder {
         return new SummaryFacts.LabFact(r.getId(), LabTestNames.canonical(r.getName()), value,
                 LabTestNames.canonicalUnit(r.getUnit()), reference,
                 r.getMeasuredAt().atZoneSameInstant(CLINICAL_ZONE).toLocalDate(), status);
+    }
+
+    // a felvétel legutóbbi elkészült összefoglalója; ha nincs, a felvétel kimarad
+    private Optional<SummaryFacts.RecordingFact> recordingFact(Recording r) {
+        return recordingSummaryRepository.findByRecordingIdOrderByRequestedAtDescIdDesc(r.getId()).stream()
+                .filter(s -> s.getStatus() == RecordingSummaryStatus.DONE)
+                .findFirst()
+                .map(s -> {
+                    boolean edited = s.getEditedText() != null && !s.getEditedText().isBlank();
+                    return new SummaryFacts.RecordingFact(r.getId(), s.getId(), r.getMode().name(),
+                            r.getRecordedAt().atZoneSameInstant(CLINICAL_ZONE).toLocalDate(),
+                            edited ? s.getEditedText() : s.getSummary(), edited);
+                });
     }
 
     private static LocalDate date(StatementResponse s) {

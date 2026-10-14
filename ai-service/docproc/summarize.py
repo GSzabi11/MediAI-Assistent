@@ -1,7 +1,8 @@
 """Klinikai státusz: rövid összefoglaló + proaktív javaslatok a beteg elmúlt 6 hónapjáról.
 
 A bemenet a Spring által összegyűjtött, már strukturált tények (laborsorok a szabálymotor
-kiértékelésével, a leletekből kinyert állítások, gyógyszer, allergia) — nem nyers lelet-szöveg.
+kiértékelésével, a leletekből kinyert állítások, gyógyszer, allergia, a hangfelvételek
+összefoglalói) — nem nyers lelet-szöveg és nem átirat.
 A "Fő eltérések" NEM a modelltől jön (a frontend a szabálymotor állításaiból mutatja).
 
 Ellenőrzés (determinisztikus): a kimenetben szereplő minden "érdemi" szám (tizedes, vagy ≥ 10)
@@ -19,7 +20,8 @@ import config
 # Két külön, rövid, egyszerű szöveges hívás (nem kötött JSON): a 4B-s modell a közös JSON-kimenetben
 # az összefoglaló mondatait tagmondatonként hurokban ismételte.
 SYSTEM_SUMMARY = """Magyar klinikus asszisztens vagy. Egy beteg elmúlt 6 hónapjának tényeiből rövid
-klinikai státusz-összefoglalót írsz egy orvosnak.
+klinikai státusz-összefoglalót írsz egy orvosnak a dokumentumaiból (leletek, ambuláns lapok) és — ha
+vannak — a hangfelvételek (orvos–beteg beszélgetés, diktálás) összefoglalóiból.
 Szabályok:
 - KIZÁRÓLAG a megadott tényeket használd. Ne találj ki diagnózist, értéket, gyógyszert.
 - Számot (laborértéket, dátumot) csak a tényekből idézz, pontosan; ne számolj új értéket.
@@ -29,11 +31,12 @@ Szabályok:
 - Csak az összefoglaló szövegét írd, bevezetés és cím nélkül."""
 
 SYSTEM_RECOMMENDATIONS = """Magyar klinikus asszisztens vagy. Egy beteg elmúlt 6 hónapjának tényei alapján
-proaktív javaslatokat adsz egy orvosnak: konkrét következő lépéseket (kontroll-labor, konzílium,
-vizsgálat, terápia felülvizsgálata).
+proaktív javaslatokat adsz egy orvosnak a dokumentumai és — ha vannak — a hangfelvételei alapján:
+konkrét következő lépéseket (kontroll-labor, konzílium, vizsgálat, terápia felülvizsgálata).
 Szabályok:
 - Legfeljebb 5 javaslat, mindegyik külön sorban, "- " kezdettel, egy mondatban.
-- Mindegyik egy megadott tényre (tartományon kívüli értékre, diagnózisra, gyógyszerre) épüljön.
+- Mindegyik egy megadott tényre (tartományon kívüli értékre, diagnózisra, gyógyszerre, a hangfelvételen
+  elhangzott panaszra) épüljön.
 - Feltételes mód ("javasolt", "mérlegelendő") — a döntés az orvosé.
 - Ha nincs indokolt teendő, írd: "- Nincs sürgős teendő; rutin kontroll javasolt."
 - Csak a felsorolást írd, bevezetés nélkül."""
@@ -109,6 +112,16 @@ def render_facts(facts: dict) -> str:
         for d in docs:
             counts[kinds.get(d["type"], d["type"])] = counts.get(kinds.get(d["type"], d["type"]), 0) + 1
         lines.append("\nDokumentumok az időszakban: " + ", ".join(f"{n} {k}" for k, n in counts.items()))
+
+    recordings = facts.get("recordings") or []
+    if recordings:
+        modes = {"SBO": "sürgősségi beszélgetés", "ECHO": "echo-diktálás"}
+        lines.append("\nHangfelvételek összefoglalói:")
+        for r in recordings:
+            kind = modes.get(r.get("mode"), "hangfelvétel")
+            edited = "; orvos szerkesztette" if r.get("edited") else "; AI-összefoglaló"
+            text = " ".join((r.get("text") or "").split())
+            lines.append(f"- {r['date']} ({kind}{edited}): {text}")
     return "\n".join(lines)
 
 
