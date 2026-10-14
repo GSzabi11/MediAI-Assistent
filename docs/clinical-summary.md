@@ -36,6 +36,22 @@ GET /api/clinical-summaries?patientId=   — a legfrissebb elöl; stale = azóta
 Betegenként egyszerre egy készülő összefoglaló (részleges egyedi index, 409). A Python nem
 érhető el → FAILED; érvénytelen eredmény → FAILED az okkal.
 
+## Hangfelvételek (2026-10-14, a felhasználó döntése)
+
+Az összefoglaló és a javaslatok a dokumentumokból kinyert tényeken túl a hangfelvételek
+**összefoglalóját** is megkapják: az időszak minden kész (`DONE`) felvételének legutóbbi elkészült
+`recording_summary`-ja, az orvos szerkesztett szövegével, ha van (`SummaryFacts.recordings`,
+`input.recordingSummaryIds`). Az átirat nem megy: a 4B-s modell kontextusát szétfeszítené, az
+összefoglaló pedig már megszólalásokhoz kötött. Új vagy szerkesztett felvétel-összefoglaló után a
+Klinikai státusz elavultnak látszik (`hasNewDataSince`).
+
+**Az összefoglaló bemenete szűkebb, mint a javaslatoké** (a felhasználó döntése, 2026-10-14): az
+összefoglaló csak a dokumentumok megállapításait (kinyert állítások, a gyógyszerek, allergiák) és a
+felvétel-összefoglalókat kapja, a laborsorokat nem — a modell a laborlistát szó szerint
+visszamondta, a laboreltérések pedig a Fő eltérések chipeken látszanak. A javaslatok a teljes
+adatot kapják (laborral együtt). Az állítások a modellnek címke szerint rendezve mennek
+(Diagnózis, Panasz, … elöl, Vizsgálat/Státusz hátul): a 4B a listán sorban haladt végig.
+
 ## A modell bemenete és ellenőrzése
 
 A 4B-s modell (`medgemma:latest`) a teljes laborlistán elveszett („a CRP emelkedett”, holott

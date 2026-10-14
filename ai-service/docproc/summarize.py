@@ -24,10 +24,10 @@ klinikai státusz-összefoglalót írsz egy orvosnak a dokumentumaiból (leletek
 vannak — a hangfelvételek (orvos–beteg beszélgetés, diktálás) összefoglalóiból.
 Szabályok:
 - KIZÁRÓLAG a megadott tényeket használd. Ne találj ki diagnózist, értéket, gyógyszert.
-- Számot (laborértéket, dátumot) csak a tényekből idézz, pontosan; ne számolj új értéket.
-- Legfeljebb 4 mondat, folyó szöveg, felsorolás nélkül. A legfontosabb aggállyal kezdd (a
-  tartományon kívüli értékek, ha több mérés van, az alakulásuk), utána a releváns diagnózisok,
-  gyógyszerek, allergiák. A referenciatartományon belüli vizsgálatokat NE említsd eltérésként.
+- Számot (értéket, dátumot) csak a tényekből idézz, pontosan; ne számolj új értéket.
+- Legfeljebb 4 mondat, folyó szöveg, felsorolás nélkül. A leletek fő megállapításaival (diagnózis,
+  panasz, vizsgálati eredmény) és a hangfelvételeken elhangzottakkal kezdd, utána a gyógyszerek,
+  allergiák. Laborértékeket ne sorolj fel: azokat a felület külön mutatja.
 - Csak az összefoglaló szövegét írd, bevezetés és cím nélkül."""
 
 SYSTEM_RECOMMENDATIONS = """Magyar klinikus asszisztens vagy. Egy beteg elmúlt 6 hónapjának tényei alapján
@@ -56,13 +56,21 @@ def prompt_hash() -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def render_facts(facts: dict) -> str:
-    """A tények tömör, ember- és modell-olvasható szövegként (vizsgálatonként időrendben)."""
+_LABEL_ORDER = {label: i for i, label in enumerate(
+    ["Diagnózis", "Panasz", "Anamnézis", "Terápia", "Gyógyszer", "Allergia", "Javaslat", "Vizsgálat", "Státusz"])}
+
+
+def render_facts(facts: dict, include_labs: bool = True) -> str:
+    """A tények tömör, ember- és modell-olvasható szövegként (vizsgálatonként időrendben).
+    include_labs=False: az összefoglaló bemenete — a felhasználó döntése (2026-10-14) szerint az
+    összefoglaló csak a dokumentumok megállapításaiból és a hangfelvételek összefoglalóiból készül (a
+    laborsorok listáját a modell szó szerint visszamondta). A laboreltérések a Fő eltérések chipeken
+    (szabálymotor) látszanak; a javaslatok továbbra is a teljes adatot kapják."""
     lines = [f"Időszak: {facts.get('periodStart')} – {facts.get('periodEnd')}"]
     if facts.get("ageYears") is not None:
         lines.append(f"Életkor: {facts['ageYears']} év")
 
-    labs = sorted(facts.get("labs") or [], key=lambda l: (l["name"].casefold(), l["date"]))
+    labs = sorted((facts.get("labs") or []) if include_labs else [], key=lambda l: (l["name"].casefold(), l["date"]))
     by_test: "OrderedDict[str, list]" = OrderedDict()
     for lab in labs:
         by_test.setdefault((lab["name"], lab.get("unit") or ""), []).append(lab)
@@ -90,7 +98,11 @@ def render_facts(facts: dict) -> str:
     if statements:
         lines.append("\nLeletekből kinyert adatok:")
         status_hu = {"ACCEPTED": "orvos elfogadta", "MODIFIED": "orvos javította", "PENDING": "jóváhagyásra vár"}
-        for s in statements:
+        # A kis modell sorban halad végig a listán: a lényeg (diagnózis, panasz) legyen elöl, a
+        # részletes mérések (Vizsgálat, Státusz) a végén; címkén belül a legfrissebb elöl
+        ordered = sorted(statements, key=lambda s: str(s.get("date")), reverse=True)
+        ordered.sort(key=lambda s: _LABEL_ORDER.get(s.get("label"), len(_LABEL_ORDER)))
+        for s in ordered:
             label = f"[{s['label']}] " if s.get("label") else ""
             lines.append(f"- {label}{s['text']} ({s['date']}; {status_hu.get(s.get('reviewStatus'), '')})")
 
@@ -271,10 +283,18 @@ def stream_messages(messages: list[dict], max_tokens: int, options: dict | None 
     return out.strip(), cut
 
 
+_BULLET = re.compile(r"^\s*(?:[-•*→]|\d+[.)])\s*")
+
+
 def _parse_recommendations(text: str) -> list[str]:
+    lines = text.splitlines()
+    # Ha van felsorolás, csak annak sorai javaslatok: a modell néha összefoglaló bekezdéssel kezdett,
+    # ami különben az első "javaslat" lett
+    if any(_BULLET.match(l) for l in lines):
+        lines = [l for l in lines if _BULLET.match(l)]
     items = []
-    for line in text.splitlines():
-        line = re.sub(r"^\s*(?:[-•*→]|\d+[.)])\s*", "", line).strip()
+    for line in lines:
+        line = _BULLET.sub("", line).replace("**", "").strip()
         if line and len(line) > 3:
             items.append(line)
     return list(OrderedDict.fromkeys(items))[:MAX_RECOMMENDATIONS]
@@ -283,11 +303,11 @@ def _parse_recommendations(text: str) -> list[str]:
 def summarize(facts: dict) -> dict:
     """Az Ollama-hívások és az ellenőrzés; a Spring callback-jének törzse (DONE)."""
     facts_text = render_facts(facts)
-    user = "A beteg tényei:\n\n" + facts_text
-    summary, summary_cut = _stream_text(SYSTEM_SUMMARY, user, 350)
+    summary_facts_text = render_facts(facts, include_labs=False)
+    summary, summary_cut = _stream_text(SYSTEM_SUMMARY, "A beteg tényei:\n\n" + summary_facts_text, 350)
     if not summary:
         raise ValueError("A modell nem adott használható összefoglalót")
-    recs_text, recs_cut = _stream_text(SYSTEM_RECOMMENDATIONS, user, 350)
+    recs_text, recs_cut = _stream_text(SYSTEM_RECOMMENDATIONS, "A beteg tényei:\n\n" + facts_text, 350)
     recommendations = _parse_recommendations(recs_text)
 
     summary, repeated = dedupe_sentences(summary)
@@ -301,7 +321,7 @@ def summarize(facts: dict) -> dict:
                         "mondatnál le lett zárva")
     warnings += contradictions(summary + " " + " ".join(recommendations), facts)
     warnings += [f"Ellenőrizetlen szám az összefoglalóban: {n} (nem szerepel a beteg adatai között)"
-                 for n in unverified_numbers(summary, facts_text)]
+                 for n in unverified_numbers(summary, summary_facts_text)]
     warnings += [f"Ellenőrizetlen szám a javaslatokban: {n} (nem szerepel a beteg adatai között)"
                  for n in unverified_numbers(" ".join(recommendations), facts_text)]
     return {
