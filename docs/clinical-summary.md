@@ -52,7 +52,29 @@ visszamondta, a laboreltérések pedig a Fő eltérések chipeken látszanak. A 
 adatot kapják (laborral együtt). Az állítások a modellnek címke szerint rendezve mennek
 (Diagnózis, Panasz, … elöl, Vizsgálat/Státusz hátul): a 4B a listán sorban haladt végig.
 
-## A modell bemenete és ellenőrzése
+## Részletes összefoglaló (2026-10-15, a felhasználó kérése)
+
+A 4 mondatos összefoglaló túl szűk volt: most 8–12 mondat, 2–4 bekezdésben (panasz és diagnózis;
+vizsgálatok eredménnyel, dátummal; a hangfelvételeken elhangzottak; jelenlegi állapot, gyógyszer,
+allergia), legfeljebb 900 token. A hurok-figyelés itt mondat-szintű (`_sentence_loop_start`, ≥ 6 szavas
+ismétlődő mondat): a tagmondat-szintű a hosszabb szövegben hamisan jelzett, és a 2–3. mondatnál vágott.
+
+- **Modell**: `SUMMARY_LLM_MODEL` (üresen `DOC_LLM_MODEL`). Mérés (12-es tesztbeteg): a `medgemma:latest`
+  (4B) hosszabb szövegnél sablonos, ismétlő mondatokat adott („ismét felkereste … a palpitatios
+  miatt”); a `medgemma:27b` jó, időrendi, bekezdésekre tagolt szöveget, de 8 GB VRAM-on ~3 perc
+  hívásonként (két hívás: összefoglaló + javaslatok), ezalatt a GPU-sor (dokumentum-feldolgozás) vár.
+- **Kulcsvizsgálatok** (`key_exams`): a vizsgálati leletek (típus a lelet fejlécéből: Holter, echo, MR, CT,
+  ultrahang) dátummal és szó szerinti eredménnyel („Vélemény”, különben „Vizsgálat eredménye” a
+  mérés-sorok nélkül) külön listában mennek a modellnek, „mindet említsd” utasítással. Oka: a 27b a
+  részletes összefoglalóból az MR-t kihagyta, a Holtert csak előjegyzettként írta (a Holter-leletből a
+  kinyerés semmit nem hozott). Ehhez a Spring a nem labor leletek szövegét is átadja
+  (`DocumentFact.text`, ≤ 6000 karakter); a modellhez csak a kiolvasott eredmény megy, a beteg-fejléc
+  nem. Ha az összefoglaló mégsem említ egy kulcsvizsgálatot, figyelmeztetés (`missing_exams`).
+  A tagadások megtartását a prompt kéri (egy futásban a „nincs” elmaradt az echo-eredményből).
+- **Gyógyszer-adag ellenőrzés** (`dose_mismatches`): ha az összefoglaló egy aktív gyógyszert a
+  gyógyszerlistától eltérő adaggal említ (egy régebbi lelet adagját: „Bisoprolol 2,5 mg”, holott a
+  lista szerint 1,25 mg), figyelmeztetés.
+
 
 A 4B-s modell (`medgemma:latest`) a teljes laborlistán elveszett („a CRP emelkedett”, holott
 normál) és hurokba esett. Ezért:

@@ -16,18 +16,28 @@ from collections import OrderedDict
 import requests
 
 import config
+from textutil import fold
 
 # Két külön, rövid, egyszerű szöveges hívás (nem kötött JSON): a 4B-s modell a közös JSON-kimenetben
 # az összefoglaló mondatait tagmondatonként hurokban ismételte.
-SYSTEM_SUMMARY = """Magyar klinikus asszisztens vagy. Egy beteg elmúlt 6 hónapjának tényeiből rövid
+SYSTEM_SUMMARY = """Magyar klinikus asszisztens vagy. Egy beteg elmúlt 6 hónapjának tényeiből részletes
 klinikai státusz-összefoglalót írsz egy orvosnak a dokumentumaiból (leletek, ambuláns lapok) és — ha
 vannak — a hangfelvételek (orvos–beteg beszélgetés, diktálás) összefoglalóiból.
 Szabályok:
 - KIZÁRÓLAG a megadott tényeket használd. Ne találj ki diagnózist, értéket, gyógyszert.
 - Számot (értéket, dátumot) csak a tényekből idézz, pontosan; ne számolj új értéket.
-- Legfeljebb 4 mondat, folyó szöveg, felsorolás nélkül. A leletek fő megállapításaival (diagnózis,
-  panasz, vizsgálati eredmény) és a hangfelvételeken elhangzottakkal kezdd, utána a gyógyszerek,
-  allergiák. Laborértékeket ne sorolj fel: azokat a felület külön mutatja.
+- 8–12 mondat, folyó szöveg, felsorolás nélkül, 2–4 bekezdésben (bekezdések között üres sor):
+  1. a fő panasz és a diagnózisok, mikor és hogyan jelentkeztek;
+  2. a vizsgálatok és a fontos eredményeik (pl. EKG, Holter, echo, MR), dátummal;
+  3. a hangfelvételeken elhangzottak, ha vannak;
+  4. a jelenlegi állapot, a gyógyszerek adaggal és az allergiák.
+- A KULCSVIZSGÁLATOK listájának MINDEN elemét említsd a dátumával és az eredményével. Ha egy vizsgálat
+  előjegyzése és az eredménye is szerepel, az eredményt írd (a vizsgálat megtörtént). Az eredményt
+  tömörítsd, de a TAGADÁST ("nincs", "nem igazolódott") mindig tartsd meg; a normál eredményt
+  foglald össze egyben (pl. "normál üregek, regurgitáció nincs").
+- A jelenlegi gyógyszereket az "Aktív gyógyszerek" listából írd, az ott álló adaggal.
+  Laborértékeket ne sorolj fel: azokat a felület külön mutatja.
+- Minden mondat új információt hozzon; ugyanazt ne ismételd.
 - Csak az összefoglaló szövegét írd, bevezetés és cím nélkül."""
 
 SYSTEM_RECOMMENDATIONS = """Magyar klinikus asszisztens vagy. Egy beteg elmúlt 6 hónapjának tényei alapján
@@ -60,6 +70,84 @@ _LABEL_ORDER = {label: i for i, label in enumerate(
     ["Diagnózis", "Panasz", "Anamnézis", "Terápia", "Gyógyszer", "Allergia", "Javaslat", "Vizsgálat", "Státusz"])}
 
 
+# --- Kulcsvizsgálatok: a vizsgálati leletek (Holter, echo, MR, …) determinisztikusan, a lelet
+# szövegéből. A 27b-s modell a részletes összefoglalóból az MR-t teljesen kihagyta, a Holtert csak
+# előjegyzettként említette (a Holter-leletből a kinyerés egyetlen állítást sem hozott).
+_RESULT_HEADINGS = ("vizsgalat eredmenye", "eredmeny", "velemeny", "epikrizis", "osszefoglalas")
+# Személyazonosító sor (fejléc, élőláb): a modellnek név/TAJ/lakcím nem mehet (SummaryFacts elve)
+_PII = re.compile(r"\bneve\b|\btaj\b|lakcim|lakhely|szuletes|\banyja\b|esetszam|\bkba\b|naplosor|\bcime?\b|"
+                  r"telefon|\btel:|e-mail|mh\.kod|kartonszam|patient")
+_EXAMS = [("holter", "Holter-EKG"), ("mr", "szív MR"), ("mri", "szív MR"), ("cmri", "szív MR"),
+          ("echo", "echokardiográfia"), ("echokardiografia", "echokardiográfia"),
+          ("echokardiografias", "echokardiográfia"), ("echocardiographia", "echokardiográfia"),
+          ("tte", "echokardiográfia"), ("ct", "CT"), ("ultrahang", "ultrahang")]
+# az összefoglalóban ezek bármelyike = a vizsgálat említve van
+_EXAM_MENTION = {"Holter-EKG": ("holter",), "szív MR": ("mr", "mri", "cmri", "magneses"),
+                 "echokardiográfia": ("echo", "echocard", "echokard", "tte"), "CT": ("ct",),
+                 "ultrahang": ("ultrahang",)}
+_MEASUREMENT_LINE = re.compile(r":\s*[-+<>]?\d|:\s*$|indikacio|minosege")
+_SIGNATURE = re.compile(r"\s(?:dr\.|Dr\.)\s.*$")
+_SECTION_HEAD = re.compile(r"^(?:vizsgálat eredménye|eredmény|leírás, vélemény|vélemény)\s*:?\s*", re.IGNORECASE)
+EXAM_RESULT_CHARS = 320
+
+
+def _exam_words(text: str) -> set[str]:
+    words = set(re.findall(r"[a-z0-9]+", fold(text)))
+    return {name for key, name in _EXAMS if key in words}
+
+
+def exam_of(text: str) -> str | None:
+    """A lelet vizsgálattípusa a fejlécéből, ha pontosan egy van. Fejléc: az eredmény-szakasz előtti
+    rész (ilyen nélkül a beteg-adatok utolsó soráig) — a lelet törzse ("szív MR-re előjegyezték")
+    nem számít."""
+    lines = [l for l in text[:2400].splitlines() if l.strip()]
+    end = next((i for i, l in enumerate(lines)
+                if fold(l).strip(" :.").startswith(_RESULT_HEADINGS) and len(l.strip()) <= 60), None)
+    if end is None:
+        pii = [i for i, l in enumerate(lines) if _PII.search(fold(l))]
+        end = pii[-1] + 1 if pii else 0
+    found = _exam_words(" ".join(l for l in lines[:end] if not _PII.search(fold(l))))
+    return found.pop() if len(found) == 1 else None
+
+
+def exam_result(text: str) -> str | None:
+    """A vizsgálati lelet eredménye szó szerint: a "Vélemény" szakasz, ha van (MR), különben a
+    "Vizsgálat eredménye" szakasz a mérés-sorok nélkül; az aláírás levágva."""
+    lines = text.splitlines()
+    for headings in (("velemeny",), ("vizsgalat eredmenye", "eredmeny")):
+        start = next((i for i, l in enumerate(lines)
+                      if fold(l).strip(" :.").startswith(headings) and len(l.strip()) <= 60), None)
+        if start is None:
+            continue
+        body = [l for l in lines[start + 1:] if l.strip() and not set(l.strip()) <= set("._-")
+                and not _PII.search(fold(l)) and not _MEASUREMENT_LINE.search(fold(l))]
+        joined = _SECTION_HEAD.sub("", _SIGNATURE.sub("", " ".join(" ".join(l.split()) for l in body))).strip()
+        if joined:
+            return joined[:EXAM_RESULT_CHARS].rsplit(" ", 1)[0] + " …" if len(joined) > EXAM_RESULT_CHARS else joined
+    return None
+
+
+def key_exams(facts: dict) -> list[tuple[str, str, str | None]]:
+    """(dátum, vizsgálat, szó szerinti eredmény) a vizsgálati leletekre, időrendben."""
+    out = []
+    for d in facts.get("documents") or []:
+        text = d.get("text") or ""
+        exam = exam_of(text) if text else None
+        if exam:
+            out.append((str(d.get("date")), exam, exam_result(text)))
+    return sorted(out)
+
+
+def missing_exams(summary: str, exams: list[tuple[str, str, str | None]]) -> list[str]:
+    words = set(re.findall(r"[a-z0-9]+", fold(summary)))
+    out = []
+    for date, exam, _ in exams:
+        keys = _EXAM_MENTION.get(exam, (fold(exam),))
+        if not any(w == k or w.startswith(k) and len(k) >= 4 for w in words for k in keys):
+            out.append(f"Az összefoglaló nem említi a(z) {exam} vizsgálatot ({date}) — ellenőrizendő")
+    return out
+
+
 def render_facts(facts: dict, include_labs: bool = True) -> str:
     """A tények tömör, ember- és modell-olvasható szövegként (vizsgálatonként időrendben).
     include_labs=False: az összefoglaló bemenete — a felhasználó döntése (2026-10-14) szerint az
@@ -69,6 +157,9 @@ def render_facts(facts: dict, include_labs: bool = True) -> str:
     lines = [f"Időszak: {facts.get('periodStart')} – {facts.get('periodEnd')}"]
     if facts.get("ageYears") is not None:
         lines.append(f"Életkor: {facts['ageYears']} év")
+    if not include_labs and (exams := key_exams(facts)):
+        lines.append("\nKULCSVIZSGÁLATOK (időrendben, az eredmény szó szerint a leletből — mindet említsd):")
+        lines += [f"- {date} {exam}: {result or 'eredmény a leletben'}" for date, exam, result in exams]
 
     labs = sorted((facts.get("labs") or []) if include_labs else [], key=lambda l: (l["name"].casefold(), l["date"]))
     by_test: "OrderedDict[str, list]" = OrderedDict()
@@ -235,8 +326,31 @@ def _loop_start(text: str) -> int | None:
     return None
 
 
-def _stream_text(system: str, user: str, max_tokens: int) -> tuple[str, bool]:
-    return stream_messages([{"role": "system", "content": system}, {"role": "user", "content": user}], max_tokens)
+_SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÖŐÚÜŰ])")
+
+
+def _sentence_loop_start(text: str) -> int | None:
+    """A részletes összefoglalóhoz: csak egy (legalább 6 szavas) teljes MONDAT ismétlődése hurok. A
+    tagmondat-szintű figyelés a hosszabb szövegben hamisan jelzett (a dátumok pontjainál törő
+    darabok ismétlődtek), és a 2–3. mondatnál levágta a szöveget."""
+    seen: set[str] = set()
+    pos = 0
+    for sentence in _SENTENCE_BREAK.split(text):
+        start = text.find(sentence, pos)
+        pos = start + len(sentence)
+        if pos >= len(text):
+            break  # az íródó mondat
+        key = _clause_key(sentence)
+        if len(key.split()) >= 6:
+            if key in seen:
+                return start
+            seen.add(key)
+    return None
+
+
+def _stream_text(system: str, user: str, max_tokens: int, loop_start=_loop_start) -> tuple[str, bool]:
+    return stream_messages([{"role": "system", "content": system}, {"role": "user", "content": user}], max_tokens,
+                           model=config.SUMMARY_LLM_MODEL, loop_start=loop_start)
 
 
 def stream_messages(messages: list[dict], max_tokens: int, options: dict | None = None, *,
@@ -300,11 +414,36 @@ def _parse_recommendations(text: str) -> list[str]:
     return list(OrderedDict.fromkeys(items))[:MAX_RECOMMENDATIONS]
 
 
+_DOSE_IN_TEXT = re.compile(r"(\d+(?:[.,]\d+)?)\s*(mg|g|mcg|µg|ml|NE|IU)\b", re.IGNORECASE)
+
+
+def dose_mismatches(text: str, facts: dict) -> list[str]:
+    """Ha az összefoglaló egy aktív gyógyszert a gyógyszerlistától eltérő adaggal említ (a modell
+    egy régebbi lelet adagját vette át: "Bisoprolol 2,5 mg este", holott a lista szerint 1,25 mg),
+    figyelmeztetés. A szöveget nem írjuk át."""
+    out = []
+    for m in facts.get("medications") or []:
+        dose = (m.get("dose") or "").split(" ")[0]
+        name = m.get("name") or ""
+        if not dose or len(name) < 3:
+            continue
+        for hit in re.finditer(re.escape(name.strip()), text, re.IGNORECASE):
+            window = text[hit.end():hit.end() + 30]
+            said = _DOSE_IN_TEXT.search(re.split(r"[;\n]|,\s*(?=[A-ZÁÉÍÓÖŐÚÜŰ])", window)[0])
+            if said and _norm_number(said.group(1)) != _norm_number(dose):
+                msg = (f"Eltérés a jelenlegi gyógyszerlistától — {name}: {said.group(1)} {said.group(2)} "
+                       f"(lista: {m.get('dose')}); lehet, hogy egy korábbi lelet adata")
+                if msg not in out:
+                    out.append(msg)
+    return out
+
+
 def summarize(facts: dict) -> dict:
     """Az Ollama-hívások és az ellenőrzés; a Spring callback-jének törzse (DONE)."""
     facts_text = render_facts(facts)
     summary_facts_text = render_facts(facts, include_labs=False)
-    summary, summary_cut = _stream_text(SYSTEM_SUMMARY, "A beteg tényei:\n\n" + summary_facts_text, 350)
+    summary, summary_cut = _stream_text(SYSTEM_SUMMARY, "A beteg tényei:\n\n" + summary_facts_text, 900,
+                                       loop_start=_sentence_loop_start)
     if not summary:
         raise ValueError("A modell nem adott használható összefoglalót")
     recs_text, recs_cut = _stream_text(SYSTEM_RECOMMENDATIONS, "A beteg tényei:\n\n" + facts_text, 350)
@@ -320,6 +459,8 @@ def summarize(facts: dict) -> dict:
         warnings.append("A modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a szöveg az utolsó teljes "
                         "mondatnál le lett zárva")
     warnings += contradictions(summary + " " + " ".join(recommendations), facts)
+    warnings += missing_exams(summary, key_exams(facts))
+    warnings += dose_mismatches(summary, facts)
     warnings += [f"Ellenőrizetlen szám az összefoglalóban: {n} (nem szerepel a beteg adatai között)"
                  for n in unverified_numbers(summary, summary_facts_text)]
     warnings += [f"Ellenőrizetlen szám a javaslatokban: {n} (nem szerepel a beteg adatai között)"
@@ -329,6 +470,6 @@ def summarize(facts: dict) -> dict:
         "summary": summary[:4000],
         "recommendations": [r[:500] for r in recommendations],
         "warnings": [w[:500] for w in warnings],
-        "model": {"modelName": config.LLM_MODEL, "seed": config.LLM_SEED, "promptHash": prompt_hash(),
+        "model": {"modelName": config.SUMMARY_LLM_MODEL, "seed": config.LLM_SEED, "promptHash": prompt_hash(),
                   "extractorVersion": config.EXTRACTOR_VERSION},
     }

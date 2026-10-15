@@ -83,6 +83,13 @@ egyszer visszahív a Springbe a kérdés vektorával.
 - A hivatkozott laborsorok **szabály-állításai** (`lab-reference-range`) külön, lakatos
   hivatkozásként jelennek meg (olvasáskor számolva — ha a szabály azóta visszavonta, eltűnik).
 
+- **Gyógyszer-adag ellenőrzés (2026-10-15)**: ha a válasz egy aktív gyógyszert a gyógyszerlistától
+  eltérő adaggal vagy napi gyakorisággal említ (pl. „Bisoprolol 1,25 mg 2x1”, holott a lista szerint
+  „E: 1x”), figyelmeztetés: lehet, hogy egy korábbi lelet adata (`chat.medication_mismatches`). Oka: a
+  modell a jelenlegi adagot egy júliusi lelet gyógyszerlistájának gyakoriságával keverte. Ugyanezért a
+  „Jelenleg aktív gyógyszer” és az allergia-források a számozás elején állnak (a dokumentum-részletek
+  előtt), és a rendszerprompt kimondja: a jelenlegi adagolást ezek adják, ellentmondásnál a legfrissebb.
+
 ## Modellválasztás — mérés (RTX 5060 8 GB, 9-es tesztbeteg, 8 dokumentum)
 
 Ugyanaz a prompt („Mik a kóros laboreredmények és hogyan alakultak?”):

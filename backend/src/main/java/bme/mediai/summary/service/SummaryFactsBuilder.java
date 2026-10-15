@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import bme.mediai.allergy.service.AllergyService;
 import bme.mediai.document.persistence.Document;
 import bme.mediai.document.persistence.DocumentRepository;
+import bme.mediai.document.persistence.DocumentType;
 import bme.mediai.lab.persistence.LabResult;
 import bme.mediai.lab.persistence.LabResultRepository;
 import bme.mediai.lab.service.LabTestNames;
@@ -42,6 +43,8 @@ import bme.mediai.summary.api.SummaryFacts;
 public class SummaryFactsBuilder {
 
     private static final ZoneId CLINICAL_ZONE = ZoneId.of("Europe/Budapest");
+    // a lelet szövegéből legfeljebb ennyi megy át (a Python ebből vágja ki az eredményt)
+    private static final int MAX_DOCUMENT_CHARS = 6000;
 
     public record Built(SummaryFacts facts, Map<String, List<Long>> inputIds) {
     }
@@ -104,7 +107,8 @@ public class SummaryFactsBuilder {
                         : d.getUploadedAt().atZoneSameInstant(CLINICAL_ZONE).toLocalDate(), start, end))
                 .toList();
         List<SummaryFacts.DocumentFact> documentFacts = documents.stream()
-                .map(d -> new SummaryFacts.DocumentFact(d.getId(), d.getType().name(), d.getClinicalDate()))
+                .map(d -> new SummaryFacts.DocumentFact(d.getId(), d.getType().name(), d.getClinicalDate(),
+                        documentText(d)))
                 .toList();
 
         List<SummaryFacts.RecordingFact> recordings = recordingRepository.findByPatientIdOrderByRecordedAtDesc(patientId)
@@ -146,6 +150,17 @@ public class SummaryFactsBuilder {
         return new SummaryFacts.LabFact(r.getId(), LabTestNames.canonical(r.getName()), value,
                 LabTestNames.canonicalUnit(r.getUnit()), reference,
                 r.getMeasuredAt().atZoneSameInstant(CLINICAL_ZONE).toLocalDate(), status);
+    }
+
+    // A (nem labor-) lelet szövege a Pythonnak: belőle olvassa ki, milyen vizsgálat volt (Holter, MR, …)
+    // és mi az eredménye — a kinyert állításokból ez nem mindig derül ki (a rövid Holter-leletből a
+    // kinyerés egyetlen állítást sem hozott). A modellhez csak a kiolvasott eredmény megy.
+    private static String documentText(Document d) {
+        if (d.getType() == DocumentType.LAB || d.getExtractedText() == null) {
+            return null;
+        }
+        String text = d.getExtractedText();
+        return text.length() > MAX_DOCUMENT_CHARS ? text.substring(0, MAX_DOCUMENT_CHARS) : text;
     }
 
     // a felvétel legutóbbi elkészült összefoglalója; ha nincs, a felvétel kimarad

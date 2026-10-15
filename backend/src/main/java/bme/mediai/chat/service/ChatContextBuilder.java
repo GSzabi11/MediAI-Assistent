@@ -123,11 +123,13 @@ public class ChatContextBuilder {
 
         // --- gyógyszer, allergia: a forrás-állításuk forrásával hivatkozható; kézi rögzítés csak háttér ---
         for (MedicationResponse m : medicationService.findByPatient(patientId, true)) {
-            String text = "Aktív gyógyszer: " + m.name()
+            // "jelenlegi": a dokumentum-részletek régebbi gyógyszerlistái ("Bisoprolol 1,25 mg 2x1")
+            // előzmények — a modell az adagot innen, az adagolást egy régi részletből keverte össze
+            String text = "Jelenleg aktív gyógyszer (a gyógyszerlista szerint): " + m.name()
                     + (m.activeIngredient() == null ? "" : " (" + m.activeIngredient() + ")")
                     + (m.dose() == null ? "" : ", " + m.dose().stripTrailingZeros().toPlainString().replace('.', ',')
                             + (m.doseUnit() == null ? "" : " " + m.doseUnit()))
-                    + (m.route() == null ? "" : ", " + m.route())
+                    + (m.route() == null ? "" : ", adagolás: " + m.route())
                     + (m.verified() ? "" : " [nem ellenőrzött]");
             facts.add(withSource(MEDICATION, m.id(), text, m.sourceStatementId(), statements, docsById));
         }

@@ -2169,6 +2169,8 @@ select.input {
   margin: 0;
   font-size: var(--fs-md);
   line-height: 1.6;
+  /* a részletes összefoglaló bekezdései (üres sorral elválasztva) */
+  white-space: pre-line;
 }
 .klinstatus__label {
   display: inline-flex;

@@ -38,7 +38,9 @@ public record SummaryFacts(
     public record AllergyFact(Long id, String substance, boolean verified) {
     }
 
-    public record DocumentFact(Long id, String type, LocalDate date) {
+    // text: a (nem labor-) lelet kinyert szövege, csonkolva. A Python ebből a vizsgálat típusát
+    // (Holter, MR, …) és az eredmény-szakaszát olvassa ki; a beteg-fejléc (név, TAJ) a modellhez nem megy
+    public record DocumentFact(Long id, String type, LocalDate date, String text) {
     }
 
     // a hangfelvétel legutóbbi elkészült összefoglalója (az orvos szerkesztett szövege, ha van)

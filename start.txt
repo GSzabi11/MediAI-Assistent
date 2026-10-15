@@ -18,3 +18,5 @@ ai_env\Scripts\activate
 python service.py   
 
 Ollama is kell fusson
+
+És a Docker is

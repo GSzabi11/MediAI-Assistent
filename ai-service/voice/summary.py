@@ -30,7 +30,8 @@ PROMPT = {
     "sbo": """Sürgősségi osztályos orvos–beteg beszélgetés átiratát kapod, sorszámozott megszólalásokkal.
 Írj belőle rövid, tárgyszerű klinikai összefoglalót egy orvosnak: fő panasz, a tünetek részletei (kezdet,
 lokalizáció, jelleg), a tagadott tünetek, gyógyszerek, allergiák, előzmények.""",
-    "echo": """Echokardiográfiás vizsgálat diktálásának átiratát kapod, sorszámozott megszólalásokkal.
+    "echo": """Echokardiográfiás vizsgálat diktálásának átiratát kapod (csak az orvos megszólalásait), sorszámozott
+megszólalásokkal.
 Írj belőle rövid, tárgyszerű leletösszefoglalót egy orvosnak: a mért paraméterek értékkel és mértékegységgel,
 pontosan úgy, ahogy elhangzottak, majd a szöveges megfigyelések.""",
 }
@@ -56,6 +57,7 @@ def _keywords_line(keywords: list[str]) -> str:
 
 def prompt_hash(mode: str) -> str:
     payload = json.dumps({"kind": "recording-summary", "prompt": PROMPT[mode], "rules": RULES, "options": _OPTIONS,
+                          "doctorOnly": mode in DOCTOR_ONLY_MODES,
                           "model": review.REVIEW_MODEL}, ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -146,13 +148,28 @@ def _generate(content: str) -> str:
     return data.get("message", {}).get("content", "")
 
 
+# Echo-diktálásnál a lelet az orvos diktálása: a beteg vagy más megszólalása (kérdés, közbeszólás)
+# nem kerülhet az összefoglalóba — a felhasználó döntése (2026-10-15). Az átirat megmarad, csak a
+# modell bemenetéből és a hivatkozható megszólalások közül marad ki.
+DOCTOR_ONLY_MODES = {"echo"}
+
+
 def summarize(mode: str, utterances: list[dict], keywords: list[str]) -> dict:
     mode = mode.lower()
+    warnings: list[str] = []
+    if mode in DOCTOR_ONLY_MODES:
+        doctor = [u for u in utterances if u.get("speaker") == "DOCTOR"]
+        excluded = len(utterances) - len(doctor)
+        if not doctor:
+            raise RuntimeError("echo-diktálás: az átiratban nincs orvosi megszólalás, nincs miből összefoglalni")
+        if excluded:
+            warnings.append(f"Echo-diktálás: {excluded} nem orvosi (beteg / egyéb) megszólalás kimaradt az "
+                            f"összefoglalóból")
+        utterances = doctor
     dialog = "\n".join(f"[{u['turnId']}] {SPEAKER_LABEL.get(u['speaker'], 'EGYÉB')}: {u['text']}" for u in utterances)
     content = (PROMPT[mode] + "\n" + RULES.format(n=MAX_POINTS, keywords=_keywords_line(keywords))
                + "\n\n--- ÁTIRAT ---\n" + dialog + "\n--- ÁTIRAT VÉGE ---")
     raw = _generate(content)
-    warnings: list[str] = []
     points = parse(raw, utterances, warnings)
     if not points:
         raise RuntimeError("a modell nem adott értelmezhető összefoglalót")

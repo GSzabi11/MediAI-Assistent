@@ -31,6 +31,9 @@ Szabályok:
 - Minden állítás végére írd a felhasznált forrás sorszámát szögletes zárójelben, pl. [3] vagy [2][5].
   Csak a felsorolt sorszámokra hivatkozz.
 - Számot (laborértéket, méretet, dátumot) csak pontosan, a forrásból idézz; ne számolj új értéket.
+- A beteg JELENLEGI gyógyszerelését (adag, adagolás) a "Jelenleg aktív gyógyszer" források adják; a
+  dokumentum-részletekben álló gyógyszerlisták korábbi állapotok. Adagot és adagolást ne keverj két
+  forrásból. Ha a források ellentmondanak, a legfrissebb dátumú az érvényes — a dátumot írd ki.
 - Ha több szempont van, számozott pontokba szedd (1., 2., ...), a pont elején félkövér rövid címmel
   (pl. **Máj**:). Előtte legfeljebb egy rövid, kettősponttal végződő bevezető mondat lehet.
 - Tömören, magyarul, legfeljebb 8 pontban.
@@ -146,7 +149,10 @@ def select_facts(facts: list[dict], query: str) -> list[dict]:
 def render_context(facts: list[dict], chunks: list[dict]) -> tuple[str, list[dict]]:
     """A modell kontextusa; a hivatkozható tények sorszámot kapnak (a dokumentum-darabok elöl —
     ezek a kérdéshez a legrelevánsabbak). (szöveg, a sorszámok sorrendjében a tények)"""
-    numbered = list(chunks) + [f for f in facts if f.get("source")]
+    # A jelenlegi gyógyszerlista és az allergiák elöl: a dokumentum-részletek (régebbi
+    # gyógyszerlistákkal) különben elnyomták — a modell egy júliusi lelet "2x1"-ét írta a jelenlegi adagra
+    current = [f for f in facts if f.get("source") and f["kind"] in ("MEDICATION", "ALLERGY")]
+    numbered = current + list(chunks) + [f for f in facts if f.get("source") and f not in current]
     lines = ["FORRÁSOK:"]
     for i, f in enumerate(numbered, 1):
         text = re.sub(r"\s+", " ", f["text"]).strip()
@@ -198,6 +204,46 @@ def parse_points(text: str, count: int) -> tuple[list[dict], list[int]]:
     return points[:MAX_POINTS], invalid
 
 
+_MED_FACT = re.compile(r"Jelenleg aktív gyógyszer[^:]*:\s*(?P<name>[^,(\[]+)(?:\([^)]*\))?"
+                       r"(?:,\s*(?P<dose>\d+(?:[.,]\d+)?)\s*(?P<unit>[^\s,\[]+))?(?:,\s*adagolás:\s*(?P<route>[^\[]+))?")
+_TIMES = re.compile(r"(\d+)\s*[x×]")
+_DOSE_IN_TEXT = re.compile(r"(\d+(?:[.,]\d+)?)\s*(mg|g|mcg|µg|ml|NE|IU)\b", re.IGNORECASE)
+
+
+def medication_mismatches(points: list[dict], facts: list[dict]) -> list[str]:
+    """Determinisztikus ellenőrzés: ha a válasz egy aktív gyógyszert a gyógyszerlistától eltérő
+    adaggal vagy napi gyakorisággal említ (pl. "Bisoprolol 1,25 mg 2x1", holott a lista szerint
+    "E: 1x"), figyelmeztetés — lehet, hogy egy régebbi lelet adata. A szöveget nem írjuk át."""
+    meds = []
+    for f in facts:
+        m = _MED_FACT.search(f.get("text") or "") if f.get("kind") in ("MEDICATION", "BACKGROUND") else None
+        if m and m.group("name"):
+            times = _TIMES.search(m.group("route") or "")
+            meds.append((m.group("name").strip(), m.group("dose"), times.group(1) if times else None))
+    out = []
+    for p in points:
+        text = p["text"]
+        for name, dose, times in meds:
+            pos = fold(text).find(fold(name))
+            if pos < 0:
+                continue
+            window = text[pos + len(name):pos + len(name) + 40]
+            window = re.split(r"[;\n]|,\s*(?=[A-ZÁÉÍÓÖŐÚÜŰ])", window)[0]  # a következő gyógyszerig
+            said_dose = _DOSE_IN_TEXT.search(window)
+            said_times = _TIMES.search(window)
+            problems = []
+            if dose and said_dose and said_dose.group(1).replace(".", ",") != dose.replace(".", ","):
+                problems.append(f"adag {said_dose.group(1)} (lista: {dose})")
+            if times and said_times and said_times.group(1) != times:
+                problems.append(f"napi {said_times.group(1)}x (lista: {times}x)")
+            if problems:
+                msg = (f"Eltérés a jelenlegi gyógyszerlistától — {name}: " + ", ".join(problems)
+                       + "; lehet, hogy egy korábbi lelet adata")
+                if msg not in out:
+                    out.append(msg)
+    return out
+
+
 def answer(question: str, history: list[dict], facts: list[dict], chunks: list[dict]) -> dict:
     """A modellhívás és az ellenőrzés; a Spring callback-jének törzse (DONE)."""
     query = question if not history else history[-1]["question"] + "\n" + question
@@ -221,6 +267,7 @@ def answer(question: str, history: list[dict], facts: list[dict], chunks: list[d
     if invalid:
         warnings.append("A modell nem létező forrásra hivatkozott (elhagyva): "
                         + ", ".join(f"[{n}]" for n in invalid))
+    warnings += medication_mismatches(points, facts)
     known = "\n".join([context_text, question] + [t["question"] + "\n" + t["answer"] for t in history])
     warnings += [f"Ellenőrizetlen szám a válaszban: {n} (nem szerepel a beteg adatai között)"
                  for n in unverified_numbers(" ".join(p["text"] for p in points), known)]

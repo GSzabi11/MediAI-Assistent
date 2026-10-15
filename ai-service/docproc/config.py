@@ -41,6 +41,9 @@ LLM_MODEL = os.environ.get("DOC_LLM_MODEL", "medgemma:4b")
 # A klinikai asszisztens (chat) modellje — külön állítható: a hosszú, sok forrású kontextusban a 4B-s
 # MedGemma hurokba esett és rossz forrásra hivatkozott, a qwen3.5:9b nem (docs/clinical-chat.md)
 CHAT_LLM_MODEL = os.environ.get("CHAT_LLM_MODEL", LLM_MODEL)
+# A Klinikai státusz modellje — külön állítható: a részletes (8–12 mondatos) összefoglalónál a 4B-s
+# MedGemma ismétlő, sablonos szöveget adott; a medgemma:27b jót, de 8 GB VRAM-on ~3 perc alatt
+SUMMARY_LLM_MODEL = os.environ.get("SUMMARY_LLM_MODEL", LLM_MODEL)
 LLM_SEED = int(os.environ.get("DOC_LLM_SEED", "42"))
 # Az Ollama alapértelmezett kontextusa (2–4k token) egy többoldalas leletet levágna
 LLM_NUM_CTX = int(os.environ.get("DOC_LLM_NUM_CTX", "16384"))
