@@ -22,6 +22,7 @@ import classify
 import config
 import embedding
 import extract
+import history
 import literature
 import locate
 import research
@@ -63,6 +64,23 @@ class SummaryJob:
     @property
     def label(self) -> str:
         return f"összefoglaló {self.summary_id}"
+
+
+@dataclass(frozen=True, eq=False)
+class MedicalHistoryJob:
+    history_id: int
+    callback_url: str
+    facts: dict
+    # haladás a felületnek ("Dokumentum-kivonat 5/16"); None: régi Spring, nem küldjük
+    progress_url: str | None = None
+
+    @property
+    def key(self) -> tuple:
+        return ("medical-history", self.history_id)
+
+    @property
+    def label(self) -> str:
+        return f"kórtörténet {self.history_id}"
 
 
 @dataclass(frozen=True, eq=False)
@@ -116,6 +134,26 @@ class ArticleEvalJob:
 
 
 @dataclass(frozen=True, eq=False)
+class RankingJob:
+    """Egy keresés összes találatának AI-rangsora (előszűrés + a legrelevánsabb kiválasztása). EGY feladat
+    a sorban (~3 s/cikk): közben a chat is vár rá — cserébe a rangsor egyben, konzisztensen készül el."""
+    research_id: int
+    callback_url: str
+    progress_url: str
+    articles: list
+    context_text: str
+    extra_prompt: str | None
+
+    @property
+    def key(self) -> tuple:
+        return ("ranking", self.research_id)
+
+    @property
+    def label(self) -> str:
+        return f"AI-rangsor {self.research_id}"
+
+
+@dataclass(frozen=True, eq=False)
 class SearchJob:
     """Hálózati keresés (PubMed, iCite) — GPU nem kell, ezért NEM a sorban fut: egy éppen
     feldolgozott lelet nem tartja fel. Saját szálon, egyszerre egy keresés."""
@@ -137,7 +175,7 @@ class SearchJob:
 
 # kisebb = előbb; azonos prioritáson belül érkezési sorrend. A cikk-értékelésre az orvos a képernyő
 # előtt vár (mint a chatnél), de egy oldalnyi cikk hosszabb — a chat után, a lelet előtt jön.
-_PRIORITY = {ChatJob: 0, ArticleEvalJob: 1}
+_PRIORITY = {ChatJob: 0, ArticleEvalJob: 1, RankingJob: 1}
 
 
 def run_chat(job: ChatJob) -> dict:
@@ -174,7 +212,10 @@ class JobQueue:
 
     def status(self) -> dict:
         with self._lock:
-            return {"queued": self._queue.qsize(), "current": self._current}
+            # pending: a sorban álló + futó feladatok kulcsa ("medical-history:5") — a Spring ebből ismeri fel,
+            # ha egy feladata a Python újraindulásakor elveszett (a sor csak memóriában él)
+            return {"queued": self._queue.qsize(), "current": self._current,
+                    "pending": sorted(f"{k[0]}:{k[1]}" for k in self._pending)}
 
     def start(self) -> None:
         threading.Thread(target=self._run, name="docproc-worker", daemon=True).start()
@@ -191,10 +232,15 @@ class JobQueue:
                         payload = run_chat(job)
                     elif isinstance(job, SummaryJob):
                         payload = summarize.summarize(job.facts)
+                    elif isinstance(job, MedicalHistoryJob):
+                        payload = history.build(job.facts, lambda m, step, total: send_step(job, m, step, total))
                     elif isinstance(job, ResearchContextJob):
                         payload = research.context(job.facts)
                     elif isinstance(job, ArticleEvalJob):
                         payload = research.evaluate(job.article, job.context_text, job.extra_prompt)
+                    elif isinstance(job, RankingJob):
+                        payload = research.rank(job.articles, job.context_text, job.extra_prompt,
+                                                lambda message: send_progress(job, message))
                     else:
                         payload = process(job)
             except Exception as e:  # noqa: BLE001 — minden hiba FAILED callback, a sor nem állhat le
@@ -246,8 +292,19 @@ class SearchRunner:
             self._queue.task_done()
 
 
-def send_progress(job: SearchJob, message: str) -> None:
-    """Állapotüzenet a Springnek; ha nem megy át, a keresés ettől még folytatódik."""
+def send_step(job: MedicalHistoryJob, message: str, step: int, total: int) -> None:
+    """Lépésenkénti haladás a Springnek (a kórtörténet); ha nem megy át, a feldolgozás ettől folytatódik."""
+    if not job.progress_url:
+        return
+    try:
+        requests.post(job.progress_url, json={"message": message[:500], "step": step, "total": total},
+                      headers={"X-Internal-Token": config.TOKEN}, timeout=10)
+    except requests.RequestException as e:
+        log.warning("Állapotüzenet nem ment át (%s): %s", job.label, e)
+
+
+def send_progress(job: "SearchJob | RankingJob", message: str) -> None:
+    """Állapotüzenet a Springnek; ha nem megy át, a keresés / rangsorolás ettől még folytatódik."""
     try:
         requests.post(job.progress_url, json={"message": message[:500]},
                       headers={"X-Internal-Token": config.TOKEN}, timeout=10)

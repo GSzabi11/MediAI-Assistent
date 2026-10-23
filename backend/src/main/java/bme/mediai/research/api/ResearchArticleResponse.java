@@ -27,8 +27,13 @@ public record ResearchArticleResponse(
         Integer citationCount,
         Evaluation evaluation,
         boolean excluded,
-        boolean bookmarked
+        boolean bookmarked,
+        Ranking ranking
 ) {
+    // az AI-rangsor (V32): előszűrés-kategória, kiemelés (1 = legrelevánsabb) indoklással, a számolt hely
+    public record Ranking(Relevance screenRelevance, Integer pick, String pickReason, Integer position) {
+    }
+
     // a modell kimenete (MODEL_INFERENCE jellegű): relevancia-kategória + indoklás, a modell adataival
     public record Evaluation(ArticleEvalStatus status, String summary, Relevance relevance, String relevanceReason,
             String error, List<String> warnings, String modelName, Long seed, String promptHash,
@@ -44,6 +49,7 @@ public record ResearchArticleResponse(
                 a.getDoi() == null ? null : "https://doi.org/" + a.getDoi(),
                 a.getTitle(), a.getAuthors(), a.getJournal(), a.getPubYear(), a.getAbstractText(), a.getSources(),
                 a.getPublicationTypes() == null ? List.of() : a.getPublicationTypes(), a.getCitationCount(),
-                evaluation, a.isExcluded(), a.isBookmarked());
+                evaluation, a.isExcluded(), a.isBookmarked(),
+                new Ranking(a.getScreenRelevance(), a.getAiPick(), a.getAiPickReason(), a.getAiRank()));
     }
 }

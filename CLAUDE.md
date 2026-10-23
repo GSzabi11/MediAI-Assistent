@@ -24,6 +24,9 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
   Ugyanez a szolgáltatás végzi a Szakirodalmi kutatást (`docs/literature-research.md`, V30): ez az
   EGYETLEN hálózatra hívó funkció (PubMed, Europe PMC, iCite) — kifelé csak a keresőkifejezés megy, a Spring
   `OutboundQueryGate` szűri a betegazonosítót; az értékelés külön tábla, nem `allitas`.
+  Ugyanez készíti a Medical history-t (kórtörténet, `docs/medical-history.md`, V31): dokumentumonkénti kivonat
+  (`document_digest`) → idővonal, diagnózisok, anamnézis, javaslatok; külön tábla, nem `allitas`; a BNO-kód csak
+  a leletből, az idővonal minden eleme forrás-dokumentumra mutat; DOCX-export (Word altChunk).
 - **frontend/** — React (Figma-terv alapján, még nincs kód).
 
 ## A rendszer központi elve: az Allitas (Statement)

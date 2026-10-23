@@ -44,6 +44,9 @@ CHAT_LLM_MODEL = os.environ.get("CHAT_LLM_MODEL", LLM_MODEL)
 # A Klinikai státusz modellje — külön állítható: a részletes (8–12 mondatos) összefoglalónál a 4B-s
 # MedGemma ismétlő, sablonos szöveget adott; a medgemma:27b jót, de 8 GB VRAM-on ~3 perc alatt
 SUMMARY_LLM_MODEL = os.environ.get("SUMMARY_LLM_MODEL", LLM_MODEL)
+# A kórtörténet (Medical history, docs/medical-history.md) modellje: a dokumentum-kivonatok (JSON) és az
+# anamnézis + javaslatok. Üresen a Klinikai státuszé.
+HISTORY_LLM_MODEL = os.environ.get("HISTORY_LLM_MODEL", SUMMARY_LLM_MODEL)
 # Szakirodalmi kutatás (docs/literature-research.md) — a felhasználó döntése (2026-10-20): a teljes
 # funkció (betegállapot-összefoglaló, keresőkifejezés, cikk-értékelés) a qwen3.5:9b-vel fut. A cikkenkénti
 # értékelés sok hívás egymás után: a 27b-s modell (~3 perc/hívás) itt használhatatlan, a VRAM-ba férő

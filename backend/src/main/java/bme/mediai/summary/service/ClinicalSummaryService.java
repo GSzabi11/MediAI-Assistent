@@ -1,6 +1,8 @@
 package bme.mediai.summary.service;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.patient.persistence.Patient;
 import bme.mediai.patient.persistence.PatientRepository;
+import bme.mediai.processing.service.AiServiceClient;
 import bme.mediai.summary.api.ClinicalSummaryResponse;
 import bme.mediai.summary.api.SummaryResultRequest;
 import bme.mediai.summary.exception.ClinicalSummaryNotFoundException;
@@ -35,6 +38,8 @@ public class ClinicalSummaryService {
     private static final ZoneId CLINICAL_ZONE = ZoneId.of("Europe/Budapest");
     private static final int PERIOD_MONTHS = 6;
     private static final int MAX_ERROR_LENGTH = 2000;
+    // a dispatch (commit után, legfeljebb ~12 mp újrapróbálással) ennyi idő alatt biztosan beadta a feladatot
+    private static final Duration LOST_JOB_GRACE = Duration.ofSeconds(60);
 
     private final ClinicalSummaryRepository repository;
     private final PatientRepository patientRepository;
@@ -42,10 +47,12 @@ public class ClinicalSummaryService {
     private final SummaryFactsBuilder factsBuilder;
     private final ApplicationEventPublisher events;
     private final Validator validator;
+    private final AiServiceClient aiService;
 
     public ClinicalSummaryService(ClinicalSummaryRepository repository, PatientRepository patientRepository,
             UserRepository userRepository, SummaryFactsBuilder factsBuilder, ApplicationEventPublisher events,
-            Validator validator) {
+            Validator validator, AiServiceClient aiService) {
+        this.aiService = aiService;
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
@@ -80,6 +87,21 @@ public class ClinicalSummaryService {
         }
         events.publishEvent(new SummaryRequestedEvent(saved.getId(), built.facts()));
         return ClinicalSummaryResponse.from(reload(saved.getId()), false);
+    }
+
+    // Beragadt feladat (a docproc leállt / újraindult, a sora elveszett — ld. docs/medical-history.md):
+    // 60 mp után megkérdezzük a Pythont; ha nincs nála, vagy nem érhető el, FAILED. Szándékosan NEM
+    // tranzakcióban: a HTTP-hívás alatt ne tartsunk nyitva adatbázis-kapcsolatot.
+    public void failLostJobs(Long patientId) {
+        List<ClinicalSummary> processing = repository.findByPatientIdAndStatusAndRequestedAtBefore(patientId,
+                SummaryStatus.PROCESSING, OffsetDateTime.now().minus(LOST_JOB_GRACE));
+        if (processing.isEmpty()) {
+            return;
+        }
+        aiService.pendingJobs().ifPresent(pending -> processing.stream()
+                .filter(s -> !pending.contains("summary:" + s.getId()))
+                .forEach(s -> repository.markFailed(s.getId(), "A feldolgozó (ai-service/docproc) leállt vagy "
+                        + "újraindult, a kérés elveszett — készítsd el újra az összefoglalót")));
     }
 
     @Transactional(readOnly = true)

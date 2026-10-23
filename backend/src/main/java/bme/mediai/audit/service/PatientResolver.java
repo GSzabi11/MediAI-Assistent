@@ -17,17 +17,18 @@ class PatientResolver {
     private static final Pattern RESOURCE = Pattern.compile("^/api/([a-z-]+)/(\\d+)(/.*)?$");
 
     // URL-szegmens → tábla, amelyiknek van patient_id oszlopa
-    private static final Map<String, String> TABLES = Map.of(
-            "documents", "document",
-            "recordings", "recording",
-            "statements", "statement",
-            "medical-cares", "medical_care",
-            "lab-results", "lab_result",
-            "medications", "medication",
-            "allergies", "allergy",
-            "clinical-summaries", "clinical_summary",
-            "research", "research",
-            "research-contexts", "research_context");
+    private static final Map<String, String> TABLES = Map.ofEntries(
+            Map.entry("documents", "document"),
+            Map.entry("recordings", "recording"),
+            Map.entry("statements", "statement"),
+            Map.entry("medical-cares", "medical_care"),
+            Map.entry("lab-results", "lab_result"),
+            Map.entry("medications", "medication"),
+            Map.entry("allergies", "allergy"),
+            Map.entry("clinical-summaries", "clinical_summary"),
+            Map.entry("medical-histories", "medical_history"),
+            Map.entry("research", "research"),
+            Map.entry("research-contexts", "research_context"));
     // a chat-messages nincs itt: V25 óta nincs táblája, a controller kérés-attribútumban adja meg
     // a beteget (AccessLogInterceptor.PATIENT_ATTRIBUTE)
 

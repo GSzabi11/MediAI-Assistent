@@ -2561,6 +2561,25 @@ select.input {
 .cikk--kivett {
   opacity: 0.7;
 }
+/* AI-rangsor: a modell szerint legrelevánsabb cikk(ek) — modell-kimenet, ezért az AI-szín (accent) */
+.cikk--kiemelt {
+  border: 2px solid var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-tint-2);
+}
+.cikk__kiemeles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.cikk__kiemeles-cimke {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-accent);
+}
+.kutatas__rangsor {
+  gap: 8px;
+}
 .cikk__fej {
   display: flex;
   align-items: flex-start;
@@ -2647,4 +2666,265 @@ select.input {
   white-space: pre-line;
   line-height: 1.55;
   font-size: var(--fs-sm);
+}
+
+/* ============ Medical history (kórtörténet) ============ */
+.kortortenet {
+  gap: 16px;
+}
+.kortortenet__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+.kortortenet__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--c-accent-tint);
+  color: var(--c-accent);
+}
+.kortortenet__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.kortortenet__title .h2,
+.kortortenet__title .meta {
+  margin: 0;
+}
+.kortortenet__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.kortortenet__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+}
+.kortortenet__warn {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--c-warning-tint);
+  border: 1px solid var(--c-warning-line);
+  color: var(--c-warning-ink);
+  font-size: var(--fs-sm);
+}
+.kortortenet__warn summary {
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.kortortenet__warn ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+.kortortenet__orig {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 2px dashed var(--c-accent);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+}
+
+/* rich text szerkesztő */
+.rte {
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.rte__bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background: var(--c-surface-sunken);
+  border-bottom: 1px solid var(--c-line);
+}
+.rte__btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: var(--fs-md);
+  cursor: pointer;
+}
+.rte__btn:hover {
+  background: var(--c-surface-muted);
+}
+.rte__btn--sep {
+  margin-left: 6px;
+  border-left: 1px solid var(--c-line);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.rte__b {
+  font-weight: 800;
+}
+.rte__i {
+  font-style: italic;
+}
+.rte__u {
+  text-decoration: underline;
+}
+.rte__body {
+  min-height: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 12px 20px 20px;
+  outline: none;
+  background: var(--c-surface);
+}
+.rte__body:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--c-accent);
+}
+
+/* a dokumentum (szerkesztő és az AI eredeti) — a DOCX-minta szerkezete */
+.kortortenet__doc {
+  color: var(--c-ink);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+}
+.kortortenet__doc h2 {
+  margin: 18px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--c-line);
+  color: var(--c-accent-strong);
+  font-size: var(--fs-lg);
+}
+.kortortenet__doc h2:first-child {
+  margin-top: 4px;
+}
+.kortortenet__doc p {
+  margin: 6px 0;
+}
+.kortortenet__doc p.tl-desc {
+  margin-left: 24px;
+}
+.kortortenet__doc ul,
+.kortortenet__doc ol {
+  margin: 6px 0;
+  padding-left: 24px;
+}
+
+/* idővonal */
+.kortortenet__tlhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-accent);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.kortortenet__tltitle {
+  color: var(--c-ink-2);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.kortortenet__count {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--c-accent-tint);
+  color: var(--c-accent-strong);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 6px;
+}
+.timeline__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 0 0 18px 26px;
+  border-left: 2px solid var(--c-line);
+}
+.timeline__item:last-child {
+  padding-bottom: 4px;
+}
+.timeline__dot {
+  position: absolute;
+  left: -7px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+.timeline__item--flag .timeline__dot {
+  background: var(--c-warning-ink);
+}
+.timeline__date {
+  color: var(--c-accent);
+  font-weight: 700;
+}
+.timeline__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+.timeline__place {
+  font-size: var(--fs-md);
+  font-weight: 400;
+  color: var(--c-ink-muted);
+}
+.timeline__text {
+  color: var(--c-ink-2);
+}
+.timeline__src {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-sm);
+  color: var(--c-accent);
+}
+.kortortenet__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kortortenet__progress .meta {
+  margin: 0;
+}
+.kortortenet__bar {
+  width: 100%;
+  max-width: 520px;
+  height: 10px;
+  accent-color: var(--c-accent);
 }

@@ -24,6 +24,7 @@ import type {
   UtteranceDto,
   VoiceProfileDto,
   ClinicalSummaryDto,
+  MedicalHistoryDto,
   ChatMessageDto,
   KeywordDto,
   RecordingSummaryDto,
@@ -59,6 +60,7 @@ import type {
   PatientResponse,
   RagDarab,
   KlinikaiOsszefoglalo,
+  Kortortenet,
   ChatValasz,
   FelvetelOsszefoglalo,
   Kulcsszo,
@@ -498,6 +500,49 @@ export const toOsszefoglalo = (s: ClinicalSummaryDto): KlinikaiOsszefoglalo => (
   elavult: s.stale,
 });
 
+const kortortenetFajta = { LAB: 'labor', DOCUMENT: 'dokumentum', HISTORY: 'elozmeny' } as const;
+
+export const toKortortenet = (h: MedicalHistoryDto): Kortortenet => ({
+  id: h.id,
+  allapot: osszefoglaloAllapot[h.status],
+  kerve: h.requestedAt,
+  elkeszult: h.completedAt,
+  hiba: h.error,
+  idovonal: (h.timeline ?? []).map((t) => ({
+    datum: t.date,
+    cim: t.title,
+    szoveg: t.text,
+    hely: t.place,
+    dokumentumId: t.documentId,
+    fajta: kortortenetFajta[t.kind],
+    jeloles: t.flag,
+  })),
+  diagnozisok: (h.diagnoses ?? []).map((d) => ({
+    nev: d.name,
+    bno: d.bnoCode,
+    datum: d.date,
+    dokumentumId: d.documentId,
+  })),
+  figyelmeztetesek: h.warnings ?? [],
+  modell: h.model && {
+    nev: h.model.modelName,
+    seed: h.model.seed,
+    promptHash: h.model.promptHash,
+    verzio: h.model.extractorVersion,
+  },
+  bemenet: h.inputCounts ?? {},
+  aiHtml: h.aiHtml,
+  html: h.html,
+  szerkesztve: h.editedAt,
+  elavult: h.stale,
+  haladas: h.progress && {
+    uzenet: h.progress.message,
+    lepes: h.progress.step,
+    osszes: h.progress.total,
+    ota: h.progress.at,
+  },
+});
+
 export const toChatValasz = (m: ChatMessageDto): ChatValasz => ({
   id: m.id,
   patientId: m.patientId,
@@ -571,6 +616,8 @@ export const toKutatasiOsszefoglalo = (c: ResearchContextDto): KutatasiOsszefogl
   modell: c.model?.modelName ?? null,
 });
 
+const ERTEKELES = { NONE: 'nincs', PENDING: 'keszul', DONE: 'kesz', FAILED: 'hiba' } as const;
+
 export const toKutatas = (r: ResearchDto): Kutatas => ({
   id: r.id,
   allapot: r.status === 'SEARCHING' ? 'keres' : r.status === 'DONE' ? 'kesz' : 'hiba',
@@ -589,10 +636,16 @@ export const toKutatas = (r: ResearchDto): Kutatas => ({
     ertekelt: r.articles.evaluated,
     varakozo: r.articles.pending,
   },
+  rangsor: {
+    allapot: ERTEKELES[r.ranking.status],
+    uzenet: r.ranking.progress,
+    hiba: r.ranking.error,
+    figyelmeztetesek: r.ranking.warnings ?? [],
+    modell: r.ranking.modelName,
+  },
 });
 
 const RELEVANCIA = { HIGH: 'magas', MEDIUM: 'kozepes', LOW: 'alacsony' } as const;
-const ERTEKELES = { NONE: 'nincs', PENDING: 'keszul', DONE: 'kesz', FAILED: 'hiba' } as const;
 
 export const toCikk = (a: ResearchArticleDto): Cikk => ({
   id: a.id,
@@ -620,11 +673,18 @@ export const toCikk = (a: ResearchArticleDto): Cikk => ({
   },
   kivett: a.excluded,
   konyvjelzo: a.bookmarked,
+  rangsor: {
+    elozetes: a.ranking.screenRelevance ? RELEVANCIA[a.ranking.screenRelevance] : null,
+    kiemeles: a.ranking.pick,
+    kiemelesIndok: a.ranking.pickReason,
+    helyezes: a.ranking.position,
+  },
 });
 
 export const toCikkOldal = (p: ArticlePageDto): CikkOldal => ({
   cikkek: p.content.map(toCikk),
   oldal: p.page,
+  meret: p.size,
   oldalak: p.totalPages,
   osszes: p.totalElements,
 });

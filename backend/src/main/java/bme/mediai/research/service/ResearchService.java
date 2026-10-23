@@ -1,6 +1,9 @@
 package bme.mediai.research.service;
 
 import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,12 +28,16 @@ import bme.mediai.research.api.BookmarkResponse;
 import bme.mediai.research.api.ResearchArticleResponse;
 import bme.mediai.research.api.ResearchCreateRequest;
 import bme.mediai.research.api.ResearchEvaluationJobRequest;
+import bme.mediai.research.api.ResearchRankingJobRequest;
+import bme.mediai.research.api.ResearchRankingResultRequest;
 import bme.mediai.research.api.ResearchResponse;
 import bme.mediai.research.api.ResearchResultRequest;
 import bme.mediai.research.api.ResearchSearchJobRequest;
 import bme.mediai.research.exception.ResearchConflictException;
 import bme.mediai.research.exception.ResearchNotFoundException;
 import bme.mediai.research.persistence.ArticleEvalStatus;
+import bme.mediai.research.persistence.RankingStatus;
+import bme.mediai.research.persistence.Relevance;
 import bme.mediai.research.persistence.Research;
 import bme.mediai.research.persistence.ResearchArticle;
 import bme.mediai.research.persistence.ResearchArticleRepository;
@@ -54,6 +61,15 @@ public class ResearchService {
     private static final int STALE_PENDING_MINUTES = 15;
 
     public enum ArticleFilter { ACTIVE, BOOKMARKED, EXCLUDED, ALL }
+
+    // AI: a látható relevancia szerint (az értékelésé, ha kész, különben az előszűrésé — egy cikk az
+    // értékelése után azonnal a helyére kerül); SOURCE: a forrás sorrendje. Ld. ResearchArticleRepository.findPage
+    public enum ArticleOrder { AI, SOURCE }
+
+    // a látható relevancia szűrője; NONE = még nincs besorolva (nincs absztrakt / a rangsor még nem futott)
+    public enum RelevanceFilter { ALL, HIGH, MEDIUM, LOW, NONE }
+
+    private static final Sort SOURCE_ORDER = Sort.by("rank");
 
     private final ResearchRepository repository;
     private final ResearchArticleRepository articleRepository;
@@ -123,15 +139,11 @@ public class ResearchService {
     }
 
     @Transactional(readOnly = true)
-    public ArticlePageResponse articles(Long researchId, ArticleFilter filter, int page) {
+    public ArticlePageResponse articles(Long researchId, ArticleFilter filter, RelevanceFilter relevance,
+            ArticleOrder order, int page) {
         reload(researchId);
-        Pageable pageable = PageRequest.of(Math.max(page, 0), PAGE_SIZE, Sort.by("rank"));
-        Page<ResearchArticle> result = switch (filter) {
-            case ACTIVE -> articleRepository.findByResearchIdAndExcluded(researchId, false, pageable);
-            case EXCLUDED -> articleRepository.findByResearchIdAndExcluded(researchId, true, pageable);
-            case BOOKMARKED -> articleRepository.findByResearchIdAndBookmarkedTrue(researchId, pageable);
-            case ALL -> articleRepository.findByResearchId(researchId, pageable);
-        };
+        Page<ResearchArticle> result = articleRepository.findPage(researchId, filter.name(), relevance.name(),
+                order == ArticleOrder.AI, PageRequest.of(Math.max(page, 0), PAGE_SIZE));
         return new ArticlePageResponse(result.getContent().stream().map(ResearchArticleResponse::from).toList(),
                 result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
     }
@@ -188,7 +200,8 @@ public class ResearchService {
         }
     }
 
-    // Python: a találatok. Az első oldal értékelése rögtön indul (a többi lapozáskor).
+    // Python: a találatok. Utána az AI-rangsor indul, és csak az után az első oldal értékelése (a rangsor
+    // szerinti első oldalé); ha nincs mit rangsorolni, rögtön az értékelés. A többi oldal lapozáskor.
     @Transactional
     public ResearchResponse complete(Long id, ResearchResultRequest result) {
         Research research = reload(id);
@@ -212,9 +225,138 @@ public class ResearchService {
                 .toList());
         research.complete(result.totalFound() == null ? saved.size() : result.totalFound());
         articleRepository.flush();
-        dispatchEvaluation(research, articleRepository.findByResearchIdAndExcludedFalseOrderByRankAsc(id,
-                PageRequest.of(0, PAGE_SIZE)));
+        if (!dispatchRanking(research)) {
+            dispatchFirstPage(research);
+        }
         return response(research);
+    }
+
+    // Az orvos újrakéri a rangsort (pl. hiba, vagy kizárt cikkek után)
+    @Transactional
+    public ResearchResponse requestRanking(Long researchId) {
+        Research research = reload(researchId);
+        if (research.getStatus() != ResearchStatus.DONE) {
+            throw new ResearchConflictException("A keresés még nem készült el");
+        }
+        if (!dispatchRanking(research)) {
+            throw new ResearchConflictException("A rangsor már készül, vagy nincs absztrakttal rendelkező cikk");
+        }
+        return response(research);
+    }
+
+    // Python: a rangsorolás állapotüzenete
+    @Transactional
+    public void rankingProgress(Long id, String message) {
+        if (message != null && !message.isBlank()) {
+            String m = message.strip();
+            reload(id).rankingProgress(m.length() > 500 ? m.substring(0, 500) : m);
+        }
+    }
+
+    // Python: az AI-rangsor. A modell csak a kategóriát és a választást adja; a sorrendet a Spring számolja
+    // (order()). Utána indul a rangsor szerinti első oldal értékelése.
+    @Transactional
+    public ResearchResponse completeRanking(Long id, ResearchRankingResultRequest result) {
+        Research research = reload(id);
+        if (research.getRankingStatus() != RankingStatus.PENDING) {
+            throw new ResearchConflictException("A(z) " + id + " kutatás rangsora nem vár eredményre");
+        }
+        validate(result);
+        if ("FAILED".equals(result.status())) {
+            failRanking(research, truncate("AI-rangsor: " + (result.error() == null ? "ismeretlen hiba"
+                    : result.error())));
+            return response(research);
+        }
+        if (result.model() == null || result.screened() == null) {
+            throw new IllegalArgumentException("DONE eredményhez kötelező a screened és a model");
+        }
+        List<ResearchArticle> articles = articleRepository.findByResearchId(id, Pageable.unpaged(SOURCE_ORDER))
+                .getContent();
+        Set<Long> ids = articles.stream().map(ResearchArticle::getId).collect(Collectors.toSet());
+        Map<Long, Relevance> screened = new HashMap<>();
+        for (ResearchRankingResultRequest.Screened sc : result.screened()) {
+            if (!ids.contains(sc.articleId()) || screened.put(sc.articleId(), sc.relevance()) != null) {
+                throw new IllegalArgumentException("Ismeretlen vagy ismétlődő cikk az előszűrésben: "
+                        + sc.articleId());
+            }
+        }
+        Map<Long, String> picks = new LinkedHashMap<>();
+        for (ResearchRankingResultRequest.Pick pick : result.picks() == null
+                ? List.<ResearchRankingResultRequest.Pick>of() : result.picks()) {
+            if (screened.get(pick.articleId()) != Relevance.HIGH
+                    || picks.put(pick.articleId(), pick.reason().strip()) != null) {
+                throw new IllegalArgumentException("Kiemelni csak magas előszűrésű cikket lehet, egyszer: "
+                        + pick.articleId());
+            }
+        }
+        List<Long> pickOrder = List.copyOf(picks.keySet());
+        List<ResearchArticle> ordered = order(articles, screened, pickOrder);
+        for (int i = 0; i < ordered.size(); i++) {
+            ResearchArticle a = ordered.get(i);
+            int pick = pickOrder.indexOf(a.getId());
+            a.applyRanking(screened.get(a.getId()), pick < 0 ? null : pick + 1, picks.get(a.getId()), i + 1);
+        }
+        ArticleEvaluationResultRequest.Model m = result.model();
+        research.completeRanking(result.warnings() == null ? List.of() : result.warnings(), m.modelName(), m.seed(),
+                m.promptHash());
+        articleRepository.flush();
+        dispatchFirstPage(research);
+        return response(research);
+    }
+
+    // Az ai_rank a rangsor PILLANATKÉPE (visszakereshető, mi volt a modell eredeti sorrendje); a megjelenítés
+    // sorrendje lekérdezéskor számolódik a látható relevanciából (findPage), mert az értékelés felülírhatja.
+    // A pillanatkép szabálya: a modell választásai (a legjobb elöl), utána előszűrés szerint HIGH, MEDIUM, LOW,
+    // végül a be nem soroltak (nincs absztrakt, kizárt, hiba); csoporton belül a forrás sorrendje.
+    static List<ResearchArticle> order(List<ResearchArticle> articles, Map<Long, Relevance> screened,
+            List<Long> picks) {
+        Comparator<ResearchArticle> byGroup = Comparator.comparingInt(a -> {
+            int pick = picks.indexOf(a.getId());
+            if (pick >= 0) {
+                return pick;
+            }
+            Relevance r = screened.get(a.getId());
+            return picks.size() + (r == null ? Relevance.values().length : r.ordinal());
+        });
+        return articles.stream().sorted(byGroup.thenComparingInt(ResearchArticle::getRank)).toList();
+    }
+
+    // A dispatcher hívja, ha a Python nem fogadta a kérést
+    @Transactional
+    public void failRanking(Long id, String error) {
+        repository.findById(id).ifPresent(r -> failRanking(r, truncate(error == null || error.isBlank()
+                ? "Ismeretlen hiba" : error.strip())));
+    }
+
+    // A rangsor hibája nem akasztja meg az értékelést: az első oldal (a korábbi rangsor, ha van, különben a
+    // forrás sorrendje szerint) értékelődik
+    private void failRanking(Research research, String error) {
+        if (research.failRanking(error)) {
+            dispatchFirstPage(research);
+        }
+    }
+
+    // false: nincs mit rangsorolni (absztrakt nélkül nem megy), vagy már fut
+    private boolean dispatchRanking(Research research) {
+        List<ResearchArticle> articles = articleRepository.findByResearchIdAndExcluded(research.getId(), false,
+                Pageable.unpaged(SOURCE_ORDER)).getContent();
+        if (articles.stream().noneMatch(a -> a.getAbstractText() != null && !a.getAbstractText().isBlank())
+                || !research.startRanking(OffsetDateTime.now().minusMinutes(STALE_PENDING_MINUTES))) {
+            return false;
+        }
+        String base = "/api/research/" + research.getId() + "/ranking";
+        events.publishEvent(new ResearchEvents.RankingRequested(new ResearchRankingJobRequest(research.getId(),
+                client.callbackUrl(base + "/result"), client.callbackUrl(base + "/progress"),
+                research.getContextText(), research.getExtraPrompt(), articles.stream()
+                        .map(a -> new ResearchRankingJobRequest.Article(a.getId(), a.getTitle(), a.getAbstractText(),
+                                a.getJournal(), a.getPubYear(), a.getPublicationTypes()))
+                        .toList())));
+        return true;
+    }
+
+    private void dispatchFirstPage(Research research) {
+        dispatchEvaluation(research, articleRepository.findPage(research.getId(), ArticleFilter.ACTIVE.name(),
+                RelevanceFilter.ALL.name(), true, PageRequest.of(0, PAGE_SIZE)).getContent());
     }
 
     @Transactional

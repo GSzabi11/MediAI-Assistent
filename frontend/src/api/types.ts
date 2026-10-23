@@ -464,6 +464,40 @@ export interface KlinikaiOsszefoglalo {
   elavult: boolean;
 }
 
+// ---------- kórtörténet (Medical history) ----------
+export interface KortortenetElem {
+  /** év ("2010") vagy ÉÉÉÉ-HH-NN */
+  datum: string;
+  cim: string;
+  szoveg: string | null;
+  hely: string | null;
+  dokumentumId: number;
+  fajta: 'labor' | 'dokumentum' | 'elozmeny';
+  /** ha nem null: ellenőrizendő */
+  jeloles: string | null;
+}
+
+export interface Kortortenet {
+  id: number;
+  allapot: 'keszul' | 'kesz' | 'hiba';
+  kerve: string;
+  elkeszult: string | null;
+  hiba: string | null;
+  idovonal: KortortenetElem[];
+  diagnozisok: { nev: string; bno: string | null; datum: string | null; dokumentumId: number }[];
+  figyelmeztetesek: string[];
+  modell: { nev: string; seed: number; promptHash: string; verzio: string } | null;
+  bemenet: Record<string, number>;
+  /** az AI eredetije a szerkesztő formájában */
+  aiHtml: string;
+  /** a megjelenített / exportált szöveg */
+  html: string;
+  szerkesztve: string | null;
+  elavult: boolean;
+  /** készülés közben az aktuális lépés */
+  haladas: { uzenet: string; lepes: number | null; osszes: number | null; ota: string } | null;
+}
+
 // ---------- felvétel: kulcsszó, összefoglaló ----------
 export interface Kulcsszo {
   id: number;
@@ -526,6 +560,14 @@ export interface Kutatas {
   forrasok: KutatasForras[];
   osszesTalalat: number | null;
   cikkek: { osszes: number; kivett: number; konyvjelzo: number; ertekelt: number; varakozo: number };
+  /** AI-rangsor: az összes találat előszűrése, a legrelevánsabb kiemelése — a sorrendet a szerver számolja */
+  rangsor: {
+    allapot: 'nincs' | 'keszul' | 'kesz' | 'hiba';
+    uzenet: string | null;
+    hiba: string | null;
+    figyelmeztetesek: string[];
+    modell: string | null;
+  };
 }
 
 export type Relevancia = 'magas' | 'kozepes' | 'alacsony';
@@ -556,11 +598,27 @@ export interface Cikk {
   };
   kivett: boolean;
   konyvjelzo: boolean;
+  rangsor: {
+    /** az előszűrés kategóriája (null: nincs besorolva — pl. absztrakt nélkül) */
+    elozetes: Relevancia | null;
+    /** 1 = a modell szerint a legrelevánsabb */
+    kiemeles: number | null;
+    kiemelesIndok: string | null;
+    helyezes: number | null;
+  };
 }
+
+/** AI: a látható relevancia szerint (értékelés, különben előszűrés); SOURCE: a forrás sorrendje */
+export type CikkSorrend = 'AI' | 'SOURCE';
+
+/** a látható relevancia szűrője; NONE = még nincs besorolva */
+export type CikkRelevanciaSzuro = 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
 
 export interface CikkOldal {
   cikkek: Cikk[];
   oldal: number;
+  /** oldalméret */
+  meret: number;
   oldalak: number;
   osszes: number;
 }

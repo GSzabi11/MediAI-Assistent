@@ -16,9 +16,27 @@ public interface ResearchArticleRepository extends JpaRepository<ResearchArticle
 
     Page<ResearchArticle> findByResearchIdAndBookmarkedTrue(Long researchId, Pageable pageable);
 
-    List<ResearchArticle> findByResearchIdAndExcludedFalseOrderByRankAsc(Long researchId, Pageable pageable);
-
     List<ResearchArticle> findByResearchIdAndIdIn(Long researchId, List<Long> ids);
+
+    // A látható relevancia: a részletes értékelésé, ha kész, különben az előszűrésé (a relevance csak DONE-nál
+    // van kitöltve, V30 CHECK). filter: ACTIVE | EXCLUDED | BOOKMARKED | ALL; relevance: ALL | HIGH | MEDIUM | LOW
+    // | NONE (be nem sorolt); ai: true = relevancia szerint (HIGH, MEDIUM, LOW, besorolatlan; csoporton belül a
+    // modell kiemelései elöl, utána a forrás sorrendje), false = a forrás sorrendje.
+    // (sima sztring-összefűzés: a text block levágná a sorvégi szóközt a kulcsszavak után)
+    String EFFECTIVE_RELEVANCE = "coalesce(relevance, screen_relevance)";
+    String PAGE_WHERE = " WHERE research_id = :researchId"
+            + " AND CASE :filter WHEN 'ACTIVE' THEN NOT excluded WHEN 'EXCLUDED' THEN excluded"
+            + " WHEN 'BOOKMARKED' THEN bookmarked ELSE true END"
+            + " AND (:relevance = 'ALL' OR coalesce(" + EFFECTIVE_RELEVANCE + ", 'NONE') = :relevance) ";
+
+    @Query(value = "SELECT * FROM research_article" + PAGE_WHERE
+            + " ORDER BY CASE WHEN :ai THEN CASE " + EFFECTIVE_RELEVANCE
+            + " WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 WHEN 'LOW' THEN 2 ELSE 3 END ELSE 0 END,"
+            + " CASE WHEN :ai THEN coalesce(ai_pick, 99) ELSE 0 END, rank",
+            countQuery = "SELECT count(*) FROM research_article" + PAGE_WHERE,
+            nativeQuery = true)
+    Page<ResearchArticle> findPage(@Param("researchId") Long researchId, @Param("filter") String filter,
+            @Param("relevance") String relevance, @Param("ai") boolean ai, Pageable pageable);
 
     // A beteg összes könyvjelzős cikke, a legutóbbi keresés elöl (a "kutatási eredmény")
     @Query("""

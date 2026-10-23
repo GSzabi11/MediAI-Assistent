@@ -48,12 +48,20 @@ public class ResearchController {
         return service.findById(id);
     }
 
-    // lapozható találati lista (oldalanként ResearchService.PAGE_SIZE), rang szerint
+    // lapozható találati lista (oldalanként ResearchService.PAGE_SIZE): az AI-rangsor vagy a forrás sorrendjében
     @GetMapping("/{id}/articles")
     public ArticlePageResponse articles(@PathVariable Long id,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "ACTIVE") ResearchService.ArticleFilter filter) {
-        return service.articles(id, filter, page);
+            @RequestParam(defaultValue = "ACTIVE") ResearchService.ArticleFilter filter,
+            @RequestParam(defaultValue = "ALL") ResearchService.RelevanceFilter relevance,
+            @RequestParam(defaultValue = "AI") ResearchService.ArticleOrder order) {
+        return service.articles(id, filter, relevance, order, page);
+    }
+
+    // az AI-rangsor újrakérése (202, a háttérben; pl. hiba vagy kizárások után)
+    @PostMapping("/{id}/ranking")
+    public ResponseEntity<ResearchResponse> rank(@PathVariable Long id) {
+        return ResponseEntity.accepted().body(service.requestRanking(id));
     }
 
     @PatchMapping("/{id}/articles/{articleId}")
@@ -92,6 +100,30 @@ public class ResearchController {
             throw e;
         } catch (RuntimeException e) {
             service.fail(id, "A keresés eredménye nem rögzíthető: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @PostMapping("/{id}/ranking/progress")
+    public ResponseEntity<Void> rankingProgress(@PathVariable Long id,
+            @RequestHeader(name = InternalTokenVerifier.HEADER, required = false) String token,
+            @RequestBody ResearchProgressRequest request) {
+        tokenVerifier.verify(token);
+        service.rankingProgress(id, request.message());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/ranking/result")
+    public ResearchResponse rankingResult(@PathVariable Long id,
+            @RequestHeader(name = InternalTokenVerifier.HEADER, required = false) String token,
+            @RequestBody ResearchRankingResultRequest result) {
+        tokenVerifier.verify(token);
+        try {
+            return service.completeRanking(id, result);
+        } catch (ResearchNotFoundException | ResearchConflictException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            service.failRanking(id, "Az AI-rangsor nem rögzíthető: " + e.getMessage());
             throw e;
         }
     }

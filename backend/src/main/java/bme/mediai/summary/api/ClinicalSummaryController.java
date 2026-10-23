@@ -34,6 +34,8 @@ public class ClinicalSummaryController {
     // a beteg összefoglalói, a legfrissebb elöl (előzmény is)
     @GetMapping
     public List<ClinicalSummaryResponse> findByPatient(@RequestParam Long patientId) {
+        // a docproc leállásakor elveszett feladat ne maradjon örökre "Készül…" (ld. failLostJobs)
+        service.failLostJobs(patientId);
         return service.findByPatient(patientId);
     }
 

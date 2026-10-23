@@ -24,6 +24,8 @@ import bme.mediai.document.exception.DuplicateDocumentException;
 import bme.mediai.document.exception.ExtractedTextAlreadySetException;
 import bme.mediai.document.exception.ExtractedTextMissingException;
 import bme.mediai.keyword.exception.KeywordConflictException;
+import bme.mediai.medicalhistory.exception.MedicalHistoryConflictException;
+import bme.mediai.medicalhistory.exception.MedicalHistoryNotFoundException;
 import bme.mediai.recordingsummary.exception.RecordingSummaryConflictException;
 import bme.mediai.recordingsummary.exception.RecordingSummaryNotFoundException;
 import bme.mediai.keyword.exception.KeywordNotFoundException;
@@ -179,6 +181,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SummaryConflictException.class)
     ProblemDetail handleSummaryConflict(SummaryConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(MedicalHistoryNotFoundException.class)
+    ProblemDetail handleMedicalHistoryNotFound(MedicalHistoryNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(MedicalHistoryConflictException.class)
+    ProblemDetail handleMedicalHistoryConflict(MedicalHistoryConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

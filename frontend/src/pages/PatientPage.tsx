@@ -9,6 +9,7 @@ import { DokumentumFul } from '../components/DokumentumFul';
 import { EllatasPanel } from '../components/EllatasPanel';
 import { GyogyszerAllergiaPanel } from '../components/GyogyszerAllergiaPanel';
 import { KlinikaiStatusz } from '../components/KlinikaiStatusz';
+import { KortortenetFul } from '../components/KortortenetFul';
 import { SzakirodalomFul } from '../components/SzakirodalomFul';
 import { Icon, type IconName } from '../components/Icon';
 import { LabTrend } from '../components/LabTrend';
@@ -18,7 +19,7 @@ import { formatDatum, formatIdo } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 import { megszolalasKulcs, PatientContext, usePatient, type PatientCtx } from '../patient/PatientContext';
 
-const NEZETEK = ['statusz', 'dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer', 'szakirodalom'] as const;
+const NEZETEK = ['statusz', 'kortortenet', 'dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer', 'szakirodalom'] as const;
 type Nezet = (typeof NEZETEK)[number];
 
 /** Becsukott/kinyitott panel állapot — kényelmi, böngészőnként tárolva. */
@@ -172,6 +173,7 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
 
   const fulek: { n: Nezet; icon: IconName; label: string }[] = [
     { n: 'statusz', icon: 'spark', label: 'Klinikai státusz' },
+    { n: 'kortortenet', icon: 'doc', label: 'Medical history' },
     // A Dokumentum nézet nincs a fülsorban: a bal oldali (összecsukható) forráslistából nyílik
     { n: 'labor', icon: 'trend', label: 'Labor-idősor' },
     { n: 'atirat', icon: 'mic', label: 'Átirat' },
@@ -206,6 +208,7 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
             ))}
           </div>
           {nezet === 'statusz' && <KlinikaiStatusz />}
+          {nezet === 'kortortenet' && <KortortenetFul />}
           {nezet === 'dokumentum' && (
             <DokumentumFul dokId={dokId} kiemeles={kiemeles} pdfNezet={pdfNezet} pdfKiemeles={pdfKiemeles} />
           )}

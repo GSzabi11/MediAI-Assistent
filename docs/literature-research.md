@@ -37,9 +37,41 @@ Orvos: [AI-összefoglaló] → POST /api/research-contexts → Python (RESEARCH_
 Orvos: átírja (PUT …/edited-text, az AI eredetije megmarad), kiegészítő kérés, források → [Kutatás indítása]
 Spring: POST /api/research → OutboundQueryGate → Python /research-searches (külön szál, NEM a GPU-sor)
 Python: progress callbackek („PubMed: 245 találat; cikkadatok letöltése…”) → /result a cikkekkel
-Spring: az 1. oldal (10 cikk) értékelése indul → Python GPU-sor, cikkenként egy feladat, callback cikkenként
-Frontend: lapozáskor a megnyitott oldal még nem értékelt cikkeit kéri (POST …/evaluations)
+Spring: AI-rangsor indul (V32) → Python GPU-sor, EGY feladat az összes (nem kivett) cikkre
+Python: előszűrés cikkenként + a legrelevánsabb kiválasztása → progress („AI-előszűrés: 12 / 50”) → /ranking/result
+Spring: sorrend számolása; a rangsor szerinti 1. oldal (10 cikk) értékelése indul → cikkenként egy feladat
+Frontend: lapozáskor a megnyitott oldal még nem értékelt cikkeit kéri (POST …/evaluations; rangsorolás közben nem)
 ```
+
+## AI-rangsor: a legrelevánsabb cikk kiemelése (V32)
+
+A felhasználó kérése (2026-10-23): az AI döntse el, melyik a legrelevánsabb kutatás, emelje ki és sorolja előre.
+A részletes értékelés oldalanként készül (~10 s/cikk), ezért a rangsor egy külön, olcsó lépés az összes találatra:
+
+1. **Előszűrés** cikkenként (`research.screen`): csak a kategória (HIGH/MEDIUM/LOW), ugyanazzal a skálával,
+   mint az értékelés, az absztrakt első 3000 karakteréből. Mérve (qwen3.5:9b, 2026-10-23): ~3,5 s/cikk.
+2. **Kiválasztás** (`research.pick`): a HIGH-ok közül a modell legfeljebb 3-at választ, a legjobbat elöl, cikkenként
+   indoklással (közvetlenség, betegcsoport, bizonyíték erőssége, frissesség). Egy kérésbe 8 jelölt fér (rövidített
+   absztrakttal); több jelöltnél csoportonként választ, majd a győztesek közül újra. Nincs HIGH → nincs kiemelés.
+3. **Sorrend** (a felhasználó szabálya, 2026-10-23): a **látható relevancia** szerint — a részletes értékelésé, ha kész,
+   különben az előszűrésé — HIGH, MEDIUM, LOW, végül a besorolatlanok; csoporton belül a kiemeltek (1–3), utána a forrás
+   sorrendje. Lekérdezéskor számolódik (`ResearchArticleRepository.findPage`, natív SQL), így ha egy cikk értékelése
+   más relevanciát ad, a következő frissítéskor azonnal a helyére kerül, oldalakon át is. `?order=SOURCE` a forrás
+   sorrendje (az API-ban megmaradt, a felületen nincs váltó — a felhasználó döntése, 2026-10-23); `?relevance=ALL|HIGH|MEDIUM|LOW|NONE` szűr a látható relevanciára. Az `ai_rank` csak a rangsor
+   pillanatképe (a modell eredeti sorrendje, visszakereséshez). Ha az értékelés egy kiemelt cikket nem talál erősen
+   relevánsnak, a felület nem emeli ki (a kártya relevanciájával ellentmondana).
+
+Mérve (2026-10-23, élő próba, 25 PubMed-cikk): a teljes rangsor ~2,5 perc (17 HIGH → két kiválasztási kör). A HFrEF +
+diabetes tesztbetegnél a DAPA-HF/EMPEROR-Reduced metaanalízist tette első helyre.
+
+- Rangsorolás közben a lista a forrás sorrendjében látszik, értékelés nem indul; elkészültekor egyszer rendeződik át.
+- **Ismert korlátok**: (1) az előszűrés kategóriája és a később készülő részletes értékelés relevanciája eltérhet
+  (két külön hívás) — ilyenkor az értékelésé dönt, a cikk átkerül a megfelelő csoportba; (2) az előszűrés laza (a tesztben
+  25-ből 17 HIGH), a kiválasztás teszi a különbséget; (3) a rangsor egy feladat a GPU-sorban: közben a chat is vár;
+  (4) a kivétel nem rendez át — „Újrarangsorolás” gomb (`POST /api/research/{id}/ranking`) a nem kivett cikkekre;
+  hiba esetén a korábbi rangsor (ha van) marad, az 1. oldal értékelése akkor is elindul.
+- Modell-adatok (modell, seed, prompt-hash) a `research.ranking_*` oszlopokban; a kiemelés indoklása
+  `ai_pick_reason`. DB CHECK: kiemelt cikk csak HIGH előszűrésű lehet, indoklással.
 
 ## Modellek
 

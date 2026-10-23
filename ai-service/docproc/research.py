@@ -3,7 +3,10 @@
 1. context(): a beteg állapotának rövid, problémaközpontú összefoglalója (RESEARCH_LLM_MODEL, egy
    hívás) + angol PubMed-keresőkifejezés javaslat (RESEARCH_LLM_MODEL, az összefoglalóból). Az orvos
    mindkettőt átírhatja, mielőtt bármi kimenne a hálózatra.
-2. evaluate(): cikkenként magyar összefoglaló + relevancia (HIGH/MEDIUM/LOW) + indoklás, a
+2. rank(): a keresés UTÁN, az összes találatra: gyors előszűrés (cikkenként csak a relevancia-kategória),
+   majd a HIGH-ok közül a legrelevánsabb (legfeljebb 3) kiválasztása, indoklással. Ebből a Spring
+   oldalakon átívelő sorrendet számol, és a megnyitott oldal ebben a sorrendben értékelődik.
+3. evaluate(): cikkenként magyar összefoglaló + relevancia (HIGH/MEDIUM/LOW) + indoklás, a
    (szerkesztett) betegállapothoz és az orvos kiegészítő kéréséhez mérve (RESEARCH_LLM_MODEL).
 
 A modell nem diagnosztizál és nem javasol terápiát: azt mondja meg, miről szól a cikk, és miért
@@ -50,6 +53,42 @@ Válaszolj JSON-ban:
   adatához kapcsolódik. Ne adj diagnózist vagy terápiás utasítást; a döntés az orvosé.
 Csak az absztraktban és a beteg-összefoglalóban álló tényekre támaszkodj."""
 
+# Az előszűrés ugyanazt a skálát használja, mint az értékelés, de csak a kategóriát kéri (rövid kimenet:
+# ~3 s/cikk a qwen3.5:9b-vel, mérve 2026-10-23), hogy az összes találat sorba rendezhető legyen.
+SYSTEM_SCREEN = """Magyar klinikus asszisztens vagy. Egy orvos szakirodalmi keresésének találatait
+sorolod be egy konkrét beteghez. Megkapod a beteg állapotának összefoglalóját, az orvos esetleges
+kérését, és egy cikk adatait (cím, típus, év, absztrakt angolul).
+Válaszolj JSON-ban, a "relevancia" mezőben:
+- HIGH: közvetlenül a beteg fő problémájáról / az orvos kérdéséről szól, a beteghez hasonló
+  betegcsoporton;
+- MEDIUM: rokon téma, részben alkalmazható (pl. más betegcsoport, más kezelés ugyanarra);
+- LOW: alig kapcsolódik.
+Csak az absztraktban és a beteg-összefoglalóban álló tényekre támaszkodj."""
+
+SCREEN_SCHEMA = {
+    "type": "object",
+    "properties": {"relevancia": {"type": "string", "enum": ["HIGH", "MEDIUM", "LOW"]}},
+    "required": ["relevancia"],
+}
+
+SYSTEM_PICK = """Magyar klinikus asszisztens vagy. Egy orvos szakirodalmi keresésének előszűrt, a beteg
+szempontjából relevánsnak ítélt cikkei közül kiválasztod a legrelevánsabbat (vagy legfeljebb hármat).
+Szempontok, sorrendben: mennyire közvetlenül a beteg fő problémájáról / az orvos kérdéséről szól; mennyire
+hasonlít a vizsgált betegcsoport a beteghez; a bizonyíték erőssége (metaanalízis, RCT, irányelv erősebb, mint
+esetismertetés); frissesség.
+Csak azt válaszd ki, ami valóban kiemelkedik; ha egy cikk egyértelműen a legjobb, csak azt.
+Válaszolj JSON-ban: "valasztas" lista, a legrelevánsabb elöl, elemenként "sorszam" (a cikk sorszáma a
+listában) és "indoklas" (1–2 mondat magyarul: miért ez a legrelevánsabb ennél a betegnél, a beteg mely
+adatához kapcsolódik). Ne adj diagnózist vagy terápiás utasítást; a döntés az orvosé."""
+
+# A választáshoz legfeljebb ennyi jelölt (a HIGH előszűrésűek, a forrás sorrendjében), rövidített
+# absztrakttal: így a kérés belefér a kontextusba (8 × ~1200 karakter + a beteg)
+PICK_MAX_CANDIDATES = 8
+PICK_ABSTRACT_CHARS = 1200
+PICK_MAX = 3
+PICK_REASON_MAX_CHARS = 400
+SCREEN_ABSTRACT_CHARS = 3000
+
 # Hosszkorlát a nyelvtanban: a 4B-s modell a "2–4 mondatot" figyelmen kívül hagyta, és az összefoglaló
 # mezőben a tokenkorlátig ismételt (mérve, 2026-10-20). A relevancia elöl: rövid, mindig elkészül.
 SUMMARY_MAX_CHARS = 900
@@ -78,6 +117,15 @@ _LONG_DIGITS = re.compile(r"\d{4,}")
 def context_prompt_hash() -> str:
     payload = json.dumps({"kind": "research-context", "summary": SYSTEM_CONTEXT, "query": SYSTEM_QUERY,
                           "options": _OPTIONS, "extractor": config.EXTRACTOR_VERSION},
+                         ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def rank_prompt_hash() -> str:
+    payload = json.dumps({"kind": "research-rank", "screen": SYSTEM_SCREEN, "screenSchema": SCREEN_SCHEMA,
+                          "pick": SYSTEM_PICK, "pickMax": PICK_MAX, "candidates": PICK_MAX_CANDIDATES,
+                          "pickAbstract": PICK_ABSTRACT_CHARS, "screenAbstract": SCREEN_ABSTRACT_CHARS,
+                          "options": _EVAL_OPTIONS, "num_ctx": EVAL_NUM_CTX, "extractor": config.EXTRACTOR_VERSION},
                          ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -146,24 +194,35 @@ def context(facts: dict) -> dict:
     }
 
 
-def render_article(article: dict) -> str:
+def render_article(article: dict, abstract_chars: int | None = None) -> str:
     lines = [f"Cím: {article.get('title')}"]
     if article.get("publicationTypes"):
         lines.append("Típus: " + ", ".join(article["publicationTypes"]))
     if article.get("journal") or article.get("pubYear"):
         lines.append(f"Megjelent: {article.get('journal') or ''} {article.get('pubYear') or ''}".strip())
-    lines.append("Absztrakt:\n" + (article.get("abstract") or ""))
+    abstract = article.get("abstract") or ""
+    if abstract_chars is not None and len(abstract) > abstract_chars:
+        abstract = abstract[:abstract_chars].rsplit(" ", 1)[0] + " […]"
+    lines.append("Absztrakt:\n" + abstract)
     return "\n".join(lines)
 
 
-def _chat_json(system: str, user: str) -> dict:
+def _patient_block(context_text: str, extra_prompt: str | None) -> str:
+    user = "A beteg állapota (az orvos által jóváhagyott összefoglaló):\n" + context_text.strip()
+    if extra_prompt and extra_prompt.strip():
+        user += "\n\nAz orvos kérése / szempontja a kereséshez:\n" + extra_prompt.strip()
+    return user
+
+
+# A num_ctx minden kutatás-hívásnál azonos (EVAL_NUM_CTX): eltérő értéknél az Ollama újratölti a modellt
+def _chat_json(system: str, user: str, schema: dict = EVAL_SCHEMA, max_tokens: int = EVAL_MAX_TOKENS) -> dict:
     resp = requests.post(
         f"{config.OLLAMA_URL}/api/chat",
         json={"model": config.RESEARCH_LLM_MODEL,
               "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-              "format": EVAL_SCHEMA, "stream": False, "think": False,
+              "format": schema, "stream": False, "think": False,
               "options": {**_EVAL_OPTIONS, "seed": config.LLM_SEED, "num_ctx": EVAL_NUM_CTX,
-                          "num_predict": EVAL_MAX_TOKENS}},
+                          "num_predict": max_tokens}},
         timeout=config.LLM_TIMEOUT_SEC,
     )
     resp.raise_for_status()
@@ -195,10 +254,7 @@ def evaluate(article: dict, context_text: str, extra_prompt: str | None) -> dict
     """Egy cikk értékelése; a Spring callback-jének törzse (DONE)."""
     if not (article.get("abstract") or "").strip():
         raise ValueError("A cikknek nincs elérhető absztraktja — csak a címből nem értékelhető")
-    user = "A beteg állapota (az orvos által jóváhagyott összefoglaló):\n" + context_text.strip()
-    if extra_prompt and extra_prompt.strip():
-        user += "\n\nAz orvos kérése / szempontja a kereséshez:\n" + extra_prompt.strip()
-    user += "\n\nA cikk:\n" + render_article(article)
+    user = _patient_block(context_text, extra_prompt) + "\n\nA cikk:\n" + render_article(article)
     data = _chat_json(SYSTEM_EVAL, user)
     summary = _whole_sentences(" ".join(str(data.get("osszefoglalo") or "").split()), SUMMARY_MAX_CHARS)
     reason = _whole_sentences(" ".join(str(data.get("indoklas") or "").split()), REASON_MAX_CHARS)
@@ -217,4 +273,95 @@ def evaluate(article: dict, context_text: str, extra_prompt: str | None) -> dict
         "warnings": [w[:500] for w in warnings],
         "model": {"modelName": config.RESEARCH_LLM_MODEL, "seed": config.LLM_SEED,
                   "promptHash": eval_prompt_hash()},
+    }
+
+
+def screen(article: dict, context_text: str, extra_prompt: str | None) -> str:
+    """Egy cikk előszűrése: csak a relevancia-kategória (HIGH / MEDIUM / LOW)."""
+    user = (_patient_block(context_text, extra_prompt) + "\n\nA cikk:\n"
+            + render_article(article, SCREEN_ABSTRACT_CHARS))
+    relevance = _chat_json(SYSTEM_SCREEN, user, SCREEN_SCHEMA, 40).get("relevancia")
+    if relevance not in ("HIGH", "MEDIUM", "LOW"):
+        raise ValueError("A modell nem adott érvényes relevancia-kategóriát")
+    return relevance
+
+
+def pick(candidates: list[dict], context_text: str, extra_prompt: str | None) -> tuple[list[dict], list[str]]:
+    """A jelöltek (HIGH előszűrésűek) közül a legrelevánsabb(ak): [{"id", "reason"}], a legjobb elöl."""
+    n = len(candidates)
+    schema = {
+        "type": "object",
+        "properties": {"valasztas": {"type": "array", "minItems": 1, "maxItems": min(PICK_MAX, n), "items": {
+            "type": "object",
+            "properties": {"sorszam": {"type": "integer", "enum": list(range(1, n + 1))},
+                           "indoklas": {"type": "string", "maxLength": PICK_REASON_MAX_CHARS}},
+            "required": ["sorszam", "indoklas"]}}},
+        "required": ["valasztas"],
+    }
+    listing = "\n\n".join(f"[{i}] " + render_article(a, PICK_ABSTRACT_CHARS) for i, a in enumerate(candidates, 1))
+    user = _patient_block(context_text, extra_prompt) + f"\n\nA cikkek ({n} db):\n\n" + listing
+    data = _chat_json(SYSTEM_PICK, user, schema, 200 * PICK_MAX + 100)
+    picks, seen, warnings = [], set(), []
+    for item in data.get("valasztas") or []:
+        index = item.get("sorszam") if isinstance(item, dict) else None
+        # a nyelvtan a tartományon kívülit kizárja; az ismétlődő sorszám ellen kell
+        if not isinstance(index, int) or not 1 <= index <= n or index in seen:
+            continue
+        seen.add(index)
+        reason = _whole_sentences(" ".join(str(item.get("indoklas") or "").split()), PICK_REASON_MAX_CHARS)
+        if not reason:
+            continue
+        article = candidates[index - 1]
+        warnings += [f"Ellenőrizetlen szám a(z) „{article.get('title', '')[:60]}” indoklásában: {num}"
+                     for num in unverified_numbers(reason, render_article(article) + "\n" + context_text)]
+        picks.append({"articleId": article["id"], "reason": reason[:1000]})
+    if not picks:
+        raise ValueError("A modell nem választott érvényes cikket")
+    return picks[:PICK_MAX], warnings
+
+
+def _tournament(candidates: list[dict], context_text: str, extra_prompt: str | None) -> tuple[list[dict], list[str]]:
+    """Ha több a jelölt, mint ami egy kérésbe fér: csoportonként (PICK_MAX_CANDIDATES) választ, a csoportok
+    győztesei közül újra, amíg egy kérésbe nem fér (mérve: 20 találatból 12 kapott HIGH-ot, 2026-10-23).
+    A végső indoklás az utolsó körből van; csak a végső kör ellenőrzéseit adjuk vissza."""
+    while len(candidates) > PICK_MAX_CANDIDATES:
+        winners = []
+        for start in range(0, len(candidates), PICK_MAX_CANDIDATES):
+            group = candidates[start:start + PICK_MAX_CANDIDATES]
+            chosen, _ = pick(group, context_text, extra_prompt)
+            by_id = {a["id"]: a for a in group}
+            winners += [by_id[c["articleId"]] for c in chosen]
+        candidates = winners
+    return pick(candidates, context_text, extra_prompt)
+
+
+def rank(articles: list[dict], context_text: str, extra_prompt: str | None, progress) -> dict:
+    """Az összes találat előszűrése, majd a legrelevánsabb(ak) kiválasztása; a Spring callback-jének törzse.
+    Absztrakt nélküli cikk nincs besorolva (a Spring a sor végére teszi). Egy cikk hibája nem buktatja el
+    az egészet: kimarad, figyelmeztetéssel. Nincs HIGH → nincs kiemelés (a MEDIUM-ot nem emeljük ki)."""
+    screened, warnings = [], []
+    with_abstract = [a for a in articles if (a.get("abstract") or "").strip()]
+    for i, article in enumerate(with_abstract, 1):
+        progress(f"AI-előszűrés: {i} / {len(with_abstract)} cikk")
+        try:
+            screened.append({"articleId": article["id"],
+                             "relevance": screen(article, context_text, extra_prompt)})
+        except (ValueError, requests.RequestException) as e:
+            warnings.append(f"A(z) „{article.get('title', '')[:60]}” előszűrése sikertelen: {e}")
+    if with_abstract and not screened:
+        raise ValueError("Egyetlen cikk előszűrése sem sikerült")
+    high = {s["articleId"] for s in screened if s["relevance"] == "HIGH"}
+    candidates = [a for a in with_abstract if a["id"] in high]
+    picks = []
+    if candidates:
+        progress(f"A legrelevánsabb cikk kiválasztása ({len(candidates)} jelölt)…")
+        picks, pick_warnings = _tournament(candidates, context_text, extra_prompt)
+        warnings += pick_warnings
+    return {
+        "status": "DONE",
+        "screened": screened,
+        "picks": picks,
+        "warnings": [w[:500] for w in warnings][:50],
+        "model": {"modelName": config.RESEARCH_LLM_MODEL, "seed": config.LLM_SEED,
+                  "promptHash": rank_prompt_hash()},
     }

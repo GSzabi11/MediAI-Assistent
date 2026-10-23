@@ -2,17 +2,23 @@ package bme.mediai.processing.service;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import bme.mediai.chat.api.ChatJobRequest;
+import bme.mediai.medicalhistory.api.MedicalHistoryJobRequest;
 import bme.mediai.processing.api.ProcessingJobRequest;
 import bme.mediai.research.api.ResearchContextJobRequest;
 import bme.mediai.research.api.ResearchEvaluationJobRequest;
+import bme.mediai.research.api.ResearchRankingJobRequest;
 import bme.mediai.research.api.ResearchSearchJobRequest;
 import bme.mediai.summary.api.SummaryFacts;
 import bme.mediai.summary.api.SummaryJobRequest;
@@ -66,6 +72,28 @@ public class AiServiceClient {
                 callbackUrl("/api/research-contexts/" + contextId + "/result"), facts));
     }
 
+    // Kórtörténet (docs/medical-history.md): dokumentum-kivonatok + összefoglaló + idővonal, a GPU-sorba
+    public void submitMedicalHistory(MedicalHistoryJobRequest job) {
+        post("/medical-histories", job);
+    }
+
+    public record Health(List<String> pending) {
+    }
+
+    // A Python sorában álló / futó feladatok kulcsa ("medical-history:5"). A sor csak memóriában él:
+    // leálláskor / újraindításkor a feladat elveszik, a callback sosem jön — ebből ismeri fel a Spring a
+    // beragadt feladatot. Nem érhető el → üres halmaz (nála semmi nem fut); régi verzió (nincs "pending"
+    // mezője) → Optional.empty(): nem tudjuk, ne nyúljunk a feladathoz.
+    public Optional<Set<String>> pendingJobs() {
+        try {
+            Health health = restClient.get().uri("/health").retrieve().body(Health.class);
+            return health == null || health.pending() == null ? Optional.empty()
+                    : Optional.of(Set.copyOf(health.pending()));
+        } catch (RestClientException e) {
+            return Optional.of(Set.of());
+        }
+    }
+
     // A keresés: a Python hívja a PubMedet (csak a keresőkifejezéssel), külön szálon, nem a GPU-sorban
     public void submitResearchSearch(ResearchSearchJobRequest job) {
         post("/research-searches", job);
@@ -74,6 +102,11 @@ public class AiServiceClient {
     // Cikkenkénti értékelés (összefoglaló + relevancia) a helyi modellel, a GPU-sorba
     public void submitResearchEvaluation(ResearchEvaluationJobRequest job) {
         post("/research-evaluations", job);
+    }
+
+    // Az összes találat AI-rangsora (előszűrés + a legrelevánsabb), egy feladat a GPU-sorban
+    public void submitResearchRanking(ResearchRankingJobRequest job) {
+        post("/research-rankings", job);
     }
 
     private void post(String uri, Object body) {

@@ -66,6 +66,16 @@ public class ResearchDispatcher {
         }
     }
 
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onRankingRequested(ResearchEvents.RankingRequested event) {
+        String error = send(() -> client.submitResearchRanking(event.job()),
+                "AI-rangsor (kutatás " + event.job().researchId() + ")");
+        if (error != null) {
+            researchService.failRanking(event.job().researchId(), error);
+        }
+    }
+
     // null = átadva; különben a hiba szövege
     private String send(Runnable call, String label) {
         for (int attempt = 0; attempt <= RETRY_DELAYS.size(); attempt++) {

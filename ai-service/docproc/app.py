@@ -2,10 +2,12 @@
 
     POST /jobs       Spring → Python: dokumentum-feldolgozás (sorba áll, 202)
     POST /summaries  Spring → Python: klinikai összefoglaló (ugyanabba a sorba, 202)
+    POST /medical-histories  Spring → Python: kórtörténet (kivonatok, idővonal, összefoglaló; sorba, 202)
     POST /chats      Spring → Python: klinikai asszisztens kérdése (a sor elejére, 202)
     POST /research-contexts     Spring → Python: betegállapot-összefoglaló a kutatáshoz (sorba, 202)
     POST /research-searches     Spring → Python: szakirodalom-keresés (PubMed/iCite, külön szálon, 202)
     POST /research-evaluations  Spring → Python: cikkek értékelése (cikkenként a sorba, 202)
+    POST /research-rankings     Spring → Python: az összes találat AI-rangsora (egy feladat a sorban, 202)
     GET  /health   sor állapota
 
 Indítás: python app.py   (ld. README.md)
@@ -20,8 +22,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import config
-from worker import (ArticleEvalJob, ChatJob, Job, JobQueue, ResearchContextJob, SearchJob, SearchRunner,
-                    SummaryJob)
+from worker import (ArticleEvalJob, ChatJob, Job, JobQueue, MedicalHistoryJob, RankingJob, ResearchContextJob,
+                    SearchJob, SearchRunner, SummaryJob)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -70,6 +72,22 @@ def submit_summary(req: SummaryRequest, x_internal_token: str | None = Header(de
     if position is None:
         return JSONResponse(status_code=202, content={"summaryId": req.summaryId, "alreadyQueued": True})
     return {"summaryId": req.summaryId, "queuePosition": position}
+
+
+class MedicalHistoryRequest(BaseModel):
+    historyId: int = Field(gt=0)
+    callbackUrl: str = Field(pattern=r"^https?://")
+    progressUrl: str | None = Field(default=None, pattern=r"^https?://")
+    facts: dict
+
+
+@app.post("/medical-histories", status_code=202)
+def submit_medical_history(req: MedicalHistoryRequest, x_internal_token: str | None = Header(default=None)):
+    _check_token(x_internal_token)
+    position = jobs.submit(MedicalHistoryJob(req.historyId, req.callbackUrl, req.facts, req.progressUrl))
+    if position is None:
+        return JSONResponse(status_code=202, content={"historyId": req.historyId, "alreadyQueued": True})
+    return {"historyId": req.historyId, "queuePosition": position}
 
 
 class ChatTurn(BaseModel):
@@ -156,6 +174,35 @@ def submit_evaluations(req: EvaluationRequest, x_internal_token: str | None = He
         if jobs.submit(ArticleEvalJob(a.id, a.callbackUrl, article, req.contextText, req.extraPrompt)) is not None:
             queued += 1
     return {"researchId": req.researchId, "queued": queued}
+
+
+class RankArticle(BaseModel):
+    id: int = Field(gt=0)
+    title: str
+    abstractText: str | None = None
+    journal: str | None = None
+    pubYear: int | None = None
+    publicationTypes: list[str] = Field(default_factory=list)
+
+
+class RankingRequest(BaseModel):
+    researchId: int = Field(gt=0)
+    callbackUrl: str = Field(pattern=r"^https?://")
+    progressUrl: str = Field(pattern=r"^https?://")
+    contextText: str = Field(min_length=1, max_length=8000)
+    extraPrompt: str | None = Field(default=None, max_length=2000)
+    articles: list[RankArticle] = Field(min_length=1, max_length=200)
+
+
+@app.post("/research-rankings", status_code=202)
+def submit_ranking(req: RankingRequest, x_internal_token: str | None = Header(default=None)):
+    _check_token(x_internal_token)
+    articles = [a.model_dump(exclude={"abstractText"}) | {"abstract": a.abstractText} for a in req.articles]
+    position = jobs.submit(RankingJob(req.researchId, req.callbackUrl, req.progressUrl, articles,
+                                      req.contextText, req.extraPrompt))
+    if position is None:
+        return JSONResponse(status_code=202, content={"researchId": req.researchId, "alreadyQueued": True})
+    return {"researchId": req.researchId, "queuePosition": position}
 
 
 @app.get("/health")

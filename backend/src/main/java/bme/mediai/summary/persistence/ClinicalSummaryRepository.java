@@ -7,12 +7,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface ClinicalSummaryRepository extends JpaRepository<ClinicalSummary, Long> {
 
     List<ClinicalSummary> findByPatientIdOrderByRequestedAtDescIdDesc(Long patientId);
 
     boolean existsByPatientIdAndStatus(Long patientId, SummaryStatus status);
+
+    List<ClinicalSummary> findByPatientIdAndStatusAndRequestedAtBefore(Long patientId, SummaryStatus status,
+            OffsetDateTime before);
 
     // Atomikus, csak PROCESSING-ből (duplikált callback 0 sort módosít → 409), DB-idővel
     @Modifying(clearAutomatically = true, flushAutomatically = true)
@@ -30,6 +34,8 @@ public interface ClinicalSummaryRepository extends JpaRepository<ClinicalSummary
             @Param("modelName") String modelName, @Param("seed") Long seed,
             @Param("promptHash") String promptHash, @Param("extractorVersion") String extractorVersion);
 
+    // @Transactional: a beragadt feladat lezárása (failLostJobs) tranzakción kívülről hívja
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             UPDATE clinical_summary SET status = 'FAILED', completed_at = now(), error = :error

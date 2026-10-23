@@ -395,6 +395,44 @@ export interface ClinicalSummaryDto {
   stale: boolean;
 }
 
+/** GET /medical-histories?patientId= — kórtörténet (külön tábla, nem állítás; docs/medical-history.md) */
+export interface MedicalHistoryDto {
+  id: number;
+  patientId: number;
+  status: 'PROCESSING' | 'DONE' | 'FAILED';
+  requestedBy: number | null;
+  requestedAt: string;
+  completedAt: string | null;
+  error: string | null;
+  summary: string | null;
+  timeline: {
+    /** év ("2010") vagy ÉÉÉÉ-HH-NN */
+    date: string;
+    title: string;
+    text: string | null;
+    place: string | null;
+    documentId: number;
+    kind: 'LAB' | 'DOCUMENT' | 'HISTORY';
+    /** ha nem null: ellenőrizendő (pl. nem támasztható alá idézettel, szokatlan javaslat) */
+    flag: string | null;
+  }[];
+  diagnoses: { name: string; bnoCode: string | null; date: string | null; documentId: number }[];
+  medications: { id: number; name: string; dose: string | null; route: string | null; verified: boolean }[];
+  recommendations: string[];
+  warnings: string[];
+  model: { modelName: string; seed: number; promptHash: string; extractorVersion: string } | null;
+  inputCounts: Record<string, number>;
+  /** az AI eredetije (HTML) */
+  aiHtml: string;
+  /** a megjelenített szöveg: az orvos szerkesztése, ha van, különben aiHtml */
+  html: string;
+  editedBy: number | null;
+  editedAt: string | null;
+  stale: boolean;
+  /** PROCESSING alatt: az aktuális lépés (pl. "Dokumentum-kivonat 5/16") */
+  progress: { message: string; step: number | null; total: number | null; at: string } | null;
+}
+
 /** GET/POST /chat-messages — klinikai asszisztens (nem állítás, nem tárolódik) */
 export interface ChatMessageDto {
   id: number;
@@ -499,6 +537,17 @@ export interface ResearchDto {
   maxResults: number;
   totalFound: number | null;
   articles: { total: number; excluded: number; bookmarked: number; evaluated: number; pending: number };
+  /** AI-rangsor (V32): előszűrés az összes találatra + a legrelevánsabb kiválasztása */
+  ranking: {
+    status: 'NONE' | 'PENDING' | 'DONE' | 'FAILED';
+    progress: string | null;
+    error: string | null;
+    warnings: string[];
+    modelName: string | null;
+    seed: number | null;
+    promptHash: string | null;
+    rankedAt: string | null;
+  };
 }
 
 export interface ResearchArticleDto {
@@ -531,6 +580,13 @@ export interface ResearchArticleDto {
   };
   excluded: boolean;
   bookmarked: boolean;
+  /** pick: 1 = a modell szerint a legrelevánsabb; position: a számolt hely a rangsorban */
+  ranking: {
+    screenRelevance: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+    pick: number | null;
+    pickReason: string | null;
+    position: number | null;
+  };
 }
 
 export interface ArticlePageDto {

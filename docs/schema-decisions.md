@@ -33,9 +33,18 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 - V28 `recording_keyword`, `recording_summary` — **külön táblák, nem `statement`** (ugyanaz a
   kivétel, mint a `clinical_summary`-nél; a felhasználó jóváhagyására vár).
 
+**V31: Medical history (kórtörténet)** — `medical_history`, `document_digest`; ugyanaz a kivétel, **külön
+táblák, nem `statement`** (a felhasználó döntése, 2026-10-23). A `document_digest` dokumentumonként egy kivonat
+(összetett FK a `document(id, patient_id)`-re), ebből épül az idővonal; minden idővonal-elem és diagnózis a
+forrás-dokumentumára mutat, a BNO-kód csak a leletből jöhet. Az orvos szerkesztése (`edited_html`, a Spring szűri)
+az AI eredetije mellé kerül — részletek: `docs/medical-history.md`.
+
 **V30: szakirodalmi kutatás** — `research_context`, `research`, `research_article`; ugyanaz a kivétel,
 **külön táblák, nem `statement`**. A `research` a keresés pillanatképe (kontextus, kérés, kifejezés).
 Az egyetlen funkció, amely a hálózatra hív (csak a keresőkifejezéssel) — részletek: `docs/literature-research.md`.
+**V32: AI-rangsor** — `research.ranking_*` (állapot, modell, seed, prompt-hash), `research_article.screen_relevance`,
+`ai_pick` (1–3, csak HIGH, indoklással), `ai_rank` (a Spring számolja, determinisztikus szabállyal; DEFERRABLE egyedi
+index, mert újrarangsoroláskor soronként íródik).
 
 V24: `chat_message` — a Klinikai asszisztens (RAG-chat) kérdései és válaszai; ugyanaz a kivétel,
 **külön tábla, nem `statement`** (a felhasználó döntése). A válasz forrásai csak a modellnek átadott

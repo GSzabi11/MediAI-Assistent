@@ -24,6 +24,7 @@ import type {
   UtteranceDto,
   VoiceProfileDto,
   ClinicalSummaryDto,
+  MedicalHistoryDto,
   ChatMessageDto,
   KeywordDto,
   RecordingSummaryDto,
@@ -57,6 +58,7 @@ import {
   toRagDarab,
   toSourceDto,
   toOsszefoglalo,
+  toKortortenet,
   toChatValasz,
   toFelvetelOsszefoglalo,
   toKulcsszo,
@@ -85,6 +87,8 @@ import {
   type UjIdezet,
   type UjLaborPanel,
   type KutatasForras,
+  type CikkSorrend,
+  type CikkRelevanciaSzuro,
 } from './types';
 
 /** A belépett felhasználó — minden írási művelet az ő nevében történik. */
@@ -469,6 +473,25 @@ export const api = {
   keszitOsszefoglalot: async (patientId: number) =>
     toOsszefoglalo(await http.post<ClinicalSummaryDto>('/clinical-summaries', { patientId, userId: requireUser().id })),
 
+  // ======================= kórtörténet (Medical history) =======================
+
+  /** GET /medical-histories?patientId= — a legfrissebb elöl */
+  listKortortenetek: async (patientId: number) =>
+    (await http.get<MedicalHistoryDto[]>(`/medical-histories?patientId=${patientId}`)).map(toKortortenet),
+
+  /** POST /medical-histories — 202, a háttérben készül (kivonatok, idővonal, összefoglaló) */
+  keszitKortortenetet: async (patientId: number) =>
+    toKortortenet(await http.post<MedicalHistoryDto>('/medical-histories', { patientId, userId: requireUser().id })),
+
+  /** PUT /medical-histories/{id}/edited-html — az orvos szerkesztése; az AI eredetije megmarad */
+  szerkesztKortortenetet: async (id: number, html: string) =>
+    toKortortenet(
+      await http.put<MedicalHistoryDto>(`/medical-histories/${id}/edited-html`, { userId: requireUser().id, html }),
+    ),
+
+  /** GET /medical-histories/{id}/file — DOCX (a naplóban EXPORT) */
+  letoltKortortenetDocx: (id: number) => http.getBlob(`/medical-histories/${id}/file`),
+
   /** POST /lab-results — egy panel egy tranzakcióban: hibás sornál egyik sem kerül be */
   createLaborPanel: async (p: UjLaborPanel) =>
     (
@@ -608,9 +631,22 @@ export const api = {
       }),
     ),
 
-  /** GET /research/{id}/articles?page=&filter= — lapozható, rang szerint */
-  getCikkOldal: async (kutatasId: number, oldal: number, szuro: 'ACTIVE' | 'BOOKMARKED' | 'EXCLUDED') =>
-    toCikkOldal(await http.get<ArticlePageDto>(`/research/${kutatasId}/articles?page=${oldal}&filter=${szuro}`)),
+  /** GET /research/{id}/articles?page=&filter=&order= — lapozható; AI-rangsor vagy a forrás sorrendje */
+  getCikkOldal: async (
+    kutatasId: number,
+    oldal: number,
+    szuro: 'ACTIVE' | 'BOOKMARKED' | 'EXCLUDED',
+    sorrend: CikkSorrend = 'AI',
+    relevancia: CikkRelevanciaSzuro = 'ALL',
+  ) =>
+    toCikkOldal(
+      await http.get<ArticlePageDto>(
+        `/research/${kutatasId}/articles?page=${oldal}&filter=${szuro}&order=${sorrend}&relevance=${relevancia}`,
+      ),
+    ),
+
+  /** POST /research/{id}/ranking — az AI-rangsor újrakérése (pl. hiba vagy kivételek után) */
+  ujraRangsorol: async (kutatasId: number) => toKutatas(await http.post<ResearchDto>(`/research/${kutatasId}/ranking`)),
 
   /** POST /research/{id}/evaluations — a megnyitott oldal még nem értékelt cikkei */
   ertekelCikkeket: async (kutatasId: number, cikkIds: number[]) =>

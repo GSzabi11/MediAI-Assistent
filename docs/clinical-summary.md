@@ -35,6 +35,10 @@ GET /api/clinical-summaries?patientId=   — a legfrissebb elöl; stale = azóta
 
 Betegenként egyszerre egy készülő összefoglaló (részleges egyedi index, 409). A Python nem
 érhető el → FAILED; érvénytelen eredmény → FAILED az okkal.
+**Beragadt feladat** (2026-10-23): ha a docproc a feldolgozás közben leáll, a sora (csak memóriában)
+elveszik. A lista lekérésekor a Spring a 60 mp-nél régebbi `PROCESSING` sornál megkérdezi a docproc
+`/health`-jének `pending` listáját; ha a `summary:{id}` nincs benne (vagy a docproc nem érhető el), FAILED
+— ld. `docs/medical-history.md`.
 
 ## Hangfelvételek (2026-10-14, a felhasználó döntése)
 

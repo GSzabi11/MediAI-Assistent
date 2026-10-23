@@ -66,6 +66,25 @@ public class Research {
 
     private Integer totalFound;
 
+    // AI-rangsor (V32): a modell adatai a rangsor egészére vonatkoznak (előszűrés + kiválasztás)
+    @Enumerated(EnumType.STRING)
+    private RankingStatus rankingStatus = RankingStatus.NONE;
+
+    private String rankingProgress;
+
+    private String rankingError;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<String> rankingWarnings;
+
+    private String rankingModel;
+
+    private Long rankingSeed;
+
+    private String rankingPromptHash;
+
+    private OffsetDateTime rankedAt;
+
     protected Research() {
     }
 
@@ -107,6 +126,82 @@ public class Research {
         this.status = ResearchStatus.FAILED;
         this.progress = null;
         this.completedAt = OffsetDateTime.now();
+    }
+
+    // false, ha már fut (és nem ragadt be): ilyenkor nem kérjük újra
+    public boolean startRanking(OffsetDateTime staleBefore) {
+        if (rankingStatus == RankingStatus.PENDING && rankedAt != null && !rankedAt.isBefore(staleBefore)) {
+            return false;
+        }
+        this.rankingStatus = RankingStatus.PENDING;
+        this.rankingProgress = "Sorban áll…";
+        this.rankingError = null;
+        this.rankingWarnings = null;
+        this.rankedAt = OffsetDateTime.now();
+        return true;
+    }
+
+    public void rankingProgress(String message) {
+        if (rankingStatus == RankingStatus.PENDING) {
+            this.rankingProgress = message;
+        }
+    }
+
+    public void completeRanking(List<String> warnings, String model, Long seed, String promptHash) {
+        if (rankingStatus != RankingStatus.PENDING) {
+            throw new IllegalStateException("A(z) " + id + " kutatás rangsora nem vár eredményre");
+        }
+        this.rankingStatus = RankingStatus.DONE;
+        this.rankingProgress = null;
+        this.rankingWarnings = List.copyOf(warnings);
+        this.rankingModel = model;
+        this.rankingSeed = seed;
+        this.rankingPromptHash = promptHash;
+        this.rankedAt = OffsetDateTime.now();
+    }
+
+    // false, ha nem várt eredményre (pl. már lezárult)
+    public boolean failRanking(String error) {
+        if (rankingStatus != RankingStatus.PENDING) {
+            return false;
+        }
+        this.rankingStatus = RankingStatus.FAILED;
+        this.rankingProgress = null;
+        this.rankingError = error;
+        this.rankedAt = OffsetDateTime.now();
+        return true;
+    }
+
+    public RankingStatus getRankingStatus() {
+        return rankingStatus;
+    }
+
+    public String getRankingProgress() {
+        return rankingProgress;
+    }
+
+    public String getRankingError() {
+        return rankingError;
+    }
+
+    public List<String> getRankingWarnings() {
+        return rankingWarnings;
+    }
+
+    public String getRankingModel() {
+        return rankingModel;
+    }
+
+    public Long getRankingSeed() {
+        return rankingSeed;
+    }
+
+    public String getRankingPromptHash() {
+        return rankingPromptHash;
+    }
+
+    public OffsetDateTime getRankedAt() {
+        return rankedAt;
     }
 
     public Long getId() {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
-import type { Cikk, CikkOldal, Kutatas, KutatasForras, KutatasiOsszefoglalo } from '../api/types';
+import type { Cikk, CikkOldal, CikkRelevanciaSzuro, Kutatas, KutatasForras, KutatasiOsszefoglalo } from '../api/types';
 import { formatDatumIdo } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
@@ -326,9 +326,11 @@ type Szuro = 'ACTIVE' | 'BOOKMARKED' | 'EXCLUDED';
 function KutatasNezet({ id }: { id: number }) {
   const kutatas = useAsync(() => api.getKutatas(id), [id]);
   const { refresh } = kutatas;
-  const keres = kutatas.state.status === 'ok' && kutatas.state.data.allapot === 'keres';
+  const keres =
+    kutatas.state.status === 'ok' &&
+    (kutatas.state.data.allapot === 'keres' || kutatas.state.data.rangsor.allapot === 'keszul');
 
-  // keresés közben 2 mp-enként: az állapotüzenet (PubMed, letöltés, hivatkozások) a Pythonból jön
+  // keresés és rangsorolás közben 2 mp-enként: az állapotüzenet (PubMed, letöltés, előszűrés) a Pythonból jön
   useEffect(() => {
     if (!keres) return;
     const t = setInterval(() => refresh().catch(() => {}), 2000);
@@ -352,7 +354,10 @@ function KutatasNezet({ id }: { id: number }) {
           A keresés nem sikerült: {kk.hiba}
         </p>
       )}
-      {kk.allapot === 'kesz' && <Talalatok k={kk} onValtozas={() => void refresh().catch(() => {})} />}
+      {kk.allapot === 'kesz' && (
+        // a rangsor elkészültekor újra betölt (az 1. oldalra): a sorrend ekkor változik, közben nem
+        <Talalatok key={kk.rangsor.allapot} k={kk} onValtozas={() => void refresh().catch(() => {})} />
+      )}
     </div>
   );
 }
@@ -384,25 +389,35 @@ function KutatasFej({ k }: { k: Kutatas }) {
 
 function Talalatok({ k, onValtozas }: { k: Kutatas; onValtozas: () => void }) {
   const [szuro, setSzuro] = useState<Szuro>('ACTIVE');
+  const [relevancia, setRelevancia] = useState<CikkRelevanciaSzuro>('ALL');
   const [oldal, setOldal] = useState(0);
-  const lista = useAsync(() => api.getCikkOldal(k.id, oldal, szuro), [k.id, oldal, szuro]);
+  // mindig a látható relevancia szerint (a felhasználó döntése: a forrás-sorrend váltó nem kell): ha egy cikk
+  // értékelése magasabb (vagy alacsonyabb) relevanciát ad, a következő frissítéskor a helyére kerül
+  const lista = useAsync(
+    () => api.getCikkOldal(k.id, oldal, szuro, 'AI', relevancia),
+    [k.id, oldal, szuro, relevancia],
+  );
   const { refresh } = lista;
   const ertekeles = useAkcio();
   const { run } = ertekeles;
+  const ujraRangsor = useAkcio();
   const adat: CikkOldal | undefined = lista.state.status === 'ok' ? lista.state.data : undefined;
   const varakozik = !!adat?.cikkek.some((c) => c.ertekeles.allapot === 'keszul');
   const kert = useRef(new Set<number>());
+  const r = k.rangsor;
+  const rangsorol = r.allapot === 'keszul';
 
-  // a megnyitott oldal még nem értékelt cikkei mennek a modellhez (nem mind előre)
+  // a megnyitott oldal még nem értékelt cikkei mennek a modellhez (nem mind előre). Rangsorolás közben
+  // nem: utána a szerver a rangsor szerinti első oldalt értékeli, a mostani oldal addig átrendeződik.
   useEffect(() => {
-    if (!adat) return;
+    if (!adat || rangsorol) return;
     const ids = adat.cikkek
       .filter((c) => !c.kivett && c.ertekeles.allapot === 'nincs' && !kert.current.has(c.id))
       .map((c) => c.id);
     if (ids.length === 0) return;
     ids.forEach((i) => kert.current.add(i));
     void run(() => api.ertekelCikkeket(k.id, ids)).then(() => refresh().catch(() => {}));
-  }, [adat, run, k.id, refresh]);
+  }, [adat, rangsorol, run, k.id, refresh]);
 
   useEffect(() => {
     if (!varakozik) return;
@@ -432,12 +447,84 @@ function Talalatok({ k, onValtozas }: { k: Kutatas; onValtozas: () => void }) {
             ['EXCLUDED', 'Kivett'],
           ]}
         />
+        <Segmented
+          label="Relevancia"
+          value={relevancia}
+          onChange={(v) => {
+            setRelevancia(v);
+            setOldal(0);
+          }}
+          options={[
+            ['ALL', 'Összes'],
+            ['HIGH', 'Erősen'],
+            ['MEDIUM', 'Részben'],
+            ['LOW', 'Kevéssé'],
+            ['NONE', 'Besorolatlan'],
+          ]}
+        />
         {varakozik && (
           <span className="meta push-right" role="status">
             <span className="kutatas__spinner" aria-hidden="true" /> AI-értékelés folyamatban…
           </span>
         )}
       </div>
+      {rangsorol && (
+        <p className="kutatas__progress" role="status" aria-live="polite">
+          <span className="kutatas__spinner" aria-hidden="true" />
+          {r.uzenet ?? 'AI-rangsor…'} — a helyi modell az összes találatot átnézi, és kiemeli a legrelevánsabbat. Addig a
+          forrás sorrendje látszik.
+        </p>
+      )}
+      {r.allapot === 'hiba' && (
+        <p className="form-error" role="alert">
+          Az AI-rangsor nem készült el: {r.hiba}
+        </p>
+      )}
+      {(r.allapot === 'kesz' || r.allapot === 'hiba') && (
+        <div className="row-baseline meta kutatas__rangsor">
+          {r.allapot === 'kesz' && (
+            <span>
+              <Icon name="spark" size={12} /> AI-rangsor: erősen, részben, kevéssé releváns, végül a besorolatlanok. A
+              részletes értékelés relevanciája felülírja az előszűrését, a cikk ekkor a helyére kerül. Csoporton belül
+              elöl a kiemelt cikk(ek), utána a forrás sorrendje.
+              {r.modell && (
+                <>
+                  {' '}
+                  <span className="mono">{r.modell}</span>
+                </>
+              )}
+            </span>
+          )}
+          <button
+            type="button"
+            className="btn btn--sm push-right"
+            disabled={ujraRangsor.busy}
+            title="Az aktív (nem kivett) találatok újrarangsorolása"
+            onClick={async () => {
+              if (await ujraRangsor.run(() => api.ujraRangsorol(k.id))) onValtozas();
+            }}
+          >
+            Újrarangsorolás
+          </button>
+        </div>
+      )}
+      {ujraRangsor.error && (
+        <p className="form-error" role="alert">
+          {ujraRangsor.error}
+        </p>
+      )}
+      {r.allapot === 'kesz' && r.figyelmeztetesek.length > 0 && (
+        <details className="meta">
+          <summary>Az AI-rangsor megjegyzései ({r.figyelmeztetesek.length})</summary>
+          <ul className="klinstatus__warn">
+            {r.figyelmeztetesek.map((w, i) => (
+              <li key={i}>
+                <Icon name="alert" size={12} /> {w}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {ertekeles.error && (
         <p className="form-error" role="alert">
           Az értékelés nem indult el: {ertekeles.error}
@@ -446,8 +533,14 @@ function Talalatok({ k, onValtozas }: { k: Kutatas; onValtozas: () => void }) {
       {lista.state.status === 'loading' && <Loading what="Cikkek" />}
       {lista.state.status === 'error' && <ErrorState error={lista.state.error} onRetry={lista.reload} />}
       {adat && adat.cikkek.length === 0 && <p className="meta">Nincs cikk ebben a nézetben.</p>}
-      {adat?.cikkek.map((c) => (
-        <CikkKartya key={c.id} c={c} onModosit={(m) => void modosit(c, m)} />
+      {adat?.cikkek.map((c, i) => (
+        <CikkKartya
+          key={c.id}
+          c={c}
+          // a helyezés a listában (a relevancia változásával együtt mozog)
+          sorszam={adat.oldal * adat.meret + i + 1}
+          onModosit={(m) => void modosit(c, m)}
+        />
       ))}
       {adat && adat.oldalak > 1 && <Lapozo oldal={adat.oldal} oldalak={adat.oldalak} onLapoz={setOldal} />}
     </section>
@@ -480,17 +573,34 @@ const RELEVANCIA_FELIRAT = { magas: 'Erősen releváns', kozepes: 'Részben rele
 
 function CikkKartya({
   c,
+  sorszam = c.sorszam,
   onModosit,
 }: {
   c: Cikk;
+  sorszam?: number;
   onModosit?: (m: { kivett?: boolean; konyvjelzo?: boolean }) => void;
 }) {
   const e = c.ertekeles;
   const szerzok = c.szerzok.length > 3 ? `${c.szerzok.slice(0, 3).join(', ')} et al.` : c.szerzok.join(', ');
+  // a kiemelés az előszűrésen alapul: ha a részletes értékelés nem tartja erősen relevánsnak, nem emeljük ki
+  // (a kártya relevanciájával ellentmondana)
+  const kiemelt = c.rangsor.kiemeles !== null && !(e.allapot === 'kesz' && e.relevancia !== 'magas');
   return (
-    <article className={`cikk${c.kivett ? ' cikk--kivett' : ''}`} aria-label={c.cim}>
+    <article
+      className={`cikk${c.kivett ? ' cikk--kivett' : ''}${kiemelt ? ' cikk--kiemelt' : ''}`}
+      aria-label={c.cim}
+    >
+      {kiemelt && (
+        <div className="cikk__kiemeles">
+          <span className="cikk__kiemeles-cimke">
+            <Icon name="spark" size={12} />{' '}
+            {c.rangsor.kiemeles === 1 ? 'AI: a legrelevánsabb' : `AI-kiemelés · ${c.rangsor.kiemeles}.`}
+          </span>
+          <p className="cikk__szoveg">{c.rangsor.kiemelesIndok}</p>
+        </div>
+      )}
       <div className="cikk__fej">
-        <span className="cikk__sorszam">{c.sorszam}.</span>
+        <span className="cikk__sorszam">{sorszam}.</span>
         <h4 className="cikk__cim" lang="en">
           <a href={c.pubmedUrl} target="_blank" rel="noreferrer noopener">
             {c.cim}
@@ -552,6 +662,11 @@ function CikkKartya({
         <span className="tag tag--modell">
           <Icon name="spark" size={12} /> AI · nem ellenőrzött
         </span>
+        {e.allapot !== 'kesz' && c.rangsor.elozetes && (
+          <span className={`cikk__relevancia cikk__relevancia--${c.rangsor.elozetes}`}>
+            Előszűrés: {RELEVANCIA_FELIRAT[c.rangsor.elozetes].toLowerCase()}
+          </span>
+        )}
         {e.allapot === 'nincs' && <p className="meta">Értékelés lapozáskor készül.</p>}
         {e.allapot === 'keszul' && (
           <p className="meta" role="status">

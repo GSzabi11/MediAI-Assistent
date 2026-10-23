@@ -91,6 +91,16 @@ public class ResearchArticle {
 
     private boolean bookmarked;
 
+    // AI-rangsor (V32): előszűrés, a modell választása (1 = legrelevánsabb), és a számolt sorrend
+    @Enumerated(EnumType.STRING)
+    private Relevance screenRelevance;
+
+    private Integer aiPick;
+
+    private String aiPickReason;
+
+    private Integer aiRank;
+
     protected ResearchArticle() {
     }
 
@@ -149,6 +159,17 @@ public class ResearchArticle {
         this.evalError = error;
         this.evalStatus = ArticleEvalStatus.FAILED;
         this.evaluatedAt = OffsetDateTime.now();
+    }
+
+    // Az előző rangsor helyére (újrarangsoroláskor minden cikkre lefut)
+    public void applyRanking(Relevance screenRelevance, Integer pick, String pickReason, int aiRank) {
+        if (pick != null && (screenRelevance != Relevance.HIGH || pickReason == null || pickReason.isBlank())) {
+            throw new IllegalArgumentException("Csak magas előszűrésű cikk emelhető ki, indoklással");
+        }
+        this.screenRelevance = screenRelevance;
+        this.aiPick = pick;
+        this.aiPickReason = pick == null ? null : pickReason;
+        this.aiRank = aiRank;
     }
 
     public void setExcluded(boolean excluded) {
@@ -253,6 +274,22 @@ public class ResearchArticle {
 
     public boolean isExcluded() {
         return excluded;
+    }
+
+    public Relevance getScreenRelevance() {
+        return screenRelevance;
+    }
+
+    public Integer getAiPick() {
+        return aiPick;
+    }
+
+    public String getAiPickReason() {
+        return aiPickReason;
+    }
+
+    public Integer getAiRank() {
+        return aiRank;
     }
 
     public boolean isBookmarked() {
