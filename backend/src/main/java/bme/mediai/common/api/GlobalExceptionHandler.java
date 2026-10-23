@@ -38,6 +38,8 @@ import bme.mediai.patient.exception.PatientNotFoundException;
 import bme.mediai.processing.exception.InvalidCallbackTokenException;
 import bme.mediai.chat.exception.ChatConflictException;
 import bme.mediai.chat.exception.ChatMessageNotFoundException;
+import bme.mediai.research.exception.ResearchConflictException;
+import bme.mediai.research.exception.ResearchNotFoundException;
 import bme.mediai.summary.exception.ClinicalSummaryNotFoundException;
 import bme.mediai.summary.exception.SummaryConflictException;
 import bme.mediai.patient.exception.TajConflictException;
@@ -177,6 +179,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SummaryConflictException.class)
     ProblemDetail handleSummaryConflict(SummaryConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ResearchNotFoundException.class)
+    ProblemDetail handleResearchNotFound(ResearchNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ResearchConflictException.class)
+    ProblemDetail handleResearchConflict(ResearchConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

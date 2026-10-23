@@ -2428,3 +2428,223 @@ select.input {
     display: none;
   }
 }
+
+/* ============ szakirodalmi kutatás (SzakirodalomFul) ============ */
+.kutatas {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.kutatas__top {
+  align-items: center;
+  gap: 8px;
+}
+.kutatas__uj,
+.kutatas__nezet,
+.kutatas__talalatok {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.kutatas__kimeno {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+}
+.kutatas__opciok {
+  align-items: flex-end;
+  gap: 16px;
+}
+.kutatas__forrasok {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.kutatas__forrasok label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+.kutatas__fej {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+}
+.kutatas__kifejezes {
+  margin: 0;
+  font-size: var(--fs-sm);
+  word-break: break-word;
+}
+.kutatas__progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--c-accent-tint-2);
+  border: 1px solid var(--c-accent-line);
+  color: var(--c-accent-strong);
+  font-weight: 700;
+}
+.kutatas__spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--c-accent-line);
+  border-top-color: var(--c-accent);
+  animation: kutatas-forog 0.9s linear infinite;
+  vertical-align: middle;
+}
+@keyframes kutatas-forog {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kutatas__spinner {
+    animation: none;
+  }
+}
+.kutatas__lapozo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+.kutatas__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kutatas__sor {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 16px;
+  text-align: left;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-md);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+.kutatas__sor:hover {
+  background: var(--c-surface-muted);
+}
+
+.cikk {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+}
+.cikk--kivett {
+  opacity: 0.7;
+}
+.cikk__fej {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.cikk__sorszam {
+  color: var(--c-ink-muted);
+  font-weight: 700;
+  padding-top: 2px;
+}
+.cikk__cim {
+  margin: 0;
+  flex: 1;
+  font-size: var(--fs-md);
+  line-height: 1.4;
+}
+.cikk__cim a {
+  color: var(--c-ink);
+}
+.cikk__muveletek {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cikk__csillag--on {
+  color: var(--c-warning-ink);
+  background: var(--c-warning-tint);
+}
+.cikk__csillag--on svg {
+  fill: currentColor;
+}
+.cikk__bib {
+  margin: 0;
+}
+.cikk__cimkek {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.cikk__tipus {
+  background: var(--c-surface-muted);
+  color: var(--c-ink-2);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.cikk__ai {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--c-accent);
+  background: var(--c-accent-tint-2);
+}
+.cikk__szoveg {
+  margin: 0;
+  line-height: 1.55;
+}
+.cikk__relevancia {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.cikk__relevancia--magas {
+  color: var(--c-success);
+}
+.cikk__relevancia--kozepes {
+  color: var(--c-warning-ink);
+}
+.cikk__relevancia--alacsony {
+  color: var(--c-ink-muted);
+}
+.cikk__absztrakt summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-ink-muted);
+}
+.cikk__absztrakt p {
+  white-space: pre-line;
+  line-height: 1.55;
+  font-size: var(--fs-sm);
+}

@@ -25,7 +25,9 @@ class PatientResolver {
             "lab-results", "lab_result",
             "medications", "medication",
             "allergies", "allergy",
-            "clinical-summaries", "clinical_summary");
+            "clinical-summaries", "clinical_summary",
+            "research", "research",
+            "research-contexts", "research_context");
     // a chat-messages nincs itt: V25 óta nincs táblája, a controller kérés-attribútumban adja meg
     // a beteget (AccessLogInterceptor.PATIENT_ATTRIBUTE)
 

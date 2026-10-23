@@ -44,6 +44,16 @@ CHAT_LLM_MODEL = os.environ.get("CHAT_LLM_MODEL", LLM_MODEL)
 # A Klinikai státusz modellje — külön állítható: a részletes (8–12 mondatos) összefoglalónál a 4B-s
 # MedGemma ismétlő, sablonos szöveget adott; a medgemma:27b jót, de 8 GB VRAM-on ~3 perc alatt
 SUMMARY_LLM_MODEL = os.environ.get("SUMMARY_LLM_MODEL", LLM_MODEL)
+# Szakirodalmi kutatás (docs/literature-research.md) — a felhasználó döntése (2026-10-20): a teljes
+# funkció (betegállapot-összefoglaló, keresőkifejezés, cikk-értékelés) a qwen3.5:9b-vel fut. A cikkenkénti
+# értékelés sok hívás egymás után: a 27b-s modell (~3 perc/hívás) itt használhatatlan, a VRAM-ba férő
+# 9b másodpercek alatt végez.
+RESEARCH_LLM_MODEL = os.environ.get("RESEARCH_LLM_MODEL", "qwen3.5:9b")
+# A külső forrásoknak csak a keresőkifejezés megy (betegadat nem). Kulcs nélkül is működnek, kulccsal
+# nagyobb a keret: NCBI 3 → 10 kérés/s.
+NCBI_API_KEY = os.environ.get("NCBI_API_KEY", "").strip()
+NCBI_EMAIL = os.environ.get("NCBI_EMAIL", "").strip()
+LITERATURE_TIMEOUT_SEC = int(os.environ.get("LITERATURE_TIMEOUT_SEC", "30"))
 LLM_SEED = int(os.environ.get("DOC_LLM_SEED", "42"))
 # Az Ollama alapértelmezett kontextusa (2–4k token) egy többoldalas leletet levágna
 LLM_NUM_CTX = int(os.environ.get("DOC_LLM_NUM_CTX", "16384"))
@@ -66,7 +76,7 @@ CHUNK_TARGET_CHARS = int(os.environ.get("CHUNK_TARGET_CHARS", "800"))
 CHUNK_OVERLAP_CHARS = int(os.environ.get("CHUNK_OVERLAP_CHARS", "150"))
 
 # A dokumentum extractor_version oszlopába kerül: a feldolgozó kód (prompt, utófeldolgozás) verziója
-EXTRACTOR_VERSION = "docproc-16"
+EXTRACTOR_VERSION = "docproc-17"
 
 CALLBACK_TIMEOUT_SEC = 60
 CALLBACK_RETRY_DELAYS_SEC = (2, 10, 30, 60)

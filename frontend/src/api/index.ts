@@ -27,6 +27,11 @@ import type {
   ChatMessageDto,
   KeywordDto,
   RecordingSummaryDto,
+  ArticlePageDto,
+  BookmarkDto,
+  ResearchArticleDto,
+  ResearchContextDto,
+  ResearchDto,
 } from './dto';
 import { http } from './http';
 import { parseMegszolalasok, parseRagDarabok } from './importok';
@@ -55,6 +60,11 @@ import {
   toChatValasz,
   toFelvetelOsszefoglalo,
   toKulcsszo,
+  toCikk,
+  toCikkOldal,
+  toKonyvjelzo,
+  toKutatas,
+  toKutatasiOsszefoglalo,
 } from './mappers';
 import {
   ApiError,
@@ -74,6 +84,7 @@ import {
   type UjHangprofil,
   type UjIdezet,
   type UjLaborPanel,
+  type KutatasForras,
 } from './types';
 
 /** A belépett felhasználó — minden írási művelet az ő nevében történik. */
@@ -545,6 +556,78 @@ export const api = {
         previousMessageIds: elozmenyIds,
       }),
     ),
+
+  // ======================= szakirodalmi kutatás =======================
+
+  /** GET /research-contexts?patientId= — a legfrissebb elöl */
+  listKutatasiOsszefoglalok: async (patientId: number) =>
+    (await http.get<ResearchContextDto[]>(`/research-contexts?patientId=${patientId}`)).map(toKutatasiOsszefoglalo),
+
+  /** POST /research-contexts — 202, a helyi modell a háttérben írja */
+  keszitKutatasiOsszefoglalot: async (patientId: number) =>
+    toKutatasiOsszefoglalo(
+      await http.post<ResearchContextDto>('/research-contexts', { patientId, userId: requireUser().id }),
+    ),
+
+  /** PUT /research-contexts/{id}/edited-text — az orvos szerkesztése (az AI eredetije megmarad) */
+  szerkesztKutatasiOsszefoglalot: async (id: number, szoveg: string, kifejezes: string) =>
+    toKutatasiOsszefoglalo(
+      await http.put<ResearchContextDto>(`/research-contexts/${id}/edited-text`, {
+        userId: requireUser().id,
+        text: szoveg,
+        query: kifejezes,
+      }),
+    ),
+
+  /** GET /research?patientId= — korábbi kutatások */
+  listKutatasok: async (patientId: number) =>
+    (await http.get<ResearchDto[]>(`/research?patientId=${patientId}`)).map(toKutatas),
+
+  getKutatas: async (id: number) => toKutatas(await http.get<ResearchDto>(`/research/${id}`)),
+
+  /** POST /research — CSAK a kifejezés megy ki a hálózatra (a backend kapuja ellenőrzi) */
+  inditKutatast: async (k: {
+    patientId: number;
+    osszefoglaloId: number | null;
+    kontextus: string;
+    keres: string;
+    kifejezes: string;
+    forrasok: KutatasForras[];
+    maxTalalat: number;
+  }) =>
+    toKutatas(
+      await http.post<ResearchDto>('/research', {
+        patientId: k.patientId,
+        userId: requireUser().id,
+        contextId: k.osszefoglaloId,
+        contextText: k.kontextus,
+        extraPrompt: k.keres || null,
+        query: k.kifejezes,
+        sources: k.forrasok,
+        maxResults: k.maxTalalat,
+      }),
+    ),
+
+  /** GET /research/{id}/articles?page=&filter= — lapozható, rang szerint */
+  getCikkOldal: async (kutatasId: number, oldal: number, szuro: 'ACTIVE' | 'BOOKMARKED' | 'EXCLUDED') =>
+    toCikkOldal(await http.get<ArticlePageDto>(`/research/${kutatasId}/articles?page=${oldal}&filter=${szuro}`)),
+
+  /** POST /research/{id}/evaluations — a megnyitott oldal még nem értékelt cikkei */
+  ertekelCikkeket: async (kutatasId: number, cikkIds: number[]) =>
+    toKutatas(await http.post<ResearchDto>(`/research/${kutatasId}/evaluations`, { articleIds: cikkIds })),
+
+  /** PATCH /research/{id}/articles/{aid} — kivétel / könyvjelző */
+  modositCikket: async (kutatasId: number, cikkId: number, m: { kivett?: boolean; konyvjelzo?: boolean }) =>
+    toCikk(
+      await http.patch<ResearchArticleDto>(`/research/${kutatasId}/articles/${cikkId}`, {
+        excluded: m.kivett,
+        bookmarked: m.konyvjelzo,
+      }),
+    ),
+
+  /** GET /research/bookmarks?patientId= — a beteg könyvjelzős cikkei */
+  listKonyvjelzok: async (patientId: number) =>
+    (await http.get<BookmarkDto[]>(`/research/bookmarks?patientId=${patientId}`)).map(toKonyvjelzo),
 };
 
 export type Api = typeof api;

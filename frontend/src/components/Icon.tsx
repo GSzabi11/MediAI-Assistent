@@ -131,6 +131,19 @@ const paths = {
   quote: <path d="M6 17c2-1 3-3 3-6V7H5v4h4M16 17c2-1 3-3 3-6V7h-4v4h4" />,
   stop: <rect x="6" y="6" width="12" height="12" rx="1.5" />,
   folder: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+  star: <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />,
+  external: (
+    <>
+      <path d="M14 4h6v6M20 4l-9 9" />
+      <path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" />
+    </>
+  ),
+  book: (
+    <>
+      <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" />
+      <path d="M4 21V5M19 19v2H6" />
+    </>
+  ),
   sun: (
     <>
       <circle cx="12" cy="12" r="4" />

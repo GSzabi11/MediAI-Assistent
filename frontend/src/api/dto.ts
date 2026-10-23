@@ -456,3 +456,94 @@ export interface RecordingSummaryDto {
   editedBy: number | null;
   editedAt: string | null;
 }
+
+// ---------- szakirodalmi kutatás (docs/literature-research.md) ----------
+
+/** GET/POST /research-contexts — betegállapot-összefoglaló a kutatáshoz (AI javaslat, orvos szerkeszti) */
+export interface ResearchContextDto {
+  id: number;
+  patientId: number;
+  status: 'PROCESSING' | 'DONE' | 'FAILED';
+  requestedBy: number | null;
+  requestedAt: string;
+  completedAt: string | null;
+  error: string | null;
+  summary: string | null;
+  query: string | null;
+  effectiveText: string | null;
+  effectiveQuery: string | null;
+  edited: boolean;
+  editedBy: number | null;
+  editedAt: string | null;
+  warnings: string[];
+  model: { modelName: string; seed: number; promptHash: string; extractorVersion: string } | null;
+}
+
+export type ResearchSourceDto = 'PUBMED' | 'COCHRANE' | 'EUROPE_PMC';
+
+/** GET/POST /research — egy keresés */
+export interface ResearchDto {
+  id: number;
+  patientId: number;
+  contextId: number | null;
+  requestedBy: number | null;
+  createdAt: string;
+  status: 'SEARCHING' | 'DONE' | 'FAILED';
+  progress: string | null;
+  completedAt: string | null;
+  error: string | null;
+  contextText: string;
+  extraPrompt: string | null;
+  query: string;
+  sources: ResearchSourceDto[];
+  maxResults: number;
+  totalFound: number | null;
+  articles: { total: number; excluded: number; bookmarked: number; evaluated: number; pending: number };
+}
+
+export interface ResearchArticleDto {
+  id: number;
+  researchId: number;
+  rank: number;
+  pmid: string;
+  doi: string | null;
+  pubmedUrl: string;
+  doiUrl: string | null;
+  title: string;
+  authors: string[];
+  journal: string | null;
+  pubYear: number | null;
+  abstractText: string | null;
+  sources: ResearchSourceDto[];
+  publicationTypes: string[];
+  citationCount: number | null;
+  evaluation: {
+    status: 'NONE' | 'PENDING' | 'DONE' | 'FAILED';
+    summary: string | null;
+    relevance: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+    relevanceReason: string | null;
+    error: string | null;
+    warnings: string[];
+    modelName: string | null;
+    seed: number | null;
+    promptHash: string | null;
+    evaluatedAt: string | null;
+  };
+  excluded: boolean;
+  bookmarked: boolean;
+}
+
+export interface ArticlePageDto {
+  content: ResearchArticleDto[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface BookmarkDto {
+  article: ResearchArticleDto;
+  researchId: number;
+  researchQuery: string;
+  researchCreatedAt: string;
+}

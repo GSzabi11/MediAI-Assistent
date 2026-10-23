@@ -21,6 +21,9 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
   döntése szerint külön táblában él, NEM `allitas`-ként (tudatos kivétel a lenti elv alól).
   Ugyanígy a Klinikai asszisztens (RAG-chat, `docs/clinical-chat.md`; V25 óta nem tárolódik, csak memóriában): a válasz
   pontjai forrásra hivatkoznak, de nem jóváhagyható állítások.
+  Ugyanez a szolgáltatás végzi a Szakirodalmi kutatást (`docs/literature-research.md`, V30): ez az
+  EGYETLEN hálózatra hívó funkció (PubMed, Europe PMC, iCite) — kifelé csak a keresőkifejezés megy, a Spring
+  `OutboundQueryGate` szűri a betegazonosítót; az értékelés külön tábla, nem `allitas`.
 - **frontend/** — React (Figma-terv alapján, még nincs kód).
 
 ## A rendszer központi elve: az Allitas (Statement)

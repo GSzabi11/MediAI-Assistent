@@ -6,7 +6,7 @@ Interfész és döntések: [`docs/document-processing.md`](../../docs/document-p
 
 | Fájl | Feladat |
 |---|---|
-| `app.py` | FastAPI: `POST /jobs`, `POST /summaries`, `POST /chats`, `GET /health` |
+| `app.py` | FastAPI: `POST /jobs`, `POST /summaries`, `POST /chats`, `POST /research-*`, `GET /health` |
 | `worker.py` | prioritásos sor (a chat elöl) + szekvenciális feldolgozó szál + callback a Springnek |
 | `pdf_text.py` | PDF szöveges rétege (PyMuPDF), OCR nincs |
 | `classify.py` | LAB / AMBULANCE — kulcsszó-keresés, nem modell |
@@ -16,6 +16,8 @@ Interfész és döntések: [`docs/document-processing.md`](../../docs/document-p
 | `chunking.py`, `embedding.py` | RAG-darabolás, embedding Ollamán (`EMBEDDING_MODEL`, 1024 dimre kérve) |
 | `summarize.py` | Klinikai státusz összefoglaló ([`docs/clinical-summary.md`](../../docs/clinical-summary.md)) |
 | `chat.py` | Klinikai asszisztens (RAG-chat, [`docs/clinical-chat.md`](../../docs/clinical-chat.md)) |
+| `literature.py` | PubMed (E-utilities), Europe PMC, iCite — az egyetlen hálózatra hívó modul ([`docs/literature-research.md`](../../docs/literature-research.md)) |
+| `research.py` | kutatási betegösszefoglaló + keresőkifejezés, cikkenkénti összefoglaló és relevancia |
 
 ## Telepítés
 
@@ -47,6 +49,8 @@ python app.py                                # http://127.0.0.1:8001
 | `OLLAMA_URL` | `http://localhost:11434` | |
 | `DOC_LLM_MODEL` | `medgemma:4b` | pl. `gemma4:e4b`, `qwen3.5:9b` |
 | `CHAT_LLM_MODEL` | = `DOC_LLM_MODEL` | a chat modellje; ajánlott: `qwen3.5:9b` (ld. clinical-chat.md) |
+| `RESEARCH_LLM_MODEL` | `qwen3.5:9b` | a szakirodalmi kutatás teljes egészében |
+| `NCBI_API_KEY` / `NCBI_EMAIL` | — | opcionális; kulccsal 10 kérés/s a 3 helyett |
 | `DOC_LLM_SEED` | `42` | a producer-be is bekerül |
 | `DOC_LLM_NUM_CTX` | `16384` | az Ollama alapértéke egy leletet levágna |
 | `DOC_LLM_MAX_CHARS` | `40000` | ennél hosszabb szöveg vége nem megy a modellhez |

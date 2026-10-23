@@ -8,9 +8,9 @@ npm run dev
 
 ai:
 .venv\Scripts\activate          
- $env:DOC_LLM_MODEL = "medgemma:latest"      
- python app.py    
- .venv\Scripts\python app.py
+$env:DOC_LLM_MODEL = "medgemma:latest"      
+python app.py    
+.venv\Scripts\python app.py
 
 cd .\ai-service\
 cd .\voice\

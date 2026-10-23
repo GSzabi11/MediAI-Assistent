@@ -22,7 +22,9 @@ import classify
 import config
 import embedding
 import extract
+import literature
 import locate
+import research
 import summarize
 import llm
 from pdf_text import NoTextLayerError, extract_text
@@ -81,8 +83,61 @@ class ChatJob:
         return f"chat {self.chat_id}"
 
 
-# kisebb = előbb; azonos prioritáson belül érkezési sorrend
-_PRIORITY = {ChatJob: 0}
+@dataclass(frozen=True, eq=False)
+class ResearchContextJob:
+    context_id: int
+    callback_url: str
+    facts: dict
+
+    @property
+    def key(self) -> tuple:
+        return ("research-context", self.context_id)
+
+    @property
+    def label(self) -> str:
+        return f"kutatási összefoglaló {self.context_id}"
+
+
+@dataclass(frozen=True, eq=False)
+class ArticleEvalJob:
+    article_id: int
+    callback_url: str
+    article: dict
+    context_text: str
+    extra_prompt: str | None
+
+    @property
+    def key(self) -> tuple:
+        return ("article", self.article_id)
+
+    @property
+    def label(self) -> str:
+        return f"cikk-értékelés {self.article_id}"
+
+
+@dataclass(frozen=True, eq=False)
+class SearchJob:
+    """Hálózati keresés (PubMed, iCite) — GPU nem kell, ezért NEM a sorban fut: egy éppen
+    feldolgozott lelet nem tartja fel. Saját szálon, egyszerre egy keresés."""
+    research_id: int
+    callback_url: str
+    progress_url: str
+    query: str
+    sources: list
+    max_results: int
+
+    @property
+    def key(self) -> tuple:
+        return ("search", self.research_id)
+
+    @property
+    def label(self) -> str:
+        return f"keresés {self.research_id}"
+
+
+# kisebb = előbb; azonos prioritáson belül érkezési sorrend. A cikk-értékelésre az orvos a képernyő
+# előtt vár (mint a chatnél), de egy oldalnyi cikk hosszabb — a chat után, a lelet előtt jön.
+_PRIORITY = {ChatJob: 0, ArticleEvalJob: 1}
 
 
 def run_chat(job: ChatJob) -> dict:
@@ -108,7 +163,7 @@ class JobQueue:
     def submit(self, job: "Job | SummaryJob | ChatJob") -> int | None:
         """Sorba állít; a sorban elfoglalt hely (0 = következő), vagy None, ha már bent van
         (ismételt értesítés ugyanarra a dokumentumra nem dolgozza fel kétszer)."""
-        priority = _PRIORITY.get(type(job), 1)
+        priority = _PRIORITY.get(type(job), 2)
         with self._lock:
             if job.key in self._pending:
                 return None
@@ -136,6 +191,10 @@ class JobQueue:
                         payload = run_chat(job)
                     elif isinstance(job, SummaryJob):
                         payload = summarize.summarize(job.facts)
+                    elif isinstance(job, ResearchContextJob):
+                        payload = research.context(job.facts)
+                    elif isinstance(job, ArticleEvalJob):
+                        payload = research.evaluate(job.article, job.context_text, job.extra_prompt)
                     else:
                         payload = process(job)
             except Exception as e:  # noqa: BLE001 — minden hiba FAILED callback, a sor nem állhat le
@@ -148,11 +207,59 @@ class JobQueue:
             self._queue.task_done()
 
 
+class SearchRunner:
+    """A keresések saját sora és szála (hálózat, nem GPU)."""
+
+    def __init__(self) -> None:
+        self._queue: queue.Queue[SearchJob] = queue.Queue()
+        self._lock = threading.Lock()
+        self._pending: set[tuple] = set()
+
+    def submit(self, job: SearchJob) -> int | None:
+        with self._lock:
+            if job.key in self._pending:
+                return None
+            self._pending.add(job.key)
+            self._queue.put(job)
+            return self._queue.qsize() - 1
+
+    def start(self) -> None:
+        threading.Thread(target=self._run, name="docproc-search", daemon=True).start()
+
+    def _run(self) -> None:
+        while True:
+            job = self._queue.get()
+            try:
+                total, articles = literature.search(job.query, job.sources, job.max_results,
+                                                    lambda message: send_progress(job, message))
+                # a Spring "abstractText"-et vár (az "abstract" Java-ban foglalt szó)
+                payload = {"status": "DONE", "totalFound": total,
+                           "articles": [{**{k: v for k, v in a.items() if k != "abstract"},
+                                         "abstractText": a.get("abstract")} for a in articles]}
+                log.info("Keresés %s kész: %d / %d cikk", job.research_id, len(articles), total)
+            except Exception as e:  # noqa: BLE001 — minden hiba FAILED callback
+                log.exception("A(z) %s sikertelen", job.label)
+                payload = {"status": "FAILED", "error": _error_message(e)}
+            send_callback(job, payload)
+            with self._lock:
+                self._pending.discard(job.key)
+            self._queue.task_done()
+
+
+def send_progress(job: SearchJob, message: str) -> None:
+    """Állapotüzenet a Springnek; ha nem megy át, a keresés ettől még folytatódik."""
+    try:
+        requests.post(job.progress_url, json={"message": message[:500]},
+                      headers={"X-Internal-Token": config.TOKEN}, timeout=10)
+    except requests.RequestException as e:
+        log.warning("Állapotüzenet nem ment át (%s): %s", job.label, e)
+
+
 def _error_message(e: Exception) -> str:
-    if isinstance(e, (ProcessingError, NoTextLayerError)):
+    if isinstance(e, (ProcessingError, NoTextLayerError, literature.LiteratureError)):
         return str(e)
     if isinstance(e, requests.RequestException):
-        return f"Az Ollama-hívás sikertelen ({config.LLM_MODEL}): {e}"[:2000]
+        return f"Az Ollama-hívás sikertelen: {e}"[:2000]
     return f"Váratlan hiba a feldolgozásban: {type(e).__name__}: {e}"[:2000]
 
 

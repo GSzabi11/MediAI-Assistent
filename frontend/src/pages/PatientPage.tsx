@@ -9,6 +9,7 @@ import { DokumentumFul } from '../components/DokumentumFul';
 import { EllatasPanel } from '../components/EllatasPanel';
 import { GyogyszerAllergiaPanel } from '../components/GyogyszerAllergiaPanel';
 import { KlinikaiStatusz } from '../components/KlinikaiStatusz';
+import { SzakirodalomFul } from '../components/SzakirodalomFul';
 import { Icon, type IconName } from '../components/Icon';
 import { LabTrend } from '../components/LabTrend';
 import { AppBar, ErrorState, Loading, PatientBand } from '../components/shell';
@@ -17,7 +18,7 @@ import { formatDatum, formatIdo } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 import { megszolalasKulcs, PatientContext, usePatient, type PatientCtx } from '../patient/PatientContext';
 
-const NEZETEK = ['statusz', 'dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer'] as const;
+const NEZETEK = ['statusz', 'dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer', 'szakirodalom'] as const;
 type Nezet = (typeof NEZETEK)[number];
 
 /** Becsukott/kinyitott panel állapot — kényelmi, böngészőnként tárolva. */
@@ -176,6 +177,7 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
     { n: 'atirat', icon: 'mic', label: 'Átirat' },
     { n: 'ellatas', icon: 'stetho', label: 'Ellátások' },
     { n: 'gyogyszer', icon: 'pill', label: 'Gyógyszer és allergia' },
+    { n: 'szakirodalom', icon: 'book', label: 'Szakirodalom' },
   ];
 
   return (
@@ -211,6 +213,7 @@ function Workspace({ allitasok, onDecided }: { allitasok: ClaimResponse[]; onDec
           {nezet === 'atirat' && <AtiratFul felvetelId={felvetelId} turnIds={turnIds} />}
           {nezet === 'ellatas' && <EllatasPanel />}
           {nezet === 'gyogyszer' && <GyogyszerAllergiaPanel />}
+          {nezet === 'szakirodalom' && <SzakirodalomFul />}
         </section>
 
         {allitasokNyitva && (

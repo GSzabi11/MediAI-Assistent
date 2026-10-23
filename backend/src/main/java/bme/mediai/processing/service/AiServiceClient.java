@@ -11,6 +11,9 @@ import org.springframework.web.client.RestClient;
 
 import bme.mediai.chat.api.ChatJobRequest;
 import bme.mediai.processing.api.ProcessingJobRequest;
+import bme.mediai.research.api.ResearchContextJobRequest;
+import bme.mediai.research.api.ResearchEvaluationJobRequest;
+import bme.mediai.research.api.ResearchSearchJobRequest;
 import bme.mediai.summary.api.SummaryFacts;
 import bme.mediai.summary.api.SummaryJobRequest;
 
@@ -48,6 +51,37 @@ public class AiServiceClient {
                 .header(InternalTokenVerifier.HEADER, token.token())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(job)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    // Erre az abszolút címre hív vissza a Python (pl. "/api/research/5/result")
+    public String callbackUrl(String path) {
+        return callbackBaseUrl + path;
+    }
+
+    // Szakirodalmi kutatás (docs/literature-research.md): betegállapot-összefoglaló a helyi modellel
+    public void submitResearchContext(Long contextId, SummaryFacts facts) {
+        post("/research-contexts", new ResearchContextJobRequest(contextId,
+                callbackUrl("/api/research-contexts/" + contextId + "/result"), facts));
+    }
+
+    // A keresés: a Python hívja a PubMedet (csak a keresőkifejezéssel), külön szálon, nem a GPU-sorban
+    public void submitResearchSearch(ResearchSearchJobRequest job) {
+        post("/research-searches", job);
+    }
+
+    // Cikkenkénti értékelés (összefoglaló + relevancia) a helyi modellel, a GPU-sorba
+    public void submitResearchEvaluation(ResearchEvaluationJobRequest job) {
+        post("/research-evaluations", job);
+    }
+
+    private void post(String uri, Object body) {
+        restClient.post()
+                .uri(uri)
+                .header(InternalTokenVerifier.HEADER, token.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
                 .retrieve()
                 .toBodilessEntity();
     }

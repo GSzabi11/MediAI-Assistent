@@ -33,6 +33,10 @@ Jelenleg migrálva: `pacient`, `app_user` (= a diagram `felhasznalo`-ja),
 - V28 `recording_keyword`, `recording_summary` — **külön táblák, nem `statement`** (ugyanaz a
   kivétel, mint a `clinical_summary`-nél; a felhasználó jóváhagyására vár).
 
+**V30: szakirodalmi kutatás** — `research_context`, `research`, `research_article`; ugyanaz a kivétel,
+**külön táblák, nem `statement`**. A `research` a keresés pillanatképe (kontextus, kérés, kifejezés).
+Az egyetlen funkció, amely a hálózatra hív (csak a keresőkifejezéssel) — részletek: `docs/literature-research.md`.
+
 V24: `chat_message` — a Klinikai asszisztens (RAG-chat) kérdései és válaszai; ugyanaz a kivétel,
 **külön tábla, nem `statement`** (a felhasználó döntése). A válasz forrásai csak a modellnek átadott
 tények (`context`, `retrieved`) lehetnek — részletek: `docs/clinical-chat.md`.

@@ -27,6 +27,11 @@ import type {
   ChatMessageDto,
   KeywordDto,
   RecordingSummaryDto,
+  ArticlePageDto,
+  BookmarkDto,
+  ResearchArticleDto,
+  ResearchContextDto,
+  ResearchDto,
 } from './dto';
 import type {
   Allergia,
@@ -57,6 +62,11 @@ import type {
   ChatValasz,
   FelvetelOsszefoglalo,
   Kulcsszo,
+  Cikk,
+  CikkOldal,
+  Konyvjelzo,
+  Kutatas,
+  KutatasiOsszefoglalo,
 } from './types';
 
 // ---------- beteg + felhasználó ----------
@@ -543,4 +553,85 @@ export const toFelvetelOsszefoglalo = (s: RecordingSummaryDto): FelvetelOsszefog
   szerkesztett: s.editedText ?? null,
   szerkesztette: s.editedBy ?? null,
   szerkesztve: s.editedAt ?? null,
+});
+
+// ---------- szakirodalmi kutatás ----------
+export const toKutatasiOsszefoglalo = (c: ResearchContextDto): KutatasiOsszefoglalo => ({
+  id: c.id,
+  allapot: c.status === 'PROCESSING' ? 'keszul' : c.status === 'DONE' ? 'kesz' : 'hiba',
+  kerve: c.requestedAt,
+  hiba: c.error,
+  aiSzoveg: c.summary,
+  aiKifejezes: c.query,
+  szoveg: c.effectiveText,
+  kifejezes: c.effectiveQuery,
+  szerkesztett: c.edited,
+  szerkesztve: c.editedAt,
+  figyelmeztetesek: c.warnings ?? [],
+  modell: c.model?.modelName ?? null,
+});
+
+export const toKutatas = (r: ResearchDto): Kutatas => ({
+  id: r.id,
+  allapot: r.status === 'SEARCHING' ? 'keres' : r.status === 'DONE' ? 'kesz' : 'hiba',
+  allapotUzenet: r.progress,
+  inditva: r.createdAt,
+  hiba: r.error,
+  kontextus: r.contextText,
+  keres: r.extraPrompt,
+  kifejezes: r.query,
+  forrasok: r.sources,
+  osszesTalalat: r.totalFound,
+  cikkek: {
+    osszes: r.articles.total,
+    kivett: r.articles.excluded,
+    konyvjelzo: r.articles.bookmarked,
+    ertekelt: r.articles.evaluated,
+    varakozo: r.articles.pending,
+  },
+});
+
+const RELEVANCIA = { HIGH: 'magas', MEDIUM: 'kozepes', LOW: 'alacsony' } as const;
+const ERTEKELES = { NONE: 'nincs', PENDING: 'keszul', DONE: 'kesz', FAILED: 'hiba' } as const;
+
+export const toCikk = (a: ResearchArticleDto): Cikk => ({
+  id: a.id,
+  kutatasId: a.researchId,
+  sorszam: a.rank,
+  pmid: a.pmid,
+  pubmedUrl: a.pubmedUrl,
+  doiUrl: a.doiUrl,
+  cim: a.title,
+  szerzok: a.authors,
+  folyoirat: a.journal,
+  ev: a.pubYear,
+  absztrakt: a.abstractText,
+  forrasok: a.sources,
+  tipusok: a.publicationTypes,
+  hivatkozas: a.citationCount,
+  ertekeles: {
+    allapot: ERTEKELES[a.evaluation.status],
+    osszefoglalo: a.evaluation.summary,
+    relevancia: a.evaluation.relevance ? RELEVANCIA[a.evaluation.relevance] : null,
+    indoklas: a.evaluation.relevanceReason,
+    hiba: a.evaluation.error,
+    figyelmeztetesek: a.evaluation.warnings ?? [],
+    modell: a.evaluation.modelName,
+  },
+  kivett: a.excluded,
+  konyvjelzo: a.bookmarked,
+});
+
+export const toCikkOldal = (p: ArticlePageDto): CikkOldal => ({
+  cikkek: p.content.map(toCikk),
+  oldal: p.page,
+  oldalak: p.totalPages,
+  osszes: p.totalElements,
+});
+
+export const toKonyvjelzo = (b: BookmarkDto): Konyvjelzo => ({
+  cikk: toCikk(b.article),
+  kutatasId: b.researchId,
+  kifejezes: b.researchQuery,
+  inditva: b.researchCreatedAt,
 });

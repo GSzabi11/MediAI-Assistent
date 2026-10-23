@@ -493,3 +493,81 @@ export interface FelvetelOsszefoglalo {
   szerkesztette: number | null;
   szerkesztve: string | null;
 }
+
+// ---------- szakirodalmi kutatás ----------
+export interface KutatasiOsszefoglalo {
+  id: number;
+  allapot: 'keszul' | 'kesz' | 'hiba';
+  kerve: string;
+  hiba: string | null;
+  /** az AI eredetije */
+  aiSzoveg: string | null;
+  aiKifejezes: string | null;
+  /** a kutatás alapja: az orvos szerkesztése, ha van */
+  szoveg: string | null;
+  kifejezes: string | null;
+  szerkesztett: boolean;
+  szerkesztve: string | null;
+  figyelmeztetesek: string[];
+  modell: string | null;
+}
+
+export type KutatasForras = 'PUBMED' | 'COCHRANE' | 'EUROPE_PMC';
+
+export interface Kutatas {
+  id: number;
+  allapot: 'keres' | 'kesz' | 'hiba';
+  allapotUzenet: string | null;
+  inditva: string;
+  hiba: string | null;
+  kontextus: string;
+  keres: string | null;
+  kifejezes: string;
+  forrasok: KutatasForras[];
+  osszesTalalat: number | null;
+  cikkek: { osszes: number; kivett: number; konyvjelzo: number; ertekelt: number; varakozo: number };
+}
+
+export type Relevancia = 'magas' | 'kozepes' | 'alacsony';
+
+export interface Cikk {
+  id: number;
+  kutatasId: number;
+  sorszam: number;
+  pmid: string;
+  pubmedUrl: string;
+  doiUrl: string | null;
+  cim: string;
+  szerzok: string[];
+  folyoirat: string | null;
+  ev: number | null;
+  absztrakt: string | null;
+  forrasok: KutatasForras[];
+  tipusok: string[];
+  hivatkozas: number | null;
+  ertekeles: {
+    allapot: 'nincs' | 'keszul' | 'kesz' | 'hiba';
+    osszefoglalo: string | null;
+    relevancia: Relevancia | null;
+    indoklas: string | null;
+    hiba: string | null;
+    figyelmeztetesek: string[];
+    modell: string | null;
+  };
+  kivett: boolean;
+  konyvjelzo: boolean;
+}
+
+export interface CikkOldal {
+  cikkek: Cikk[];
+  oldal: number;
+  oldalak: number;
+  osszes: number;
+}
+
+export interface Konyvjelzo {
+  cikk: Cikk;
+  kutatasId: number;
+  kifejezes: string;
+  inditva: string;
+}
