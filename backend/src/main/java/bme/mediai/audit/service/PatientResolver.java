@@ -27,6 +27,7 @@ class PatientResolver {
             Map.entry("allergies", "allergy"),
             Map.entry("clinical-summaries", "clinical_summary"),
             Map.entry("medical-histories", "medical_history"),
+            Map.entry("epicrises", "epicrisis"),
             Map.entry("research", "research"),
             Map.entry("research-contexts", "research_context"));
     // a chat-messages nincs itt: V25 óta nincs táblája, a controller kérés-attribútumban adja meg

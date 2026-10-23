@@ -68,8 +68,7 @@ public final class MedicalHistoryDocx {
 
     // body: a (szűrt) szerkesztő-HTML; madeOn: a "Készült" dátum
     public static byte[] build(Patient patient, String body, LocalDate madeOn, boolean edited) {
-        String html = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>" + STYLE + "</style></head><body>"
-                + "<h1>ANAMNÉZIS / KÓRTÖRTÉNETI ÖSSZEFOGLALÓ</h1>"
+        return fromHtml("<h1>ANAMNÉZIS / KÓRTÖRTÉNETI ÖSSZEFOGLALÓ</h1>"
                 + "<p><b>Beteg:</b> " + MedicalHistoryHtml.escape(patient.getName()) + "</p>"
                 + "<p><b>TAJ:</b> " + taj(patient.getTaj()) + " &nbsp;&nbsp;<b>Születési dátum:</b> "
                 + (patient.getBirthDate() == null ? "–" : patient.getBirthDate()) + "</p>"
@@ -78,8 +77,13 @@ public final class MedicalHistoryDocx {
                 + "<hr><p class=\"note\"><i>"
                 + (edited ? "AI által előkészített, orvos által szerkesztett összefoglaló."
                         : "AI által előkészített összefoglaló — orvosi ellenőrzés nélkül.")
-                + " Döntéstámogatásra; a végső döntés az orvosé.</i></p>"
-                + "</body></html>";
+                + " Döntéstámogatásra; a végső döntés az orvosé.</i></p>");
+    }
+
+    // Tetszőleges (már escape-elt / szűrt) HTML-törzs DOCX-ként, a közös stílussal — az epikrízis is ezt használja
+    public static byte[] fromHtml(String bodyHtml) {
+        String html = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>" + STYLE + "</style></head><body>"
+                + bodyHtml + "</body></html>";
         String mht = "MIME-Version: 1.0\r\n"
                 + "Content-Type: multipart/related; type=\"text/html\"; boundary=\"----=mhtDocumentPart\"\r\n\r\n"
                 + "------=mhtDocumentPart\r\n"

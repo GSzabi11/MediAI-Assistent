@@ -16,7 +16,9 @@ public record MedicalHistoryFacts(
         // laborleletenként a szabálymotor szerinti eltérések (determinisztikus idővonal-elem)
         List<LabEntry> labs,
         List<SummaryFacts.MedicationFact> medications,
-        List<SummaryFacts.AllergyFact> allergies
+        List<SummaryFacts.AllergyFact> allergies,
+        // az összefoglaló bemenete: az elmúlt 6 hónap tényei, ugyanaz, mint a Klinikai státuszé
+        SummaryFacts summaryFacts
 ) {
     // digest: a meglévő kivonat (a Python újraszámolja, ha a promptHash-e nem a mostani)
     public record DocumentInput(Long id, String type, LocalDate date, String text, Digest digest) {

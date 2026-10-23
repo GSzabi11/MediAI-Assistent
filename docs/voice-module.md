@@ -113,6 +113,31 @@ Tudatosan **külön táblák, nem `statement`** (mint a `clinical_summary`).
   az `edited_text` kerül előre („Orvos szerkesztette”), az eredeti lenyitható. Újraszerkesztés
   felülírja az előző szerkesztést; újragenerálás új sort ad (a szerkesztést nem viszi át).
 
+## Csoportok (V34)
+
+Az átiratból hat csoport, mindegyik az orvos szerkeszthető listája: **Panaszok** (+ BNO), **Diagnózisok** (+ BNO),
+**Beutalók**, **Vizsgálati megállapítások**, **Javasolt gyógyszerek**, **Javaslatok / kontroll**. Szabi kérése
+(2026-10-23). Tudatosan **külön táblák, nem `statement`** (mint a kulcsszó és az összefoglaló).
+
+- **Folyamat**: a felvétel elkészültekor (`RecordingTranscribedEvent`) automatikusan, utána gombbal újra
+  (`POST /api/recordings/{id}/findings/extractions`, 202). Spring → Python `POST /recording-findings` (a teljes,
+  javított átirat) → `findings.py` (MedGemma, kötött JSON-séma) → callback `POST /api/recording-extractions/{id}/result`.
+- **Determinisztikus ellenőrzés (Python)**: minden elem megszólalásra hivatkozik; rossz / hiányzó sorszámnál
+  szótő-egyezés (`summary.ground`), ha így sincs forrás, **az elem kimarad** (figyelmeztetéssel). Tagadott tünet
+  (`nincs…`, `tagad…`) nem panasz. Az átiratban nem szereplő szám → „Ellenőrizendő” jelölés az elemen. A Spring
+  újra ellenőrzi, hogy a `turn_id`-k léteznek. Echo-diktálásnál csak az orvos megszólalásai (mint az összefoglalónál).
+- **BNO-kód**: a modell nem ad. Csak ha a hivatkozott megszólalásban a „BNO” szó mellett szó szerint elhangzott
+  (pl. „BNO I20.0”) és pontosan egy ilyen kód van; különben az orvos írja be. Formátum-ellenőrzés (DB CHECK +
+  entitás), kódtábla még nincs — létező kódra nem ellenőrzünk.
+- **Az orvos**: hozzáad (`POST …/findings`; a + gombbal, vagy az átirat kijelöléséből „Csoportba…” — ekkor a
+  megszólalás a forrás), szerkeszt (`PUT …/findings/{fid}`: szöveg + BNO), töröl (`POST …/findings/{fid}/delete`,
+  logikai). Csak `DOCTOR`, csak kész felvétel. Az AI eredetije megmarad, a frontenden lenyitható.
+- **Újrakinyerés**: a legfrissebb KÉSZ futás AI-elemei jelennek meg + az orvos elemei. A korábbi futás AI-elemei
+  (és a rajtuk végzett szerkesztés) az adatbázisban maradnak, a listából eltűnnek — a frontend erre rákérdez.
+- **Időkorlát**: `FINDINGS_DEADLINE` (alapból max(`LLM_DEADLINE`, 600) mp). Mérés (2026-10-23, 8 megszólalásos
+  szintetikus SBO-próba): `medgemma:latest` (4B) 20–60 mp, mind a hat csoport helyes, egy panasz (nehézlégzés) és a
+  vizsgálatkérés (EKG, troponin) kimaradt; `medgemma:27b` 120 mp alatt nem végzett.
+
 ## Leképezés a fő adatmodellre
 
 | Hangmodul (Python) | Fő rendszer |
@@ -121,6 +146,7 @@ Tudatosan **külön táblák, nem `statement`** (mint a `clinical_summary`).
 | ASR-modell, átnéző modell | `recording.asr_model`, `recording.review_model` |
 | kulcsszó-javaslat | `recording_keyword` (`MODEL`) |
 | összefoglaló | `recording_summary` (modell, seed, prompt-hash) |
+| csoportok (`findings.py`) | `recording_extraction` (futás) + `recording_finding` (elem, `turn_ids`) |
 | orvosi jóváhagyás | kulcsszónál `ACCEPTED`/`REJECTED`; állításnál `statement_approval` |
 
 A prototípus `extract()`-je (tünet / gyógyszer / mérés → `statement` `MODEL_INFERENCE`, AUDIO

@@ -4,7 +4,8 @@ a beteg TELJES előzményéből (docs/medical-history.md).
 Két lépés, hogy a modell kontextusa ne teljen meg a leletek szövegével:
 1. Dokumentum-kivonat (digest): minden nem labor-dokumentumból EGYSZER (a Spring tárolja; promptváltáskor
    újraszámoljuk) — cím, hely, 1–2 mondat, alátámasztó idézet, korábbi események, diagnózisok.
-2. Összefoglaló + javaslatok a kivonatokból, a laborleletek szabálymotor szerinti eltéréseiből, a
+2. Összefoglaló: a Klinikai státuszéval azonos (summarize.write_summary, az elmúlt 6 hónap tényeiből);
+   javaslatok a kivonatokból, a laborleletek szabálymotor szerinti eltéréseiből, a
    gyógyszer- és allergialistából.
 
 A modell csak javasol. Determinisztikus ellenőrzés (sosem csendes — figyelmeztetés / jelölés):
@@ -21,8 +22,8 @@ import re
 import requests
 
 import config
-from summarize import (_BULLET, _sentence_loop_start, _loop_start, dedupe_sentences,
-                       dose_mismatches, stream_messages, unverified_numbers)
+import summarize
+from summarize import _BULLET, _loop_start, dedupe_sentences, stream_messages, unverified_numbers
 from textutil import contains_phrase, fold
 
 DIGEST_SYSTEM = """Magyar orvosi dokumentumból (ambuláns lap, zárójelentés, konzílium, képalkotó lelet) rövid
@@ -69,20 +70,6 @@ DIGEST_SCHEMA = {
     "required": ["cim", "hely", "osszefoglalo", "idezet", "korabbi_esemenyek", "diagnozisok"],
 }
 
-SYSTEM_HISTORY = """Magyar klinikus asszisztens vagy. Egy beteg teljes kórtörténetének tényeiből (idővonal,
-diagnózisok, gyógyszerek) anamnézist és kórtörténeti összefoglalót írsz egy orvosnak.
-Szabályok:
-- KIZÁRÓLAG a megadott tényeket használd. Ne találj ki diagnózist, értéket, dátumot, gyógyszert.
-- Számot (értéket, dátumot, évet) csak a tényekből idézz, pontosan.
-- A beteget ne nevezd meg ("A beteg …").
-- 3 bekezdés, folyó szöveg, felsorolás nélkül (bekezdések között üres sor):
-  1. az alapbetegségek és mióta állnak fenn, a fő panaszok;
-  2. a betegség lefolyása időrendben: a fontos vizsgálatok, eredmények, konzíliumok dátummal;
-  3. a jelenlegi állapot és a gyógyszerelés (az "Aktív gyógyszerek" listából), a dokumentumokban szereplő
-     terápiás javaslatok.
-- Minden mondat új információt hozzon; ugyanazt ne ismételd.
-- Csak az összefoglaló szövegét írd, cím nélkül."""
-
 SYSTEM_RECOMMENDATIONS = """Magyar klinikus asszisztens vagy. Egy beteg kórtörténetének tényei alapján javaslatokat
 adsz egy orvosnak: konkrét következő lépéseket (kontroll-labor, konzílium, vizsgálat, terápia felülvizsgálata,
 életmód, diéta).
@@ -125,7 +112,7 @@ def digest_prompt_hash() -> str:
 
 
 def prompt_hash() -> str:
-    return _hash({"kind": "medical-history", "history": SYSTEM_HISTORY, "recommendations": SYSTEM_RECOMMENDATIONS,
+    return _hash({"kind": "medical-history", "summary": summarize.prompt_hash(), "recommendations": SYSTEM_RECOMMENDATIONS,
                   "options": _OPTIONS, "digest": digest_prompt_hash()})
 
 
@@ -456,11 +443,17 @@ def build(facts: dict, progress=None) -> dict:
                         + "; ".join(f"{t['date']} {t['title']}" for t in flagged)[:400])
 
     facts_text = render_facts(facts, timeline, diagnoses)
-    report("Anamnézis és kórtörténeti összefoglaló írása", total - 1, total)
-    summary, cut1 = _stream(SYSTEM_HISTORY, "A beteg kórtörténetének tényei:\n\n" + facts_text, 1100,
-                            _sentence_loop_start)
-    if not summary:
-        raise ValueError("A modell nem adott használható összefoglalót")
+    # Az összefoglaló a Klinikai státuszéval azonos (a felhasználó döntése, 2026-10-23): az elmúlt 6 hónap
+    # tényeiből, ugyanazzal a prompttal és ellenőrzéssel (summarize.py), a proaktív javaslatok nélkül
+    report("Összefoglaló (elmúlt 6 hónap) írása", total - 1, total)
+    sfacts = facts.get("summaryFacts") or {}
+    if any(sfacts.get(k) for k in ("statements", "documents", "recordings", "labs", "medications")):
+        summary, cut1, summary_facts_text = summarize.write_summary(sfacts)
+        summary_warnings = None
+    else:
+        summary, cut1, summary_facts_text = ("Az elmúlt 6 hónapból nincs feldolgozott dokumentum vagy adat — a "
+                                             "korábbi események az idővonalon láthatók.", False, "")
+        summary_warnings = []
     report("Javaslatok", total, total)
     recs_text, cut2 = _stream(SYSTEM_RECOMMENDATIONS, "A beteg kórtörténetének tényei:\n\n" + facts_text, 450,
                               _loop_start)
@@ -485,9 +478,9 @@ def build(facts: dict, progress=None) -> dict:
                         "mondatnál le lett zárva")
     if s := suspicious(summary):
         warnings.append("Összefoglaló: " + s)
-    warnings += dose_mismatches(summary, facts)
-    warnings += [f"Ellenőrizetlen szám az összefoglalóban: {n} (nem szerepel a beteg adatai között)"
-                 for n in unverified_numbers(summary, facts_text)]
+    if summary_warnings is None:
+        summary, summary_warnings = summarize.check_summary(summary, sfacts, summary_facts_text)
+    warnings += summary_warnings
     warnings += [f"Ellenőrizetlen szám a javaslatokban: {n} (nem szerepel a beteg adatai között)"
                  for n in unverified_numbers(" ".join(recommendations), facts_text)]
     return {

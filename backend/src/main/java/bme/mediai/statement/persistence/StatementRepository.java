@@ -16,4 +16,11 @@ public interface StatementRepository extends JpaRepository<Statement, Long> {
              WHERE patient_id = :patientId AND source ->> 'type' = 'LAB' AND producer ->> 'ruleId' = :ruleId
             """, nativeQuery = true)
     List<Statement> findLabRuleStatements(@Param("patientId") Long patientId, @Param("ruleId") String ruleId);
+
+    // Egy szabály MEDICATION forrású állításai egy betegnél (az interakció-szabály egyeztetéséhez)
+    @Query(value = """
+            SELECT * FROM statement
+             WHERE patient_id = :patientId AND source ->> 'type' = 'MEDICATION' AND producer ->> 'ruleId' = :ruleId
+            """, nativeQuery = true)
+    List<Statement> findMedicationRuleStatements(@Param("patientId") Long patientId, @Param("ruleId") String ruleId);
 }

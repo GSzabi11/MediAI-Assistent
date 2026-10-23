@@ -10,6 +10,8 @@ import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
 import { IdezetForm } from './allitas/IdezetForm';
+import { csoportApi, csoportok, type FindingCategoryDto } from '../api/felvetelCsoportok';
+import { FelvetelCsoportokPanel } from './FelvetelCsoportok';
 import { FelvetelOsszefoglaloPanel, KulcsszoPanel } from './FelvetelElemzes';
 import { Icon, type IconName } from './Icon';
 import { ErrorState, Loading, PatientMatch } from './shell';
@@ -43,6 +45,8 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
   // az összefoglaló hivatkozására kattintva kiemelt megszólalások (az URL-es kiemelés mellett)
   const [ugrott, setUgrott] = useState<number[]>([]);
   const [kwHiba, setKwHiba] = useState<string | null>(null);
+  // a kijelölésből csoportba tett elem után a csoport-panel újratölt
+  const [csoportFrissites, setCsoportFrissites] = useState(0);
   const ugras = (turnIds: number[]) => {
     setUgrott(turnIds);
     listRef.current
@@ -167,6 +171,7 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
         <div className="docview__hint">
           <KulcsszoPanel felvetelId={felvetel.id} kulcsszavak={kulcsszavak} onValtozott={kulcsszoLista.refresh} />
           <FelvetelOsszefoglaloPanel felvetelId={felvetel.id} kulcsszavak={kulcsszavak} onUgras={ugras} />
+          <FelvetelCsoportokPanel felvetelId={felvetel.id} frissites={csoportFrissites} onUgras={ugras} />
         </div>
       )}
       {state.status === 'ok' && sameP && state.data.length > 0 && (
@@ -253,6 +258,32 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
                   <Icon name="plus" size={14} />
                   Kulcsszóként
                 </button>
+              )}
+              {felvetel.allapot === 'kesz' && kijeloles.szoveg.trim().length <= 500 && (
+                <select
+                  className="input input--sm"
+                  aria-label="Kijelölés hozzáadása csoporthoz"
+                  value=""
+                  onChange={(e) =>
+                    void csoportApi
+                      .hozzaad(felvetel.id, e.target.value as FindingCategoryDto, kijeloles.szoveg, null, [kijeloles.turn])
+                      .then(() => {
+                        setCsoportFrissites((n) => n + 1);
+                        setKwHiba(null);
+                        setKijeloles(null);
+                      })
+                      .catch((err: Error) => setKwHiba(err.message))
+                  }
+                >
+                  <option value="" disabled>
+                    Csoportba…
+                  </option>
+                  {csoportok.map((cs) => (
+                    <option key={cs.kategoria} value={cs.kategoria}>
+                      {cs.cim}
+                    </option>
+                  ))}
+                </select>
               )}
               <button type="button" className="btn btn--sm" onClick={() => setKijeloles(null)}>
                 Mégse

@@ -25,6 +25,7 @@ import type {
   VoiceProfileDto,
   ClinicalSummaryDto,
   MedicalHistoryDto,
+  EpicrisisDto,
   ChatMessageDto,
   KeywordDto,
   RecordingSummaryDto,
@@ -59,6 +60,7 @@ import {
   toSourceDto,
   toOsszefoglalo,
   toKortortenet,
+  toEpikrizis,
   toChatValasz,
   toFelvetelOsszefoglalo,
   toKulcsszo,
@@ -491,6 +493,23 @@ export const api = {
 
   /** GET /medical-histories/{id}/file — DOCX (a naplóban EXPORT) */
   letoltKortortenetDocx: (id: number) => http.getBlob(`/medical-histories/${id}/file`),
+
+  // ======================= epikrízis (ellátásonként) =======================
+
+  /** GET /epicrises?patientId= — a beteg összes epikrízise, a legfrissebb elöl */
+  listEpikrizisek: async (patientId: number) =>
+    (await http.get<EpicrisisDto[]>(`/epicrises?patientId=${patientId}`)).map(toEpikrizis),
+
+  /** POST /epicrises — 202, a háttérben készül az ellátás leleteiből, felvételeiből és az aktuális gyógyszerekből */
+  keszitEpikrizist: async (ellatasId: number) =>
+    toEpikrizis(await http.post<EpicrisisDto>('/epicrises', { medicalCareId: ellatasId, userId: requireUser().id })),
+
+  /** PUT /epicrises/{id}/edited-html — az orvos szerkesztése (a fejléc nem része); az AI eredetije megmarad */
+  szerkesztEpikrizist: async (id: number, html: string) =>
+    toEpikrizis(await http.put<EpicrisisDto>(`/epicrises/${id}/edited-html`, { userId: requireUser().id, html })),
+
+  /** GET /epicrises/{id}/file — DOCX (a naplóban EXPORT) */
+  letoltEpikrizisDocx: (id: number) => http.getBlob(`/epicrises/${id}/file`),
 
   /** POST /lab-results — egy panel egy tranzakcióban: hibás sornál egyik sem kerül be */
   createLaborPanel: async (p: UjLaborPanel) =>

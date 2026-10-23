@@ -193,6 +193,7 @@ public class ChatContextBuilder {
             case StatementSource.Image i -> labelOf(i.documentId(), docsById);
             case StatementSource.Audio a -> "Felvétel #" + a.recordingId();
             case StatementSource.Lab l -> "Labormérés #" + l.labResultId();
+            case StatementSource.Medication m -> "Gyógyszerlista";
         };
     }
 

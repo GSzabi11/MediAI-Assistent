@@ -7,6 +7,7 @@ import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
 import { FelhasznaloNev } from './FelhasznaloNev';
+import { EpikrizisPanel } from './EpikrizisPanel';
 import { Icon } from './Icon';
 import { Segmented } from './Segmented';
 import { ErrorState, Loading } from './shell';
@@ -85,6 +86,7 @@ export function EllatasPanel() {
 function EllatasSor({ ellatas, onValtozott }: { ellatas: Ellatas; onValtozott: () => Promise<void> }) {
   const { patient, felvetelek } = usePatient();
   const [reszletek, setReszletek] = useState(false);
+  const [epikrizis, setEpikrizis] = useState(false);
   const zaras = useAkcio();
   const felvetelei = felvetelek.filter((f) => f.ellatasId === ellatas.id);
   const nyitott = ellatas.veg === null;
@@ -114,6 +116,15 @@ function EllatasSor({ ellatas, onValtozott }: { ellatas: Ellatas; onValtozott: (
           >
             Részletek
           </button>
+          <button
+            type="button"
+            className="btn btn--sm"
+            aria-expanded={epikrizis}
+            onClick={() => setEpikrizis((v) => !v)}
+          >
+            <Icon name="doc" size={14} />
+            Epikrízis
+          </button>
           {nyitott && (
             <button type="button" className="btn btn--sm" onClick={() => void lezar()} disabled={zaras.busy}>
               <Icon name="stop" size={14} />
@@ -128,6 +139,7 @@ function EllatasSor({ ellatas, onValtozott }: { ellatas: Ellatas; onValtozott: (
         </p>
       )}
       {reszletek && <EllatasReszlet id={ellatas.id} />}
+      {epikrizis && <EpikrizisPanel ellatas={ellatas} />}
       {felvetelei.length > 0 && (
         <div className="item__sub">
           <span className="meta">Felvételek:</span>

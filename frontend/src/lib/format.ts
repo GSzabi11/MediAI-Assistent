@@ -90,5 +90,8 @@ export function forrasLink(patientId: number, f: Forras) {
   if (f.tipus === 'labor') {
     return `/betegek/${patientId}?nezet=labor&meres=${f.laborId}`;
   }
+  if (f.tipus === 'gyogyszer') {
+    return `/betegek/${patientId}?nezet=gyogyszer`;
+  }
   return `/betegek/${patientId}?nezet=atirat&felvetel=${f.felvetelId}&turn=${f.turnIds.join(',')}`;
 }

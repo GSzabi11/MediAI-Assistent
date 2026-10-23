@@ -91,6 +91,9 @@ export function useForrasCimke() {
     if (f.tipus === 'labor') {
       return { cim: 'Labormérés', hely: `#${f.laborId}`, icon: 'flask' };
     }
+    if (f.tipus === 'gyogyszer') {
+      return { cim: 'Gyógyszerlista', hely: f.gyogyszerIds.map((id) => `#${id}`).join(', '), icon: 'pill' };
+    }
     const fv = felvetelek.find((x) => x.id === f.felvetelId);
     // A turnIds a felvétel turn-sorszámai; ha valamelyik nincs meg, látszódjon, ne tűnjön el csendben
     const sorszamok = f.turnIds.map((turn) =>

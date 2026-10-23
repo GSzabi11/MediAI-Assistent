@@ -438,31 +438,48 @@ def dose_mismatches(text: str, facts: dict) -> list[str]:
     return out
 
 
-def summarize(facts: dict) -> dict:
-    """Az Ollama-hívások és az ellenőrzés; a Spring callback-jének törzse (DONE)."""
-    facts_text = render_facts(facts)
+def write_summary(facts: dict) -> tuple[str, bool, str]:
+    """Az összefoglaló megírása (stream): (nyers szöveg, hurok/csonkolás volt-e, a modellnek átadott tények
+    szövege). A Medical history is ezt használja (a felhasználó döntése, 2026-10-23: ott az összefoglaló
+    ugyanez, csak a javaslatok nélkül)."""
     summary_facts_text = render_facts(facts, include_labs=False)
     summary, summary_cut = _stream_text(SYSTEM_SUMMARY, "A beteg tényei:\n\n" + summary_facts_text, 900,
                                        loop_start=_sentence_loop_start)
     if not summary:
         raise ValueError("A modell nem adott használható összefoglalót")
-    recs_text, recs_cut = _stream_text(SYSTEM_RECOMMENDATIONS, "A beteg tényei:\n\n" + facts_text, 350)
-    recommendations = _parse_recommendations(recs_text)
+    return summary, summary_cut, summary_facts_text
 
-    summary, repeated = dedupe_sentences(summary)
+
+def check_summary(summary: str, facts: dict, summary_facts_text: str) -> tuple[str, list[str]]:
+    """Az összefoglaló determinisztikus utóellenőrzése: (javított szöveg, figyelmeztetések). A hurok /
+    csonkolás jelzését a hívó teszi hozzá (a javaslatokéval együtt)."""
     warnings = []
     summary, denied = drop_false_normal(summary, facts)
     if denied:
         warnings.append("Az összefoglaló egy mondata szerint nincs kóros eltérés, holott a referencia-szabály "
                         "tartományon kívüli értéket talált — a mondatot elhagytuk")
-    if summary_cut or recs_cut or repeated:
-        warnings.append("A modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a szöveg az utolsó teljes "
-                        "mondatnál le lett zárva")
-    warnings += contradictions(summary + " " + " ".join(recommendations), facts)
+    warnings += contradictions(summary, facts)
     warnings += missing_exams(summary, key_exams(facts))
     warnings += dose_mismatches(summary, facts)
     warnings += [f"Ellenőrizetlen szám az összefoglalóban: {n} (nem szerepel a beteg adatai között)"
                  for n in unverified_numbers(summary, summary_facts_text)]
+    return summary, warnings
+
+
+def summarize(facts: dict) -> dict:
+    """Az Ollama-hívások és az ellenőrzés; a Spring callback-jének törzse (DONE)."""
+    facts_text = render_facts(facts)
+    summary, summary_cut, summary_facts_text = write_summary(facts)
+    recs_text, recs_cut = _stream_text(SYSTEM_RECOMMENDATIONS, "A beteg tényei:\n\n" + facts_text, 350)
+    recommendations = _parse_recommendations(recs_text)
+
+    summary, repeated = dedupe_sentences(summary)
+    summary, warnings = check_summary(summary, facts, summary_facts_text)
+    if summary_cut or recs_cut or repeated:
+        warnings.append("A modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a szöveg az utolsó teljes "
+                        "mondatnál le lett zárva")
+    # a javaslatok is: egy normál vizsgálatot eltérőnek nevező javaslat ugyanúgy ellentmondás
+    warnings += [w for w in contradictions(" ".join(recommendations), facts) if w not in warnings]
     warnings += [f"Ellenőrizetlen szám a javaslatokban: {n} (nem szerepel a beteg adatai között)"
                  for n in unverified_numbers(" ".join(recommendations), facts_text)]
     return {

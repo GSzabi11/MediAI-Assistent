@@ -93,7 +93,8 @@ export type Forras =
   | { tipus: 'dokumentum'; dokumentumId: number; kezdet: number; veg: number }
   | { tipus: 'megszolalas'; felvetelId: number; turnIds: number[] }
   | { tipus: 'kep'; dokumentumId: number; oldal: number }
-  | { tipus: 'labor'; laborId: number };
+  | { tipus: 'labor'; laborId: number }
+  | { tipus: 'gyogyszer'; gyogyszerIds: number[] };
 
 export type Dontes = 'jovahagyva' | 'elutasitva' | 'modositva';
 
@@ -628,4 +629,35 @@ export interface Konyvjelzo {
   kutatasId: number;
   kifejezes: string;
   inditva: string;
+}
+
+// ---------- epikrízis ----------
+/** a forrás: lelet VAGY a felvétel megszólalásai */
+export interface EpikrizisForras {
+  dokumentumId: number | null;
+  felvetelId: number | null;
+  turnIds: number[];
+}
+
+export interface Epikrizis {
+  id: number;
+  ellatasId: number;
+  allapot: 'keszul' | 'kesz' | 'hiba';
+  kerve: string;
+  elkeszult: string | null;
+  hiba: string | null;
+  /** a sablon fejléce az adatbázisból (nem szerkeszthető) */
+  fejlec: { beteg: string; taj: string; datum: string };
+  diagnozisok: ({ nev: string; bno: string | null } & EpikrizisForras)[];
+  megallapitasok: ({ szoveg: string; idezet: string | null; jeloles: string | null } & EpikrizisForras)[];
+  javaslatok: string[];
+  figyelmeztetesek: string[];
+  modell: { nev: string; seed: number; promptHash: string; verzio: string } | null;
+  bemenet: Record<string, number>;
+  dokumentumIds: number[];
+  felvetelIds: number[];
+  aiHtml: string;
+  html: string;
+  szerkesztve: string | null;
+  haladas: { uzenet: string; lepes: number | null; osszes: number | null; ota: string } | null;
 }

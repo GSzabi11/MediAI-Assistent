@@ -3,6 +3,7 @@
     POST /profiles   Spring → Python: hangprofil a felolvasott mondatokból (sorba áll, 202)
     POST /recordings Spring → Python: felvétel átírása, szerepkiosztás, MedGemma-átnézés (202)
     POST /recording-summaries  Spring → Python: összefoglaló az átiratból + kulcsszavakból (202)
+    POST /recording-findings   Spring → Python: csoportok (panasz, diagnózis, beutaló, …) az átiratból (202)
     GET  /health     sor állapota
 
 A hang nem élőben jön: a böngésző a felvétel végén a Springnek tölti fel, a Spring a fájl útját
@@ -20,7 +21,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import voice_config as config
-from worker import EnrollmentJob, JobQueue, RecordingJob, SummaryJob
+from worker import EnrollmentJob, FindingsJob, JobQueue, RecordingJob, SummaryJob
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -96,6 +97,23 @@ def submit_summary(req: SummaryRequest, x_internal_token: str | None = Header(de
     if position is None:
         return JSONResponse(status_code=202, content={"summaryId": req.summaryId, "alreadyQueued": True})
     return {"summaryId": req.summaryId, "queuePosition": position}
+
+
+class FindingsRequest(BaseModel):
+    extractionId: int = Field(gt=0)
+    mode: str = Field(pattern=r"^(SBO|ECHO)$")
+    utterances: list[SummaryTurn] = Field(min_length=1, max_length=5000)
+    callbackUrl: str = Field(pattern=r"^https?://")
+
+
+@app.post("/recording-findings", status_code=202)
+def submit_findings(req: FindingsRequest, x_internal_token: str | None = Header(default=None)):
+    _check_token(x_internal_token)
+    position = jobs.submit(FindingsJob(req.extractionId, req.mode, [u.model_dump() for u in req.utterances],
+                                       req.callbackUrl))
+    if position is None:
+        return JSONResponse(status_code=202, content={"extractionId": req.extractionId, "alreadyQueued": True})
+    return {"extractionId": req.extractionId, "queuePosition": position}
 
 
 @app.get("/health")

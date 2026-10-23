@@ -100,6 +100,8 @@ public class StatementService {
             }
             case StatementSource.Lab lab -> throw new IllegalArgumentException(
                     "LAB forrású állítást csak a szabálymotor hozhat létre, az API nem");
+            case StatementSource.Medication medication -> throw new IllegalArgumentException(
+                    "MEDICATION forrású állítást csak a szabálymotor hozhat létre, az API nem");
             case StatementSource.Image image -> {
                 Document document = requireDocumentOfPatient(image.documentId(), request.patientId());
                 if (!document.isImageLike()) {

@@ -4,7 +4,7 @@ A betegoldal „Medical history” füle. Az összes feldolgozott dokumentumból
 
 | Rész | Forrás | Mód |
 |---|---|---|
-| Összefoglaló (anamnézis, kórtörténet, 3 bekezdés) | LLM (`history.py`) | gombra, a háttérben |
+| Összefoglaló (elmúlt 6 hónap) | LLM — **ugyanaz, mint a Klinikai státuszé** (`summarize.write_summary`) | gombra, a háttérben |
 | Kórtörténeti idővonal | laborlelet: **szabálymotor**; egyéb lelet: dokumentum-kivonat (LLM, idézettel ellenőrizve) | ugyanazzal a gombbal |
 | Diagnózisok (BNO-kóddal) | dokumentum-kivonat; a **BNO-kód csak a leletből**, szó szerint | ugyanazzal a gombbal |
 | Aktuális gyógyszerelés | a gyógyszerlista (`medication`, aktív) pillanatképe | determinisztikus |
@@ -92,6 +92,15 @@ A modell csak javasol (`history.py`):
   két szöveges hívás, ~5–6 perc); a kivonatok és a BNO-kódok (`K2190`, `J3920` a leletből) helyesek, az
   összefoglaló időrendje nagyrészt jó, de egy diagnózis dátumát rosszul kötötte („októberben diagnosztizálták
   a refluxot”, holott februári). Ezalatt a GPU-sor (dokumentum-feldolgozás) vár.
+
+## Összefoglaló = a Klinikai státusz összefoglalója (a felhasználó döntése, 2026-10-23)
+
+Az összefoglaló csak az **elmúlt 6 hónap** tényeiből készül, a Klinikai státusszal azonos bemenettel
+(`SummaryFactsBuilder`, `MedicalHistoryFacts.summaryFacts`), prompttal és ellenőrzéssel
+(`summarize.write_summary` + `check_summary`), de a **proaktív javaslatok nélkül**. Az idővonal, a
+diagnózisok és a kórtörténet saját Javaslatai továbbra is a teljes előzményből készülnek. Ha az elmúlt 6
+hónapból nincs adat, modell nélküli rögzített szöveg áll ott. A korábbi, teljes előzményes anamnézis-prompt
+(`SYSTEM_HISTORY`) megszűnt.
 
 ## Sorrend
 

@@ -27,6 +27,13 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
   Ugyanez készíti a Medical history-t (kórtörténet, `docs/medical-history.md`, V31): dokumentumonkénti kivonat
   (`document_digest`) → idővonal, diagnózisok, anamnézis, javaslatok; külön tábla, nem `allitas`; a BNO-kód csak
   a leletből, az idővonal minden eleme forrás-dokumentumra mutat; DOCX-export (Word altChunk).
+  Ugyanez készíti az Epikrízist (`docs/epicrisis.md`, V33) egy ellátáshoz: az ellátás leletei + az ellátás
+  hangfelvétel-átirata + aktív gyógyszerek → diagnózisok, kritikus megállapítások (forrással, idézettel), javaslatok;
+  a fejléc a DB-ből; külön tábla, nem `allitas`; a dokumentum-kivonatok közösek a kórtörténettel.
+- **Gyógyszer-interakció** (`docs/drug-interaction.md`, V35): Java szabálymotor (`rule/DrugInteractionRule`),
+  helyi referenciatáblákból (NEAK PUPHA: név → ATC; DDInter 2.0: hatóanyag-párok). A havi frissítés (`drug` modul)
+  tölti le őket — kifelé csak fájlkérés és ATC-kód (RxNorm) megy, betegadat soha; futás közben nincs hálózati hívás.
+  A riasztás `DETERMINISTIC_RULE` állítás `MEDICATION {medicationIds}` forrással.
 - **frontend/** — React (Figma-terv alapján, még nincs kód).
 
 ## A rendszer központi elve: az Allitas (Statement)

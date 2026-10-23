@@ -13,6 +13,7 @@ import requests
 
 import beszed_pipeline as bp
 import enrollment
+import findings
 import keywords
 import local_models
 import review
@@ -126,6 +127,25 @@ class SummaryJob:
 
     def run(self) -> dict:
         return summary.summarize(self.mode, self.utterances, self.keywords)
+
+
+@dataclass(frozen=True, eq=False)
+class FindingsJob:
+    extraction_id: int
+    mode: str
+    utterances: list
+    callback_url: str
+
+    @property
+    def key(self) -> tuple:
+        return ("findings", self.extraction_id)
+
+    @property
+    def label(self) -> str:
+        return f"felvétel-csoportok {self.extraction_id}"
+
+    def run(self) -> dict:
+        return findings.extract(self.mode, self.utterances)
 
 
 def resolve(raw: str, must_exist: bool = True) -> Path:

@@ -25,6 +25,7 @@ import type {
   VoiceProfileDto,
   ClinicalSummaryDto,
   MedicalHistoryDto,
+  EpicrisisDto,
   ChatMessageDto,
   KeywordDto,
   RecordingSummaryDto,
@@ -61,6 +62,7 @@ import type {
   RagDarab,
   KlinikaiOsszefoglalo,
   Kortortenet,
+  Epikrizis,
   ChatValasz,
   FelvetelOsszefoglalo,
   Kulcsszo,
@@ -162,6 +164,8 @@ export function toForras(s: StatementSourceDto): Forras {
       return { tipus: 'kep', dokumentumId: s.documentId, oldal: s.page };
     case 'LAB':
       return { tipus: 'labor', laborId: s.labResultId };
+    case 'MEDICATION':
+      return { tipus: 'gyogyszer', gyogyszerIds: s.medicationIds };
   }
 }
 
@@ -175,6 +179,8 @@ export function toSourceDto(f: Forras): StatementSourceDto {
       throw new Error('Képforrású idézet kézzel nem rögzíthető (nincs kijelölt terület)');
     case 'labor':
       throw new Error('Laborsor-forrású állítást csak a szabálymotor hoz létre');
+    case 'gyogyszer':
+      throw new Error('Gyógyszer-forrású állítást csak a szabálymotor hoz létre');
   }
 }
 
@@ -694,4 +700,49 @@ export const toKonyvjelzo = (b: BookmarkDto): Konyvjelzo => ({
   kutatasId: b.researchId,
   kifejezes: b.researchQuery,
   inditva: b.researchCreatedAt,
+});
+
+export const toEpikrizis = (e: EpicrisisDto): Epikrizis => ({
+  id: e.id,
+  ellatasId: e.medicalCareId,
+  allapot: osszefoglaloAllapot[e.status],
+  kerve: e.requestedAt,
+  elkeszult: e.completedAt,
+  hiba: e.error,
+  fejlec: { beteg: e.header.patient, taj: e.header.taj, datum: e.header.date },
+  diagnozisok: (e.diagnoses ?? []).map((d) => ({
+    nev: d.name,
+    bno: d.bnoCode,
+    dokumentumId: d.documentId,
+    felvetelId: d.recordingId,
+    turnIds: d.turnIds ?? [],
+  })),
+  megallapitasok: (e.findings ?? []).map((f) => ({
+    szoveg: f.text,
+    idezet: f.quote,
+    jeloles: f.flag,
+    dokumentumId: f.documentId,
+    felvetelId: f.recordingId,
+    turnIds: f.turnIds ?? [],
+  })),
+  javaslatok: e.recommendations ?? [],
+  figyelmeztetesek: e.warnings ?? [],
+  modell: e.model && {
+    nev: e.model.modelName,
+    seed: e.model.seed,
+    promptHash: e.model.promptHash,
+    verzio: e.model.extractorVersion,
+  },
+  bemenet: e.inputCounts ?? {},
+  dokumentumIds: e.documentIds ?? [],
+  felvetelIds: e.recordingIds ?? [],
+  aiHtml: e.aiHtml,
+  html: e.html,
+  szerkesztve: e.editedAt,
+  haladas: e.progress && {
+    uzenet: e.progress.message,
+    lepes: e.progress.step,
+    osszes: e.progress.total,
+    ota: e.progress.at,
+  },
 });

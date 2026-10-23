@@ -24,8 +24,12 @@ import bme.mediai.document.exception.DuplicateDocumentException;
 import bme.mediai.document.exception.ExtractedTextAlreadySetException;
 import bme.mediai.document.exception.ExtractedTextMissingException;
 import bme.mediai.keyword.exception.KeywordConflictException;
+import bme.mediai.epicrisis.exception.EpicrisisConflictException;
+import bme.mediai.epicrisis.exception.EpicrisisNotFoundException;
 import bme.mediai.medicalhistory.exception.MedicalHistoryConflictException;
 import bme.mediai.medicalhistory.exception.MedicalHistoryNotFoundException;
+import bme.mediai.recordingfinding.exception.RecordingFindingConflictException;
+import bme.mediai.recordingfinding.exception.RecordingFindingNotFoundException;
 import bme.mediai.recordingsummary.exception.RecordingSummaryConflictException;
 import bme.mediai.recordingsummary.exception.RecordingSummaryNotFoundException;
 import bme.mediai.keyword.exception.KeywordNotFoundException;
@@ -111,6 +115,16 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(RecordingFindingNotFoundException.class)
+    ProblemDetail handleRecordingFindingNotFound(RecordingFindingNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(RecordingFindingConflictException.class)
+    ProblemDetail handleRecordingFindingConflict(RecordingFindingConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(KeywordNotFoundException.class)
     ProblemDetail handleKeywordNotFound(KeywordNotFoundException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -191,6 +205,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MedicalHistoryConflictException.class)
     ProblemDetail handleMedicalHistoryConflict(MedicalHistoryConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(EpicrisisNotFoundException.class)
+    ProblemDetail handleEpicrisisNotFound(EpicrisisNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(EpicrisisConflictException.class)
+    ProblemDetail handleEpicrisisConflict(EpicrisisConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

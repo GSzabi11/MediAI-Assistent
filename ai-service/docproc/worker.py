@@ -21,6 +21,7 @@ import chunking
 import classify
 import config
 import embedding
+import epicrisis
 import extract
 import history
 import literature
@@ -81,6 +82,22 @@ class MedicalHistoryJob:
     @property
     def label(self) -> str:
         return f"kórtörténet {self.history_id}"
+
+
+@dataclass(frozen=True, eq=False)
+class EpicrisisJob:
+    epicrisis_id: int
+    callback_url: str
+    facts: dict
+    progress_url: str | None = None
+
+    @property
+    def key(self) -> tuple:
+        return ("epicrisis", self.epicrisis_id)
+
+    @property
+    def label(self) -> str:
+        return f"epikrízis {self.epicrisis_id}"
 
 
 @dataclass(frozen=True, eq=False)
@@ -234,6 +251,8 @@ class JobQueue:
                         payload = summarize.summarize(job.facts)
                     elif isinstance(job, MedicalHistoryJob):
                         payload = history.build(job.facts, lambda m, step, total: send_step(job, m, step, total))
+                    elif isinstance(job, EpicrisisJob):
+                        payload = epicrisis.build(job.facts, lambda m, step, total: send_step(job, m, step, total))
                     elif isinstance(job, ResearchContextJob):
                         payload = research.context(job.facts)
                     elif isinstance(job, ArticleEvalJob):
@@ -292,7 +311,7 @@ class SearchRunner:
             self._queue.task_done()
 
 
-def send_step(job: MedicalHistoryJob, message: str, step: int, total: int) -> None:
+def send_step(job: "MedicalHistoryJob | EpicrisisJob", message: str, step: int, total: int) -> None:
     """Lépésenkénti haladás a Springnek (a kórtörténet); ha nem megy át, a feldolgozás ettől folytatódik."""
     if not job.progress_url:
         return

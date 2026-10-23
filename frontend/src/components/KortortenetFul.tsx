@@ -6,6 +6,7 @@ import { formatDatumIdo } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
+import { DokSzerkeszto, type Mentetlen } from './DokSzerkeszto';
 import { Icon } from './Icon';
 import { ErrorState, Loading } from './shell';
 
@@ -99,7 +100,7 @@ export function KortortenetFul() {
  * Készülés közben: a feldolgozó aktuális lépése ("Dokumentum-kivonat 5/16") sávval, és az eltelt idő.
  * Lépés nélkül (még a sorban vár, vagy régi docproc) csak az időt mutatja.
  */
-function Haladas({ k }: { k: Kortortenet }) {
+export function Haladas({ k }: { k: Pick<Kortortenet, 'kerve' | 'haladas'> }) {
   const [most, setMost] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setMost(Date.now()), 1000);
@@ -133,7 +134,6 @@ function Haladas({ k }: { k: Kortortenet }) {
   );
 }
 
-type Mentetlen = { id: number; html: () => string };
 type SzerkesztoProps = { k: Kortortenet; regisztral: (m: Mentetlen | null) => void; onSaved: (k: Kortortenet) => void };
 
 function KeszKortortenet({ k, regisztral, onSaved }: SzerkesztoProps) {
@@ -236,151 +236,17 @@ function ExportGomb({
   );
 }
 
-const ESZKOZOK: { parancs: string; cimke: string; jel: string; className?: string }[] = [
-  { parancs: 'bold', cimke: 'Félkövér', jel: 'B', className: 'rte__b' },
-  { parancs: 'italic', cimke: 'Dőlt', jel: 'I', className: 'rte__i' },
-  { parancs: 'underline', cimke: 'Aláhúzott', jel: 'U', className: 'rte__u' },
-  { parancs: 'insertUnorderedList', cimke: 'Felsorolás', jel: '•≡' },
-  { parancs: 'insertOrderedList', cimke: 'Számozott lista', jel: '1≡' },
-];
-
-/**
- * A dokumentum alapból olvasható nézetben jelenik meg; a "Szerkesztés" gomb nyitja meg a szerkesztőt.
- * Egyszerű rich text szerkesztő (contentEditable + execCommand): félkövér, dőlt, aláhúzott, felsorolás,
- * számozott lista. A mentett HTML-t a Spring szűri (csak ezek az elemek maradnak meg).
- */
 function Szerkeszto({ k, regisztral, onSaved }: SzerkesztoProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [modositott, setModositott] = useState(false);
-  const [eredeti, setEredeti] = useState(false);
-  // olvasási nézet az alapértelmezés; mentés után a key újraindítja → ismét olvasási nézet
-  const [szerkeszt, setSzerkeszt] = useState(false);
-  const mentes = useAkcio();
-
-  // A tartalmat csak a szerkesztő megnyitásakor írjuk be: gépelés közben a React nem nyúl hozzá
-  useEffect(() => {
-    if (szerkeszt && ref.current) ref.current.innerHTML = k.html;
-  }, [k.html, szerkeszt]);
-
-  useEffect(() => {
-    regisztral(modositott ? { id: k.id, html: () => ref.current?.innerHTML ?? k.html } : null);
-    return () => regisztral(null);
-  }, [modositott, k.id, k.html, regisztral]);
-
-  function parancs(p: string) {
-    ref.current?.focus();
-    // Enter után <p> legyen, ne <div> (a Word-export és a szűrő is a bekezdést várja)
-    document.execCommand('defaultParagraphSeparator', false, 'p');
-    document.execCommand(p);
-    setModositott(true);
-  }
-
-  async function ment() {
-    const html = ref.current?.innerHTML ?? '';
-    const uj = await mentes.run(() => api.szerkesztKortortenetet(k.id, html));
-    if (uj) onSaved(uj);
-  }
-
-  function megse() {
-    if (modositott && !window.confirm('Elveted a nem mentett módosításokat?')) return;
-    setModositott(false);
-    setSzerkeszt(false);
-  }
-
-  function visszaallit() {
-    if (ref.current) ref.current.innerHTML = k.aiHtml;
-    setModositott(true);
-  }
-
   return (
-    <section className="kortortenet__card" aria-label="Anamnézis és kórtörténeti összefoglaló">
-      {!szerkeszt && (
-        <div className="rte">
-          <div className="rte__bar">
-            <span className="push-right" />
-            {k.szerkesztve && (
-              <button type="button" className="btn btn--sm" onClick={() => setEredeti((v) => !v)}>
-                {eredeti ? 'AI eredeti elrejtése' : 'AI eredeti megtekintése'}
-              </button>
-            )}
-            <button type="button" className="btn btn--sm btn--primary" onClick={() => setSzerkeszt(true)}>
-              <Icon name="pencil" size={14} />
-              Szerkesztés
-            </button>
-          </div>
-          {/* a Spring által előállított (escape-elt) vagy szűrt HTML (MedicalHistoryHtml) */}
-          <div className="rte__body kortortenet__doc" dangerouslySetInnerHTML={{ __html: k.html }} />
-        </div>
-      )}
-      {szerkeszt && (
-        <div className="rte">
-          <div className="rte__bar" role="toolbar" aria-label="Formázás">
-            {ESZKOZOK.map((e, i) => (
-              <button
-                key={e.parancs}
-                type="button"
-                className={`rte__btn ${e.className ?? ''}${i === 3 ? ' rte__btn--sep' : ''}`}
-                title={e.cimke}
-                aria-label={e.cimke}
-                // mousedown: a kijelölés ne vesszen el a gombra kattintáskor
-                onMouseDown={(ev) => {
-                  ev.preventDefault();
-                  parancs(e.parancs);
-                }}
-              >
-                {e.jel}
-              </button>
-            ))}
-            <span className="push-right" />
-            {k.szerkesztve && (
-              <button type="button" className="btn btn--sm" onClick={() => setEredeti((v) => !v)}>
-                {eredeti ? 'AI eredeti elrejtése' : 'AI eredeti megtekintése'}
-              </button>
-            )}
-            <button type="button" className="btn btn--sm" onClick={visszaallit} title="Az AI szövegére">
-              Visszaállítás
-            </button>
-            <button type="button" className="btn btn--sm" onClick={megse}>
-              Mégse
-            </button>
-            <button
-              type="button"
-              className="btn btn--sm btn--primary"
-              onClick={() => void ment()}
-              disabled={!modositott || mentes.busy}
-            >
-              <Icon name="check" size={14} />
-              {mentes.busy ? 'Mentés…' : modositott ? 'Mentés' : 'Mentve'}
-            </button>
-          </div>
-          <div
-            ref={ref}
-            className="rte__body kortortenet__doc"
-            contentEditable
-            suppressContentEditableWarning
-            role="textbox"
-            aria-multiline="true"
-            aria-label="Anamnézis és kórtörténeti összefoglaló (szerkeszthető)"
-            spellCheck
-            onInput={() => setModositott(true)}
-          />
-        </div>
-      )}
-      {mentes.error && (
-        <p className="form-error" role="alert">
-          {mentes.error}
-        </p>
-      )}
-      {eredeti && (
-        <div className="kortortenet__orig">
-          <span className="klinstatus__label">
-            <Icon name="spark" size={12} /> Az AI eredeti szövege (nem szerkeszthető)
-          </span>
-          {/* a Spring által előállított, escape-elt HTML (MedicalHistoryHtml.render) */}
-          <div className="kortortenet__doc" dangerouslySetInnerHTML={{ __html: k.aiHtml }} />
-        </div>
-      )}
-    </section>
+    <DokSzerkeszto
+      id={k.id}
+      html={k.html}
+      aiHtml={k.aiHtml}
+      szerkesztve={k.szerkesztve}
+      ment={async (html) => onSaved(await api.szerkesztKortortenetet(k.id, html))}
+      regisztral={regisztral}
+      cimke="Anamnézis és kórtörténeti összefoglaló"
+    />
   );
 }
 

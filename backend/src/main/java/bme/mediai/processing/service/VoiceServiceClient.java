@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import bme.mediai.recording.api.RecordingJobRequest;
+import bme.mediai.recordingfinding.api.ExtractionJobRequest;
 import bme.mediai.recordingsummary.api.RecordingSummaryJobRequest;
 import bme.mediai.voiceprofile.api.VoiceEnrollmentJobRequest;
 
@@ -52,6 +53,10 @@ public class VoiceServiceClient {
 
     public void submitRecordingSummary(RecordingSummaryJobRequest job) {
         post("/recording-summaries", job);
+    }
+
+    public void submitRecordingExtraction(ExtractionJobRequest job) {
+        post("/recording-findings", job);
     }
 
     private void post(String uri, Object body) {

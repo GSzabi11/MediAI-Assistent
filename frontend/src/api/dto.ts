@@ -111,7 +111,9 @@ export type StatementSourceDto =
   | { type: 'DOCUMENT'; documentId: number; charStart: number; charEnd: number }
   | { type: 'IMAGE'; documentId: number; page: number; x: number; y: number; width: number; height: number }
   /** egy laborsor — csak a szabálymotor (referencia-tartomány) állításai hivatkoznak így */
-  | { type: 'LAB'; labResultId: number };
+  | { type: 'LAB'; labResultId: number }
+  /** a beteg gyógyszer-tételei — csak az interakció-szabály állításai hivatkoznak így */
+  | { type: 'MEDICATION'; medicationIds: number[] };
 
 export type StatementProducerDto =
   | { type: 'RULE'; ruleId: string; ruleVersion: string }
@@ -602,4 +604,46 @@ export interface BookmarkDto {
   researchId: number;
   researchQuery: string;
   researchCreatedAt: string;
+}
+
+/** GET/POST /epicrises — epikrízis egy ellátáshoz (nem állítás; docs/epicrisis.md) */
+export interface EpicrisisDto {
+  id: number;
+  patientId: number;
+  medicalCareId: number;
+  status: 'PROCESSING' | 'DONE' | 'FAILED';
+  requestedBy: number | null;
+  requestedAt: string;
+  completedAt: string | null;
+  error: string | null;
+  /** a sablon fejléce az adatbázisból: "Kovács István (sz.: 1958-03-14)", "123-456-789", "2026. 10. 15." */
+  header: { patient: string; taj: string; date: string };
+  diagnoses: {
+    name: string;
+    bnoCode: string | null;
+    documentId: number | null;
+    recordingId: number | null;
+    turnIds: number[];
+  }[];
+  findings: {
+    text: string;
+    documentId: number | null;
+    recordingId: number | null;
+    turnIds: number[];
+    quote: string | null;
+    /** ha nem null: ellenőrizendő */
+    flag: string | null;
+  }[];
+  medications: { id: number; name: string; dose: string | null; route: string | null; verified: boolean }[];
+  recommendations: string[];
+  warnings: string[];
+  model: { modelName: string; seed: number; promptHash: string; extractorVersion: string } | null;
+  inputCounts: Record<string, number>;
+  documentIds: number[];
+  recordingIds: number[];
+  aiHtml: string;
+  html: string;
+  editedBy: number | null;
+  editedAt: string | null;
+  progress: { message: string; step: number | null; total: number | null; at: string } | null;
 }

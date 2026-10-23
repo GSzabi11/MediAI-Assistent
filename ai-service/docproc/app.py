@@ -22,8 +22,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import config
-from worker import (ArticleEvalJob, ChatJob, Job, JobQueue, MedicalHistoryJob, RankingJob, ResearchContextJob,
-                    SearchJob, SearchRunner, SummaryJob)
+from worker import (ArticleEvalJob, ChatJob, EpicrisisJob, Job, JobQueue, MedicalHistoryJob, RankingJob,
+                    ResearchContextJob, SearchJob, SearchRunner, SummaryJob)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -88,6 +88,22 @@ def submit_medical_history(req: MedicalHistoryRequest, x_internal_token: str | N
     if position is None:
         return JSONResponse(status_code=202, content={"historyId": req.historyId, "alreadyQueued": True})
     return {"historyId": req.historyId, "queuePosition": position}
+
+
+class EpicrisisRequest(BaseModel):
+    epicrisisId: int = Field(gt=0)
+    callbackUrl: str = Field(pattern=r"^https?://")
+    progressUrl: str | None = Field(default=None, pattern=r"^https?://")
+    facts: dict
+
+
+@app.post("/epicrises", status_code=202)
+def submit_epicrisis(req: EpicrisisRequest, x_internal_token: str | None = Header(default=None)):
+    _check_token(x_internal_token)
+    position = jobs.submit(EpicrisisJob(req.epicrisisId, req.callbackUrl, req.facts, req.progressUrl))
+    if position is None:
+        return JSONResponse(status_code=202, content={"epicrisisId": req.epicrisisId, "alreadyQueued": True})
+    return {"epicrisisId": req.epicrisisId, "queuePosition": position}
 
 
 class ChatTurn(BaseModel):

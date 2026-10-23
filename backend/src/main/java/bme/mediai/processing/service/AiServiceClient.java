@@ -14,6 +14,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import bme.mediai.chat.api.ChatJobRequest;
+import bme.mediai.epicrisis.api.EpicrisisJobRequest;
 import bme.mediai.medicalhistory.api.MedicalHistoryJobRequest;
 import bme.mediai.processing.api.ProcessingJobRequest;
 import bme.mediai.research.api.ResearchContextJobRequest;
@@ -75,6 +76,11 @@ public class AiServiceClient {
     // Kórtörténet (docs/medical-history.md): dokumentum-kivonatok + összefoglaló + idővonal, a GPU-sorba
     public void submitMedicalHistory(MedicalHistoryJobRequest job) {
         post("/medical-histories", job);
+    }
+
+    // Epikrízis egy ellátáshoz (docs/epicrisis.md): kivonatok + megállapítások + javaslatok, a GPU-sorba
+    public void submitEpicrisis(EpicrisisJobRequest job) {
+        post("/epicrises", job);
     }
 
     public record Health(List<String> pending) {

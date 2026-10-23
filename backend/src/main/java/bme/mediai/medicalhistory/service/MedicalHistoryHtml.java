@@ -47,7 +47,7 @@ public final class MedicalHistoryHtml {
             return "";
         }
         StringBuilder out = new StringBuilder();
-        out.append("<h2>Összefoglaló</h2>");
+        out.append("<h2>Összefoglaló (elmúlt 6 hónap)</h2>");
         for (String paragraph : h.getSummary().strip().split("\\n\\s*\\n")) {
             out.append("<p>").append(escape(paragraph.strip()).replace("\n", "<br>")).append("</p>");
         }

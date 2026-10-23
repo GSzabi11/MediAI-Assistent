@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,6 +42,8 @@ public class MedicalHistoryFactsBuilder {
     private static final ZoneId CLINICAL_ZONE = ZoneId.of("Europe/Budapest");
     // a lelet szövegéből legfeljebb ennyi megy a kivonathoz
     private static final int MAX_DOCUMENT_CHARS = 12000;
+    // az összefoglaló időszaka — ugyanaz, mint a Klinikai státuszé (a felhasználó döntése, 2026-10-23)
+    private static final int SUMMARY_MONTHS = 6;
 
     public record Built(MedicalHistoryFacts facts, List<MedicalHistory.Medication> medications,
             Map<String, List<Long>> inputIds) {
@@ -51,10 +54,12 @@ public class MedicalHistoryFactsBuilder {
     private final LabResultRepository labResultRepository;
     private final MedicationService medicationService;
     private final AllergyService allergyService;
+    private final SummaryFactsBuilder summaryFactsBuilder;
 
     public MedicalHistoryFactsBuilder(DocumentRepository documentRepository, DocumentDigestRepository digestRepository,
             LabResultRepository labResultRepository, MedicationService medicationService,
-            AllergyService allergyService) {
+            AllergyService allergyService, SummaryFactsBuilder summaryFactsBuilder) {
+        this.summaryFactsBuilder = summaryFactsBuilder;
         this.documentRepository = documentRepository;
         this.digestRepository = digestRepository;
         this.labResultRepository = labResultRepository;
@@ -63,13 +68,22 @@ public class MedicalHistoryFactsBuilder {
     }
 
     public Built build(Patient patient) {
+        return build(patient, d -> true);
+    }
+
+    // Feldolgozott, típussal és dátummal rendelkező dokumentum — csak ilyen kerülhet idővonalra / epikrízisbe
+    public static boolean usable(Document d) {
+        return d.getStatus() == DocumentStatus.PROCESSED && d.getType() != null && d.getClinicalDate() != null;
+    }
+
+    // include: a dokumentumok szűkítése (az epikrízisnél az orvos által kiválasztott leletek)
+    public Built build(Patient patient, Predicate<Document> include) {
         Long patientId = patient.getId();
         LocalDate today = LocalDate.now(CLINICAL_ZONE);
 
         // csak a feldolgozott, típussal és dátummal rendelkező dokumentumok (a többi nem helyezhető idővonalra)
         List<Document> documents = documentRepository.findByPatientIdOrderByUploadedAtDesc(patientId).stream()
-                .filter(d -> d.getStatus() == DocumentStatus.PROCESSED && d.getType() != null
-                        && d.getClinicalDate() != null)
+                .filter(d -> usable(d) && include.test(d))
                 .sorted(Comparator.comparing(Document::getClinicalDate).thenComparing(Document::getId))
                 .toList();
         Map<Long, DocumentDigest> digests = digestRepository.findByPatientId(patientId).stream()
@@ -109,8 +123,11 @@ public class MedicalHistoryFactsBuilder {
                 .toList();
 
         Integer age = patient.getBirthDate() == null ? null : Period.between(patient.getBirthDate(), today).getYears();
+        // Az összefoglaló a Klinikai státuszéval azonos módon készül: az elmúlt 6 hónap tényeiből (a
+        // javaslatok nélkül); az idővonal és a diagnózisok a teljes előzményből
+        SummaryFactsBuilder.Built summary = summaryFactsBuilder.build(patient, today.minusMonths(SUMMARY_MONTHS), today);
         MedicalHistoryFacts facts = new MedicalHistoryFacts(today, age, documentInputs, labEntries, medicationFacts,
-                allergies);
+                allergies, summary.facts());
 
         Map<String, List<Long>> ids = new LinkedHashMap<>();
         // a modellnek átadott dokumentumok: a szöveges leletek + a laborsort tartalmazó laborleletek
@@ -119,6 +136,9 @@ public class MedicalHistoryFactsBuilder {
         ids.put("labResultIds", labsByDocument.values().stream().flatMap(List::stream).map(LabResult::getId).toList());
         ids.put("medicationIds", medicationFacts.stream().map(SummaryFacts.MedicationFact::id).toList());
         ids.put("allergyIds", allergies.stream().map(SummaryFacts.AllergyFact::id).toList());
+        // az összefoglaló (6 hónap) bemenetéből, ami a fentiekben nincs benne
+        ids.put("statementIds", summary.inputIds().getOrDefault("statementIds", List.of()));
+        ids.put("recordingSummaryIds", summary.inputIds().getOrDefault("recordingSummaryIds", List.of()));
         return new Built(facts, medications, ids);
     }
 
@@ -152,7 +172,7 @@ public class MedicalHistoryFactsBuilder {
     // A beteg neve, anyja neve és TAJ-száma "[beteg]" / "[TAJ]" lesz a modellnek átadott szövegben: a kis
     // modell a kivonatba írta a nevet ("… idegenfogára készítettek …"). A kivonat idézetei ehhez a
     // (maszkolt) szöveghez igazodnak — karakterpozícióra a kivonat nem hivatkozik.
-    static String mask(Patient patient, String text) {
+    public static String mask(Patient patient, String text) {
         String out = text;
         if (patient.getTaj() != null && patient.getTaj().length() == 9) {
             String t = patient.getTaj();

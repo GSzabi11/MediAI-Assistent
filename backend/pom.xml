@@ -68,6 +68,12 @@
 			<artifactId>jsoup</artifactId>
 			<version>1.21.2</version>
 		</dependency>
+		<!-- a NEAK PUPHA gyógyszertörzs (Access .mdb) olvasása — docs/drug-interaction.md -->
+		<dependency>
+			<groupId>com.healthmarketscience.jackcess</groupId>
+			<artifactId>jackcess</artifactId>
+			<version>4.0.10</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>

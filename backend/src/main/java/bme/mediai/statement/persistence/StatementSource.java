@@ -2,6 +2,7 @@ package bme.mediai.statement.persistence;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -12,7 +13,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = StatementSource.Audio.class, name = "AUDIO"),
         @JsonSubTypes.Type(value = StatementSource.Document.class, name = "DOCUMENT"),
         @JsonSubTypes.Type(value = StatementSource.Image.class, name = "IMAGE"),
-        @JsonSubTypes.Type(value = StatementSource.Lab.class, name = "LAB")
+        @JsonSubTypes.Type(value = StatementSource.Lab.class, name = "LAB"),
+        @JsonSubTypes.Type(value = StatementSource.Medication.class, name = "MEDICATION")
 })
 public sealed interface StatementSource {
 
@@ -58,6 +60,16 @@ public sealed interface StatementSource {
         @Override
         public void validate() {
             require(labResultId != null, "A LAB forráshoz kell labResultId");
+        }
+    }
+
+    // A beteg gyógyszerei (rendezett id-k) — csak az interakció-szabály állításai hivatkoznak így (DB CHECK is)
+    record Medication(List<Long> medicationIds) implements StatementSource {
+        @Override
+        public void validate() {
+            require(medicationIds != null && !medicationIds.isEmpty(), "A MEDICATION forráshoz kell medicationIds");
+            require(medicationIds.stream().allMatch(Objects::nonNull), "Üres medicationId a forrásban");
+            require(new HashSet<>(medicationIds).size() == medicationIds.size(), "Ismétlődő medicationId a forrásban");
         }
     }
 

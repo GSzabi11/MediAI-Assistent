@@ -12,6 +12,7 @@ import bme.mediai.patient.persistence.PatientRepository;
 import bme.mediai.statement.service.StatementApprovalService;
 import bme.mediai.statement.service.StatementService;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,13 +31,16 @@ public class MedicationService {
     private final PatientRepository patientRepository;
     private final StatementApprovalService approvalService;
     private final StatementService statementService;
+    private final ApplicationEventPublisher events;
 
     public MedicationService(MedicationRepository repository, PatientRepository patientRepository,
-            StatementApprovalService approvalService, StatementService statementService) {
+            StatementApprovalService approvalService, StatementService statementService,
+            ApplicationEventPublisher events) {
         this.repository = repository;
         this.patientRepository = patientRepository;
         this.approvalService = approvalService;
         this.statementService = statementService;
+        this.events = events;
     }
 
     @Transactional
@@ -57,7 +61,9 @@ public class MedicationService {
                 request.sourceStatementId(),
                 EntryOrigin.MANUAL);
 
-        return MedicationResponse.from(repository.save(medication), true);
+        MedicationResponse saved = MedicationResponse.from(repository.save(medication), true);
+        events.publishEvent(new MedicationsChangedEvent(request.patientId()));
+        return saved;
     }
 
     // Az automatikus dokumentum-feldolgozás: a forrás-állítás még PENDING, ezért a tétel
@@ -103,8 +109,9 @@ public class MedicationService {
             medication.discontinue();
             notes.add(stripped + ": újabb dokumentumban más adaggal szerepel — ez az adag leállítottként került fel");
         }
-        return new PipelineMedicationResult(Optional.of(MedicationResponse.from(repository.save(medication), false)),
-                notes);
+        MedicationResponse saved = MedicationResponse.from(repository.save(medication), false);
+        events.publishEvent(new MedicationsChangedEvent(patientId));
+        return new PipelineMedicationResult(Optional.of(saved), notes);
     }
 
     public record PipelineMedicationResult(Optional<MedicationResponse> created, List<String> notes) {
@@ -154,6 +161,8 @@ public class MedicationService {
             throw new MedicationAlreadyDiscontinuedException(id);
         }
         medication.discontinue();
+        repository.flush();
+        events.publishEvent(new MedicationsChangedEvent(medication.getPatientId()));
         return withVerification(List.of(medication)).getFirst();
     }
 

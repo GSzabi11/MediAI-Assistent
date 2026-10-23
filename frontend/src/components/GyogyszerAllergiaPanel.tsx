@@ -5,6 +5,7 @@ import { parseSzam } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
+import { GyogyszerInterakcio } from './GyogyszerInterakcio';
 import { Icon } from './Icon';
 import { ErrorState, Loading } from './shell';
 
@@ -16,10 +17,13 @@ const allitasSzoveg = (a: ClaimResponse) => a.ervenyesSzoveg || a.idezet || a.ci
 
 /** Gyógyszerek és allergiák — a klinikai tényként megjelenő listák. */
 export function GyogyszerAllergiaPanel() {
+  // gyógyszer-változás után az interakció-panel lefedettsége is frissül
+  const [interakcioKulcs, setInterakcioKulcs] = useState(0);
   return (
     <div className="tabbody">
       <AllergiaResz />
-      <GyogyszerResz />
+      <GyogyszerResz onChanged={() => setInterakcioKulcs((k) => k + 1)} />
+      <GyogyszerInterakcio frissitesKulcs={interakcioKulcs} />
     </div>
   );
 }
@@ -196,8 +200,8 @@ function AllergiaReszlet({ id }: { id: number }) {
 
 // ======================= gyógyszer =======================
 
-function GyogyszerResz() {
-  const { patient } = usePatient();
+function GyogyszerResz({ onChanged }: { onChanged: () => void }) {
+  const { patient, frissit } = usePatient();
   const [csakAktiv, setCsakAktiv] = useState(true);
   const { state, reload, refresh } = useAsync(
     () => api.listGyogyszerek(patient.id, csakAktiv),
@@ -208,7 +212,14 @@ function GyogyszerResz() {
 
   async function leallit(id: number) {
     const g = await leallitas.run(() => api.leallitGyogyszer(id));
-    if (g) await refresh();
+    if (g) await mentve();
+  }
+
+  // A gyógyszerlista változásakor a szabálymotor újraszámolja az interakció-állításokat
+  async function mentve() {
+    await refresh();
+    await frissit().catch(() => undefined);
+    onChanged();
   }
 
   return (
@@ -277,7 +288,7 @@ function GyogyszerResz() {
           {leallitas.error}
         </p>
       )}
-      <GyogyszerForm onSaved={refresh} />
+      <GyogyszerForm onSaved={mentve} />
     </section>
   );
 }

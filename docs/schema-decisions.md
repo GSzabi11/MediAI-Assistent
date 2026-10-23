@@ -39,6 +39,24 @@ táblák, nem `statement`** (a felhasználó döntése, 2026-10-23). A `document
 forrás-dokumentumára mutat, a BNO-kód csak a leletből jöhet. Az orvos szerkesztése (`edited_html`, a Spring szűri)
 az AI eredetije mellé kerül — részletek: `docs/medical-history.md`.
 
+**V33: Epikrízis** — `epicrisis`; ugyanaz a kivétel, **külön tábla, nem `statement`**. Ellátásonként (összetett FK a
+`medical_care(id, patient_id)`-re), egyszerre egy `PROCESSING`. A leletek nincsenek tartósan az ellátáshoz kötve: az
+ellátás időszakába eső leletek kerülnek be, az `input.documentIds`-ben rögzülnek. A fejléc (név, TAJ, dátum) nem tárolódik, az
+adatbázisból számolódik; minden megállapítás és diagnózis forrásra mutat (lelet VAGY felvétel + `turn_id`-k) —
+részletek: `docs/epicrisis.md`.
+
+**V34: a felvétel csoportjai** — `recording_extraction` (futás: állapot, modell, seed, prompt-hash, figyelmeztetések)
+és `recording_finding` (elem: kategória — `COMPLAINT | DIAGNOSIS | REFERRAL | EXAM_FINDING | MEDICATION |
+RECOMMENDATION` —, `turn_ids`, `bno_code`); ugyanaz a kivétel, **külön táblák, nem `statement`** (az orvos
+szerkeszthető munkalistája). `MODEL` elem csak futáshoz és legalább egy `turn_id`-vel; `DOCTOR` elem `created_by`-jal.
+Az eredeti (`text`, `bno_code`) nem változik: a szerkesztés `edited_*`, a törlés logikai (`deleted_*`). BNO-kód csak
+panasznál / diagnózisnál (CHECK), a modell sosem ad — részletek: `docs/voice-module.md`, „Csoportok”.
+
+**V35: gyógyszer-interakció** — referenciatáblák (`pupha_product`, `atc_code`, `ddi_drug`, `ddi_interaction`,
+`atc_ddi_drug`, `drug_reference_import`; beteghez nem kötődnek, a frissítés egy tranzakcióban cseréli őket, JPA-entitás
+nélkül) + új állítás-forrás `MEDICATION {medicationIds}` (DB CHECK: csak szabály-állításé; egyedi index `(ruleId,
+medicationIds)`). Ez **`statement`** (szabály), nem kivétel — részletek: `docs/drug-interaction.md`.
+
 **V30: szakirodalmi kutatás** — `research_context`, `research`, `research_article`; ugyanaz a kivétel,
 **külön táblák, nem `statement`**. A `research` a keresés pillanatképe (kontextus, kérés, kifejezés).
 Az egyetlen funkció, amely a hálózatra hív (csak a keresőkifejezéssel) — részletek: `docs/literature-research.md`.
