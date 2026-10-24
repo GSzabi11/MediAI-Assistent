@@ -65,6 +65,13 @@ a diarizáció modellje a lépés után felszabadul, hogy a MedGemma elférjen.
   Az sbo mód fix 2 beszélőt kér: ha a „másik” beszélő is ≥ 0,75-ös hasonlóságú az orvoshoz (mért:
   egybeszélős felvételen 0,96), az is az orvos hangja — figyelmeztetéssel összevonjuk.
 
+- **Leállás / újraindulás** (`processing/service/VoiceLostJobs`): a Python sora csak memóriában él. A Spring
+  induláskor és percenként a `/health` `pending` listájával (`recording:`, `profile:`, `summary:`, `findings:`)
+  veti össze a futó feladatokat: az elveszett **felvételt újra átadja** (a hang megmaradt; csak a
+  `{beteg}/hangfelvetelek/` alatti, böngészőből feltöltött felvételt, a kézi JSON-importot nem), a hangprofilt,
+  az összefoglalót és a csoport-kinyerést 60 mp után `FAILED`-re állítja (újrakérhetők). Ha a hangszolgáltatás
+  nem érhető el, a felvétel `PROCESSING` marad és a következő körben folytatódik.
+
 ## MedGemma-átnézés (`review.py`)
 
 **Célzott kérdések, nem „javítsd az egészet”** — mérve: a teljes átiratot kapó 4B modell vagy

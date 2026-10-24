@@ -176,7 +176,10 @@ class JobQueue:
 
     def status(self) -> dict:
         with self._lock:
-            return {"queued": self._queue.qsize(), "current": self._current}
+            # pending: a sorban álló + futó feladatok kulcsa ("recording:5") — a Spring ebből ismeri fel,
+            # ha egy feladata a Python újraindulásakor elveszett (a sor csak memóriában él)
+            return {"queued": self._queue.qsize(), "current": self._current,
+                    "pending": sorted(f"{k[0]}:{k[1]}" for k in self._pending)}
 
     def start(self) -> None:
         threading.Thread(target=self._run, name="voice-worker", daemon=True).start()

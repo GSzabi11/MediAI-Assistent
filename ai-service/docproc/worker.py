@@ -288,6 +288,11 @@ class SearchRunner:
             self._queue.put(job)
             return self._queue.qsize() - 1
 
+    def pending(self) -> list[str]:
+        """A sorban álló + futó keresések kulcsa ("search:5"), a /health "pending" listájához."""
+        with self._lock:
+            return [f"{k[0]}:{k[1]}" for k in self._pending]
+
     def start(self) -> None:
         threading.Thread(target=self._run, name="docproc-search", daemon=True).start()
 

@@ -69,6 +69,17 @@ A modell csak javasol (`history.py`):
 - **Hely** (intézmény/osztály): csak ha szó szerint a leletben áll.
 - Javaslat: szokatlan tartalom kimarad; ellenőrizetlen szám, gyógyszeradag-eltérés → figyelmeztetés.
 
+**Lazítás (2026-10-24, a felhasználó visszajelzése — sok jó találat kimaradt):**
+- az idézet **közel szó szerint** is elfogadott: ékezet, kis/nagybetű, írásjel és whitespace nélkül összevetve, a
+  karakterek ≥ 85%-a egyezik a lelet egy szakaszával (`QUOTE_MATCH`, `difflib`); a helyre ugyanez;
+- diagnózisnál, ha az idézet nem egyezik, de **a diagnózis neve** a leletben áll („Episcleritis”, „nsVT”), megmarad;
+- a korábbi esemény éve a leletben bárhol állhat (relatív „6 éve” megadásnál a modell számolja ki);
+- BNO: a magyar `/3`-szerű minősítő utótag is (`H1010/3` = `H10.1`), Springben is;
+- a kivonatok ellenőrzési megjegyzései (kimaradt kód / idézet / hely) és az „N idővonal-elem ellenőrizendő” sor
+  **nem kerülnek a figyelmeztetések közé** (a kivonatban tárolódnak; az idővonal-elem a saját jelölésével látszik).
+  Maradnak: ismétlés/hosszkorlát, gyógyszeradag-eltérés, a Klinikai státusz összefoglaló-ellenőrzései, szokatlan
+  tartalom, sikertelen kivonat. `DIGEST_VERSION = 3`: a tárolt kivonatok egyszer újraszámolódnak.
+
 ## Szerkesztés és export
 
 - A szerkesztő HTML-jét a Spring szűri (jsoup allowlist: `p br div b strong i em u ul ol li h2 h3`, a `p`-n

@@ -223,7 +223,10 @@ def submit_ranking(req: RankingRequest, x_internal_token: str | None = Header(de
 
 @app.get("/health")
 def health():
-    return {"status": "UP", "version": config.EXTRACTOR_VERSION, "model": config.LLM_MODEL, **jobs.status()}
+    status = jobs.status()
+    # a keresések külön szálon futnak, de a Spring ugyanebből a listából ismeri fel az elveszett feladatot
+    status["pending"] = sorted(status["pending"] + searches.pending())
+    return {"status": "UP", "version": config.EXTRACTOR_VERSION, "model": config.LLM_MODEL, **status}
 
 
 if __name__ == "__main__":

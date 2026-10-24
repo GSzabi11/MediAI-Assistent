@@ -40,7 +40,8 @@ public record MedicalHistoryResultRequest(
     Model model
 ) {
     public static final String DATE = "^\\d{4}(-\\d{2}-\\d{2})?$";
-    public static final String BNO = "^[A-Z]\\d{2}(\\.?[0-9A-Z]{1,2})?$";
+    // a magyar írásmód "/3"-szerű minősítő utótagjával is (H1010/3)
+    public static final String BNO = "^[A-Z]\\d{2}(\\.?[0-9A-Z]{1,2})?(/\\d)?$";
 
     public record TimelineItem(
         @NotBlank @Pattern(regexp = DATE) String date,

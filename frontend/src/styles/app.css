@@ -2266,22 +2266,29 @@ select.input {
   padding: 8px 12px;
   border-radius: var(--radius-md);
 }
-.ddirow--critical {
+/* interakció súlyosság szerinti színe — közös: Klinikai státusz és Gyógyszer és allergia fül
+   (súlyos piros, közepes borostyán, enyhe / tájékoztató semleges) */
+.sevtone--critical {
   border: 1.5px solid var(--c-critical-line);
   background: var(--c-critical-tint);
   color: var(--c-critical);
 }
-.ddirow--warning {
+.sevtone--warning {
   border: 1.5px solid var(--c-warning-line);
   background: var(--c-warning-tint);
   color: var(--c-warning-ink);
 }
-.ddirow__sev {
+.sevtag {
   flex: none;
   font-weight: 700;
   text-transform: uppercase;
   font-size: var(--fs-xs);
   letter-spacing: 0.04em;
+}
+.sevtone--critical .meta,
+.sevtone--warning .meta {
+  color: inherit;
+  opacity: 0.85;
 }
 .klinstatus__ddilink {
   font-weight: 700;
@@ -2525,6 +2532,62 @@ select.input {
   margin: 0;
   font-size: var(--fs-sm);
   word-break: break-word;
+}
+/* a keresőkifejezés kulcsszavai fogalmanként (KeresoFogalmak) */
+.kutatas__fogalmak {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+.kutatas__fogalmak > .meta,
+.kutatas__fogalmak-nem {
+  margin: 0;
+}
+.kutatas__fogalom {
+  display: grid;
+  gap: 6px;
+}
+.kutatas__fogalom .chips {
+  align-items: center;
+}
+.kutatas__op {
+  display: inline-flex;
+  justify-self: start;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.kutatas__opgomb {
+  border: none;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.kutatas__opgomb--on {
+  background: var(--c-accent);
+  color: var(--c-ink-inverse);
+}
+.kutatas__chipszo {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: text;
+}
+.kutatas__szourlap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.kutatas__meshvalaszto {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--fs-xs);
 }
 .kutatas__progress {
   display: flex;

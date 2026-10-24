@@ -1,5 +1,6 @@
 package bme.mediai.research.persistence;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -69,4 +70,7 @@ public interface ResearchArticleRepository extends JpaRepository<ResearchArticle
               FROM research_article WHERE research_id IN (:researchIds) GROUP BY research_id
             """, nativeQuery = true)
     List<Counts> countByResearch(@Param("researchIds") List<Long> researchIds);
+
+    // beragadt értékelések keresése (ResearchLostJobs); PENDING-nél az evaluatedAt a kérés ideje
+    List<ResearchArticle> findByEvalStatusAndEvaluatedAtBefore(ArticleEvalStatus status, OffsetDateTime before);
 }

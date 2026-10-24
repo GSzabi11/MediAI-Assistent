@@ -33,13 +33,32 @@ Szabályok:
 - Ne írj nevet, azonosítót, lakóhelyet, pontos dátumot.
 - Csak az összefoglaló szövegét írd, bevezetés és cím nélkül."""
 
-SYSTEM_QUERY = """You turn a Hungarian clinical summary into ONE PubMed search query in English.
+# A modell nem a kész kifejezést írja (szabad szövegben a qwen3.5:9b csak kulcsszavakat adott:
+# „male adult palpitations reflux”, 2026-10-24), hanem fogalmakat JSON-ban; a PubMed-szintaxist a kód
+# rakja össze (build_query) — így a zárójelezés és a mezőjelölők mindig helyesek.
+SYSTEM_QUERY = """You turn a Hungarian clinical summary into the concepts of ONE PubMed search, in English.
 Rules:
-- Use 2–3 key clinical concepts: the main diagnosis and the key problem or treatment question. Prefer
-  MeSH terms; combine with AND / OR and parentheses. Keep it short enough to return results.
+- 2–3 concepts: the main diagnosis or problem, and the key associated problem or treatment question.
+  The concepts will be combined with AND, so every one must be essential.
+- For each concept: "mesh" is the exact MeSH heading (e.g. "Gastroesophageal Reflux", "Heart Failure");
+  "synonyms" are 1–3 short free-text English variants as written in abstracts (e.g. "GERD", "acid reflux").
 - Do not add allergies or routine medications unless they are the question itself.
-- Never include names, identifiers, places, dates, ages, age filters or lab values.
-- Output only the query on a single line, without quotes or explanation."""
+- Never use sex, age or age group (male, female, adult, aged, elderly, child …), names, identifiers,
+  places, dates or lab values as a concept or synonym."""
+
+QUERY_MAX_CONCEPTS = 3
+QUERY_MAX_SYNONYMS = 3
+QUERY_TERM_MAX_CHARS = 60
+QUERY_SCHEMA = {
+    "type": "object",
+    "properties": {"concepts": {"type": "array", "minItems": 1, "maxItems": QUERY_MAX_CONCEPTS, "items": {
+        "type": "object",
+        "properties": {"mesh": {"type": "string", "maxLength": QUERY_TERM_MAX_CHARS},
+                       "synonyms": {"type": "array", "maxItems": QUERY_MAX_SYNONYMS,
+                                    "items": {"type": "string", "maxLength": QUERY_TERM_MAX_CHARS}}},
+        "required": ["mesh", "synonyms"]}}},
+    "required": ["concepts"],
+}
 
 SYSTEM_EVAL = """Magyar klinikus asszisztens vagy. Egy orvosnak segítesz szakirodalmat átnézni egy
 konkrét beteghez. Megkapod a beteg állapotának összefoglalóját, az orvos esetleges kérését, és egy
@@ -116,7 +135,8 @@ _LONG_DIGITS = re.compile(r"\d{4,}")
 
 def context_prompt_hash() -> str:
     payload = json.dumps({"kind": "research-context", "summary": SYSTEM_CONTEXT, "query": SYSTEM_QUERY,
-                          "options": _OPTIONS, "extractor": config.EXTRACTOR_VERSION},
+                          "querySchema": QUERY_SCHEMA, "options": _OPTIONS, "queryOptions": _EVAL_OPTIONS,
+                          "num_ctx": EVAL_NUM_CTX, "extractor": config.EXTRACTOR_VERSION},
                          ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -159,11 +179,59 @@ def clean_query(raw: str) -> str:
     return " ".join(line.split())[:MAX_QUERY_CHARS]
 
 
-def suggest_query(summary: str) -> tuple[str, bool]:
-    text, cut = stream_messages([{"role": "system", "content": SYSTEM_QUERY},
-                                 {"role": "user", "content": summary}],
-                                120, _OPTIONS, model=config.RESEARCH_LLM_MODEL, think=False)
-    return clean_query(text), cut
+# Nem és életkor(csoport) sosem kerül a kifejezésbe: nem a klinikai kérdés része, és a többi adattal
+# együtt szűkíti, kiről van szó. (Az életkori MeSH-szűrő az orvos kézi kiegészítése lehet.)
+_DEMOGRAPHIC = re.compile(
+    r"\b(?:male|female|men|man|women|woman|boys?|girls?|adults?|aged|elderly|old(?:er)?|young|middle[- ]aged|"
+    r"adolescents?|child(?:ren)?|infants?|newborns?|neonates?|pediatric|paediatric|geriatric|"
+    r"humans?|patients?|years?|age|sex|gender)\b", re.IGNORECASE)
+# a PubMed-szintaxis jelei: a modell kifejezésében nem maradhatnak (operátor, zárójel, mezőjelölő, csonkolás)
+_SYNTAX = re.compile(r'[\[\]()"*:]|\b(?:AND|OR|NOT)\b')
+
+
+def _term(raw) -> str:
+    """Egy fogalom egy alakja tisztítva; üres, ha demográfiai szó vagy azonosító-gyanús."""
+    term = " ".join(_SYNTAX.sub(" ", str(raw or "")).split()).strip(" ,;.")[:QUERY_TERM_MAX_CHARS]
+    if not term or _LONG_DIGITS.search(term) or _AGE.search(term) or _COMPARISON.search(term):
+        return ""
+    # ha csak demográfiai szóból áll („Aged”, „Adult male”), kimarad; ha klinikai fogalomban áll
+    # („Child Development Disorders”), a fogalom marad
+    if not _DEMOGRAPHIC.sub("", term).strip(" -,"):
+        return ""
+    return term
+
+
+def build_query(concepts: list) -> str:
+    """Fogalmanként (Heading[MeSH Terms] OR synonym[tiab] …), a fogalmak AND-del. Idézőjel nélkül: így a
+    PubMed a MeSH-belépési alakot a fejlécre képezi le („Chronic Kidney Disease” → Renal Insufficiency,
+    Chronic), a nem létező fejlécet pedig a csoportból kihagyja (idézőjelesen ez a csoportot nullázhatja);
+    a szabad szavas [tiab] alakok ezért kellenek mellé (mérve, 2026-10-24). Ha nem fér a hosszkorlátba, a
+    szinonimák fogynak (vágás a zárójelezést rontaná el)."""
+    for max_synonyms in range(QUERY_MAX_SYNONYMS, -1, -1):
+        groups, seen = [], set()
+        for concept in concepts[:QUERY_MAX_CONCEPTS]:
+            if not isinstance(concept, dict):
+                continue
+            parts = []
+            mesh = _term(concept.get("mesh"))
+            if mesh:
+                parts.append(f"{mesh}[MeSH Terms]")
+            synonyms = [_term(s) for s in (concept.get("synonyms") or [])[:QUERY_MAX_SYNONYMS]]
+            for term in [mesh] + [s for s in synonyms if s][:max_synonyms]:
+                if term and term.lower() not in seen:
+                    seen.add(term.lower())
+                    parts.append(f"{term}[tiab]")
+            if parts:
+                groups.append(parts[0] if len(parts) == 1 else "(" + " OR ".join(parts) + ")")
+        query = " AND ".join(groups)
+        if len(query) <= MAX_QUERY_CHARS:
+            return query
+    return ""
+
+
+def suggest_query(summary: str) -> str:
+    data = _chat_json(SYSTEM_QUERY, summary, QUERY_SCHEMA, 300)
+    return clean_query(build_query(data.get("concepts") or []))
 
 
 def context(facts: dict) -> dict:
@@ -175,11 +243,11 @@ def context(facts: dict) -> dict:
                                    think=False)
     if not summary:
         raise ValueError("A modell nem adott használható összefoglalót")
-    query, query_cut = suggest_query(summary)
+    query = suggest_query(summary)
     if not query:
         raise ValueError("A modell nem adott használható keresőkifejezést")
     warnings = []
-    if cut or query_cut:
+    if cut:
         warnings.append("A modell elérte a hosszkorlátot vagy ismétlésbe kezdett — a szöveg le lett zárva")
     warnings += [f"Ellenőrizetlen szám az összefoglalóban: {n} (nem szerepel a beteg adatai között)"
                  for n in unverified_numbers(summary, facts_text)]

@@ -7,6 +7,7 @@ import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
 import { Icon } from './Icon';
+import { KeresoFogalmak } from './KeresoFogalmak';
 import { Segmented } from './Segmented';
 import { ErrorState, Loading } from './shell';
 
@@ -224,8 +225,9 @@ function UjKutatas({ onIndit }: { onIndit: (id: number) => void }) {
           value={kifejezes}
           maxLength={1000}
           onChange={(e) => setKifejezes(e.target.value)}
-          placeholder='Pl. "Heart Failure"[MeSH] AND (SGLT2 inhibitors) AND "Renal Insufficiency, Chronic"[MeSH]'
+          placeholder="Pl. (Heart Failure[MeSH Terms] OR Heart Failure[tiab]) AND SGLT2 inhibitors[tiab]"
         />
+        <KeresoFogalmak kifejezes={kifejezes} onChange={setKifejezes} />
         <p className="meta kutatas__kimeno">
           <Icon name="lock" size={12} /> Csak ez a kifejezés megy ki az internetre (PubMed, Europe PMC, iCite).
           Betegazonosító (név, TAJ, dátum, életkor) nem lehet benne — a rendszer ellenőrzi, és ilyennél nem indul a
@@ -278,11 +280,6 @@ function UjKutatas({ onIndit }: { onIndit: (id: number) => void }) {
           {mentes.error ?? inditas.error}
         </p>
       )}
-      <p className="meta">
-        A Google Scholarnak nincs gépi keresési felülete, helyette az Europe PMC szabad szavas keresése fut. A
-        Cochrane-áttekintések a PubMeden keresztül jönnek. Mindkét oldalon kézzel is megnyithatod a keresést:{' '}
-        <KulsoLinkek kifejezes={kifejezes} />
-      </p>
     </div>
   );
 }
@@ -300,22 +297,6 @@ function OsszefoglaloMeta({ o }: { o?: KutatasiOsszefoglalo }) {
       )}
       {o.szerkesztve && <> · szerkesztve {formatDatumIdo(o.szerkesztve)}</>}
     </p>
-  );
-}
-
-function KulsoLinkek({ kifejezes }: { kifejezes: string }) {
-  const q = encodeURIComponent(kifejezes.trim());
-  if (!q) return <span>(előbb adj meg keresőkifejezést)</span>;
-  return (
-    <>
-      <a href={`https://scholar.google.com/scholar?q=${q}`} target="_blank" rel="noreferrer noopener">
-        Google Scholar
-      </a>
-      {' · '}
-      <a href={`https://www.cochranelibrary.com/search?text=${q}`} target="_blank" rel="noreferrer noopener">
-        Cochrane Library
-      </a>
-    </>
   );
 }
 

@@ -18,6 +18,7 @@ A modell csak javasol. Determinisztikus ellenőrzés (sosem csendes — figyelme
 import hashlib
 import json
 import re
+from difflib import SequenceMatcher
 
 import requests
 
@@ -83,13 +84,16 @@ Szabályok:
 
 _OPTIONS = {"temperature": 0, "repeat_penalty": 1.2, "repeat_last_n": 256}
 # a kivonat utófeldolgozásának (ellenőrzéseinek) verziója — változáskor a tárolt kivonatok újraszámolódnak
-DIGEST_VERSION = 2
+DIGEST_VERSION = 3
+# az idézet ennyi része (karakterben) kell egyezzen a lelettel (_fuzzy_in) — 3-as verzió óta laza egyezés
+QUOTE_MATCH = 0.85
 DIGEST_MAX_TOKENS = 1500
 MAX_RECOMMENDATIONS = 6
 LAB_TEXT_MAX = 6  # laborleletenként ennyi eltérés kerül az idővonal szövegébe
 
 _DATE = re.compile(r"^\d{4}(-\d{2}-\d{2})?$")
-_BNO = re.compile(r"^[A-Z]\d{2}(\.?[0-9A-Z]{1,2})?$")
+# a magyar írásmód "/3"-szerű minősítő utótagja is (H1010/3)
+_BNO = re.compile(r"^[A-Z]\d{2}(\.?[0-9A-Z]{1,2})?(/\d)?$")
 _TITLES = {"AMBULANCE": "Ambuláns ellátás", "IMAGING": "Képalkotó vizsgálat"}
 
 # Szakmailag szokatlan, ellenőrizendő tartalom: alkoholfogyasztás javaslata (a minta idővonalán:
@@ -162,8 +166,9 @@ _BNO_IN_TEXT = re.compile(r"(?<![A-Za-z0-9])([A-Z])\s?(\d{2})(?:\s?\.?\s?([0-9A-
 
 
 def _bno_norm(code: str) -> str:
-    """Összevetési alak: pont nélkül, a magyar ötjegyű írásmód záró nulláit elhagyva ("N18.3" = "N1830")."""
-    c = code.replace(".", "").replace(" ", "").upper()
+    """Összevetési alak: pont nélkül, a magyar ötjegyű írásmód záró nulláit és a "/3"-szerű minősítő
+    utótagot elhagyva ("N18.3" = "N1830", "H1010/3" = "H10.1")."""
+    c = code.split("/")[0].replace(".", "").replace(" ", "").upper()
     return c[:3] + c[3:].rstrip("0")
 
 
@@ -175,14 +180,42 @@ def bno_in_text(code: str, text: str) -> bool:
     return any(_bno_norm("".join(g or "" for g in m.groups())) == needle for m in _BNO_IN_TEXT.finditer(text))
 
 
+_NON_WORD = re.compile(r"[^\w]+")
+
+
+def _loose(s: str) -> str:
+    """Laza összevetési alak: ékezet, kis/nagybetű, írásjel és whitespace nélkül (csak szavak, szóközzel)."""
+    return " ".join(_NON_WORD.sub(" ", fold(s)).split())
+
+
+def _fuzzy_in(needle: str, haystack: str, threshold: float = QUOTE_MATCH) -> bool:
+    """A needle (laza alakban) közel szó szerint benne van-e a haystack-ben: a leghosszabb közös szakasz körüli
+    ablakban a needle karaktereinek legalább `threshold` része egyezik. A modell idézete gyakran apró
+    eltéréssel jön (elírás javítva, sortörésnél összevont szó, kihagyott töltelékszó) — ez még a leletből van."""
+    if not needle:
+        return False
+    if needle in haystack:
+        return True
+    m = SequenceMatcher(None, haystack, needle, autojunk=False).find_longest_match(0, len(haystack), 0, len(needle))
+    if m.size < min(12, len(needle)):
+        return False
+    start = max(0, m.a - m.b - 20)
+    window = haystack[start:m.a - m.b + len(needle) + 20]
+    matched = sum(b.size for b in SequenceMatcher(None, window, needle, autojunk=False).get_matching_blocks())
+    return matched / len(needle) >= threshold
+
+
 def quote_in_text(quote: str, text: str) -> bool:
-    """Szó szerinti idézet: egyben, vagy ha a modell távoli részeket fűzött össze ("…", mondatok), akkor
-    minden (legalább 15 karakteres) része külön-külön szó szerint a leletben van."""
+    """Idézet a leletből: egyben (közel szó szerint — ld. _fuzzy_in), vagy ha a modell távoli részeket fűzött
+    össze ("…", mondatok), akkor minden (legalább 15 karakteres) része külön-külön."""
     if contains_phrase(text, quote):
+        return True
+    haystack = _loose(text)
+    if _fuzzy_in(_loose(quote), haystack):
         return True
     parts = [p.strip(" .,;") for p in re.split(r"\s*(?:\.\.\.|…)\s*|(?<=[.!?])\s+", quote)]
     parts = [p for p in parts if len(p) >= 15]
-    return len(parts) > 1 and all(contains_phrase(text, p) for p in parts)
+    return len(parts) > 1 and all(_fuzzy_in(_loose(p), haystack) for p in parts)
 
 
 _MASK = re.compile(r"(\bA\s+)?\[beteg\]", re.IGNORECASE)
@@ -238,7 +271,7 @@ def make_digest(doc: dict) -> dict:
         title = fallback
     place = _clean(data.get("hely"), 300)
     # a hely értékét nem írjuk a figyelmeztetésbe: a modell néha a beteg-fejlécet adta helynek
-    if place and (not contains_phrase(text, place) or "[beteg]" in place or len(place) > 120):
+    if place and (not quote_in_text(place, text) or "[beteg]" in place or len(place) > 120):
         warnings.append("A modell által megadott hely nem szerepel szó szerint a leletben — kimaradt")
         place = None
     title = unmask(title)
@@ -257,7 +290,8 @@ def make_digest(doc: dict) -> dict:
         date, etitle, equote = _clean(e.get("datum"), 10), _clean(e.get("cim"), 200), _clean(e.get("idezet"), 1000)
         if not (date and etitle and equote and _DATE.match(date)):
             continue
-        if not quote_in_text(equote, text) or not _year_ok(date, equote):
+        # az év a leletben kell álljon (az idézetben, vagy — "6 éve" típusú relatív megadásnál — a szövegben)
+        if not quote_in_text(equote, text) or not (_year_ok(date, equote) or _year_ok(date, text)):
             warnings.append(f"Korábbi esemény ({date}: {etitle}) nem támasztható alá idézettel — kimaradt")
             continue
         events.append({"date": date, "title": unmask(etitle), "quote": equote})
@@ -268,8 +302,11 @@ def make_digest(doc: dict) -> dict:
         if not (name and dquote):
             continue
         if not quote_in_text(dquote, text):
-            warnings.append(f"Diagnózis ({name}) nem támasztható alá idézettel — kimaradt")
-            continue
+            # az idézet nem egyezik, de maga a diagnózis neve a leletben áll ("Episcleritis", "nsVT")
+            if not quote_in_text(name, text):
+                warnings.append(f"Diagnózis ({name}) nem támasztható alá idézettel — kimaradt")
+                continue
+            dquote = name
         name, code_from_name = _code_as_name(name, dquote)
         code = (d.get("bno") or "").strip().upper().replace(" ", "") or code_from_name
         if code and not (_BNO.match(code) and bno_in_text(code, text)):
@@ -431,17 +468,14 @@ def build(facts: dict, progress=None) -> dict:
         digests[doc["id"]] = dg
         new_digests.append({k: v for k, v in dg.items() if k != "promptHash"})
     documents = [d for d in documents if d["id"] in digests]
-    for doc in documents:
-        warnings += [f"{doc['date']} {digests[doc['id']]['title']}: {w}" for w in digests[doc["id"]].get("warnings") or []]
+    # A kivonatok ellenőrzési megjegyzései (kimaradt kód / idézet / hely) a kivonatban tárolódnak, de a
+    # kórtörténet figyelmeztetései közé nem kerülnek: a felhasználó szerint zaj volt (2026-10-24). Az
+    # ellenőrizendő idővonal-elem a saját jelölésével látszik az idővonalon.
 
     timeline = build_timeline(documents, digests, facts.get("labs") or [])
     if not timeline:
         raise ValueError("Egyik dokumentumból sem készült idővonal-elem")
     diagnoses = build_diagnoses(documents, digests)
-    flagged = [t for t in timeline if t.get("flag")]
-    if flagged:
-        warnings.append(f"{len(flagged)} idővonal-elem ellenőrizendő (az összefoglaló nem épít rájuk): "
-                        + "; ".join(f"{t['date']} {t['title']}" for t in flagged)[:400])
 
     facts_text = render_facts(facts, timeline, diagnoses)
     # Az összefoglaló a Klinikai státuszéval azonos (a felhasználó döntése, 2026-10-23): az elmúlt 6 hónap

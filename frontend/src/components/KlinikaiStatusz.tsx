@@ -8,6 +8,7 @@ import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
 import { usePatient } from '../patient/PatientContext';
 import { Icon } from './Icon';
+import { SulyossagCimke } from './GyogyszerInterakcio';
 import { ErrorState, Loading } from './shell';
 
 /**
@@ -190,8 +191,8 @@ function Interakciok() {
       </span>
       <ul>
         {fontos.map((a) => (
-          <li key={a.id} className={`ddirow ddirow--${a.sulyossag}`}>
-            <span className="ddirow__sev">{a.sulyossag === 'critical' ? 'Súlyos' : 'Közepes'}</span>
+          <li key={a.id} className={`ddirow sevtone--${a.sulyossag}`}>
+            <SulyossagCimke s={a.sulyossag} />
             <span>
               {a.ervenyesSzoveg || a.idezet || a.cim}
               {a.jovahagyas?.dontes === 'jovahagyva' && <span className="meta"> · orvos elfogadta</span>}

@@ -2,12 +2,16 @@ package bme.mediai.processing.service;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import bme.mediai.recording.api.RecordingJobRequest;
 import bme.mediai.recordingfinding.api.ExtractionJobRequest;
@@ -57,6 +61,21 @@ public class VoiceServiceClient {
 
     public void submitRecordingExtraction(ExtractionJobRequest job) {
         post("/recording-findings", job);
+    }
+
+    public record Health(List<String> pending) {
+    }
+
+    // A Python sorában álló / futó feladatok kulcsa ("recording:5"), ld. AiServiceClient.pendingJobs.
+    // Nem érhető el → üres halmaz; régi verzió (nincs "pending") → Optional.empty().
+    public Optional<Set<String>> pendingJobs() {
+        try {
+            Health health = restClient.get().uri("/health").retrieve().body(Health.class);
+            return health == null || health.pending() == null ? Optional.empty()
+                    : Optional.of(Set.copyOf(health.pending()));
+        } catch (RestClientException e) {
+            return Optional.of(Set.of());
+        }
     }
 
     private void post(String uri, Object body) {

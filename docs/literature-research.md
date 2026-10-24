@@ -22,7 +22,7 @@ kivétel** (a felhasználó döntése, 2026-10-20): a gépről kimegy a **keres�
 |---|---|---|
 | PubMed | E-utilities, relevancia-sorrend | hivatalos API |
 | Cochrane | ugyanaz a PubMed-keresés `"Cochrane Database Syst Rev"[Journal]`-ra szűrve | a Cochrane Library saját API-ja kulcshoz/licenchez kötött |
-| Google Scholar helyett | Europe PMC szabad szavas keresés (kulcs nélkül, `searchPOST`), a mezőjelölők (`[MeSH]`) nélkül, csak PMID-es (`SRC:MED`) találat; a Scholarra kézi „megnyitás” link | a Scholarnak nincs API-ja, az ÁSZF tiltja a gépi lekérdezést (a felhasználó jóváhagyta, 2026-10-20) |
+| Google Scholar helyett | Europe PMC szabad szavas keresés (kulcs nélkül, `searchPOST`), a mezőjelölők (`[MeSH]`) nélkül, csak PMID-es (`SRC:MED`) találat (a Scholar / Cochrane Library kézi linkje 2026-10-24 óta nincs a felületen, Szabi kérése) | a Scholarnak nincs API-ja, az ÁSZF tiltja a gépi lekérdezést (a felhasználó jóváhagyta, 2026-10-20) |
 | Hivatkozási szám | iCite (kulcs nélkül) | az OpenAlex 2026 óta kulcsot és napi keretet kér; a forrás a felületen kiírva, hiányzó szám = „nincs adat”, nem 0 |
 
 A Cochrane-áttekintések elöl állnak (más forrás mellett legfeljebb a hely fele), utána a PubMed és az
@@ -42,6 +42,25 @@ Python: előszűrés cikkenként + a legrelevánsabb kiválasztása → progress
 Spring: sorrend számolása; a rangsor szerinti 1. oldal (10 cikk) értékelése indul → cikkenként egy feladat
 Frontend: lapozáskor a megnyitott oldal még nem értékelt cikkeit kéri (POST …/evaluations; rangsorolás közben nem)
 ```
+
+**A keresőkifejezés (2026-10-24)**: a modell nem a kész kifejezést írja (szabad szövegben a qwen3.5:9b csak
+kulcsszavakat adott), hanem JSON-sémával 1–3 fogalmat (`mesh` fejléc + 1–3 szabad szavas szinonima); a
+PubMed-szintaxist a kód rakja össze (`research.build_query`): `(Heading[MeSH Terms] OR Heading[tiab] OR
+syn[tiab]) AND (…)`. Idézőjel nélkül, mert így a PubMed a belépési alakot a fejlécre képezi le, és a nem
+létező fejlécet kihagyja (idézőjelesen a csoport nullázódhat) — ezért kell mellé a `[tiab]`. Nem és
+életkor(csoport) (`male`, `adult`, `aged` …) determinisztikusan kimarad; életkori szűrőt az orvos kézzel adhat.
+
+**Kulcsszavak chipként (2026-10-24, Szabi kérése)**: a kifejezés alatt a fogalmak csoportonként, chipként
+(`KeresoFogalmak.tsx`): a MeSH-fejléc „MeSH” jelöléssel, a szinonimák mellette; csoporton belül VAGY, a csoportok
+között alapból ÉS, de fogalmanként VAGY-ra váltható (ÉS / VAGY kapcsoló). Vegyes operátornál nincs extra zárójelezés: a
+PubMed balról jobbra értékel (`A AND B OR C` = `(A AND B) OR C`), ezt a felület ki is írja. Chip szerkeszthető (kattintás), törölhető, csoporthoz új alak, új fogalom (MeSH-ként vagy szabad szóként)
+adható, fogalom törölhető — **minden változás azonnal újraépíti a kifejezést**. A fogalmak **nem tárolódnak
+külön** (nincs séma-változás): a `lib/keresoKifejezes.ts` a kifejezésből bontja vissza őket (`bont`), és ugyanazzal
+a szabállyal rakja össze (`epit`), mint a `build_query` (mesh → `[MeSH Terms]` + `[tiab]`, ismétlődő alak egyszer,
+szintaxisjel kiszűrve) — a modell kifejezésére `epit(bont(q)) == q`. Így a kifejezés marad az egyetlen igazság, a
+kézzel átírt kifejezés is bontható, ha ezt a szerkezetet követi; ha nem (pl. `NOT`, idézőjeles kifejezés, mezőjelölő
+nélküli szó), a chipek helyén üzenet áll, és csak a szövegmező szerkeszthető. A demográfiai szűrés a chipeknél nincs
+(az orvos döntése); a betegazonosító-kaput (`OutboundQueryGate`) ez nem érinti, minden keresésnél fut.
 
 ## AI-rangsor: a legrelevánsabb cikk kiemelése (V32)
 
@@ -97,6 +116,13 @@ betegről szóló, jóváhagyandó állítások. Mindhárom beteg-gyerektábla (
 - `research_article`: bibliográfiai adat szó szerint a forrásból; értékelés cikkenként (`NONE → PENDING →
   DONE | FAILED`, a 15 percnél régebbi PENDING újrakérhető); `excluded`, `bookmarked` az orvos döntése.
   A könyvjelzők betegenként visszanézhetők (`GET /api/research/bookmarks?patientId=`).
+
+## Beragadt feladat (a docproc leállása)
+
+A docproc sora csak memóriában él. `research/service/ResearchLostJobs` percenként lezárja (`FAILED`) a 60 mp-nél
+régebben kért betegállapot-összefoglalót, keresést, AI-rangsort és cikk-értékelést, ha nincs a Python `/health`
+`pending` listájában (`research-context:`, `search:`, `ranking:`, `article:`; a keresések külön szála is
+beleszámít). Ezután újraindítható. Ha a docproc nem érhető el, nála semmi sem fut: mind `FAILED`.
 
 ## Nyitott kérdések
 

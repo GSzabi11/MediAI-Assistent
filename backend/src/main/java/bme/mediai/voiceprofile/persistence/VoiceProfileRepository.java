@@ -1,5 +1,6 @@
 package bme.mediai.voiceprofile.persistence;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,4 +13,7 @@ public interface VoiceProfileRepository extends JpaRepository<VoiceProfile, Long
     List<VoiceProfile> findByUserIdOrderByRecordedAtDesc(Long userId);
 
     boolean existsByUserIdAndStatus(Long userId, VoiceProfileStatus status);
+
+    // beragadt hangprofil keresése (VoiceLostJobs)
+    List<VoiceProfile> findByStatusAndCreatedAtBefore(VoiceProfileStatus status, OffsetDateTime before);
 }

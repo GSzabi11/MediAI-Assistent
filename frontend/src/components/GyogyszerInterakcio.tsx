@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { interakcioApi, type EllenorzesEredmeny, type Feloldas } from '../api/gyogyszerInterakcio';
+import type { SeverityDto } from '../api/dto';
 import type { ClaimResponse } from '../api/types';
 import { formatDatum } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
@@ -91,15 +92,18 @@ const rang = (a: ClaimResponse) => ({ critical: 0, warning: 1, info: 2 })[a.suly
 
 function RiasztasSor({ a }: { a: ClaimResponse }) {
   const dontes = a.jovahagyas?.dontes;
+  // az orvos által elutasított interakció nem kap színt (szürke)
+  const tonus = dontes === 'elutasitva' ? ' item--off' : ` sevtone--${a.sulyossag}`;
   return (
-    <li className={`item${a.sulyossag === 'critical' ? ' item--critical' : ''}${dontes === 'elutasitva' ? ' item--off' : ''}`}>
+    <li className={`item${tonus}`}>
       <div className="item__row">
         <Icon name={a.sulyossag === 'info' ? 'pill' : 'alert'} size={16} strokeWidth={2.4} />
+        <SulyossagCimke s={a.sulyossag} />
         <span>{a.ervenyesSzoveg || a.idezet || a.cim}</span>
       </div>
       <div className="item__sub">
         <span className="meta">
-          {sulyossagSzoveg[a.sulyossag]} · szabály-állítás
+          szabály-állítás
           {dontes === 'jovahagyva' && ' · orvos elfogadta'}
           {dontes === 'elutasitva' && ' · orvos elutasította'}
         </span>
@@ -108,7 +112,14 @@ function RiasztasSor({ a }: { a: ClaimResponse }) {
   );
 }
 
-const sulyossagSzoveg = { critical: 'kritikus', warning: 'figyelmeztetés', info: 'tájékoztató' };
+type Sulyossag = ClaimResponse['sulyossag'];
+const sulyossagCimke: Record<Sulyossag, string> = { critical: 'Súlyos', warning: 'Közepes', info: 'Enyhe / tájékoztató' };
+const dtoSulyossag: Record<SeverityDto, Sulyossag> = { CRITICAL: 'critical', WARNING: 'warning', INFO: 'info' };
+
+/** Interakció súlyossága címkeként; a sor színét a `sevtone--{s}` osztály adja (app.css). Közös a Klinikai státusszal. */
+export function SulyossagCimke({ s }: { s: Sulyossag }) {
+  return <span className="sevtag">{sulyossagCimke[s]}</span>;
+}
 
 const allapotSzoveg: Record<Feloldas['status'], string> = {
   RESOLVED: 'ellenőrizve',
@@ -321,17 +332,17 @@ function EllenorzesEredmenye({ e }: { e: EllenorzesEredmeny }) {
           elemek={e.findings}
           tajekoztato={(f) => f.severity === 'INFO'}
           render={(f) => (
-            <li key={`${f.labelA}|${f.labelB}`} className={`item${f.severity === 'CRITICAL' ? ' item--critical' : ''}`}>
+            <li key={`${f.labelA}|${f.labelB}`} className={`item sevtone--${dtoSulyossag[f.severity]}`}>
               <div className="item__row">
                 <Icon name="alert" size={16} strokeWidth={2.4} />
+                <SulyossagCimke s={dtoSulyossag[f.severity]} />
                 <span>{f.text}</span>
               </div>
-              <div className="item__sub">
-                <span className="meta">
-                  {f.severity === 'CRITICAL' ? 'kritikus' : f.severity === 'WARNING' ? 'figyelmeztetés' : 'tájékoztató'}
-                  {(f.medicationIdA ?? f.medicationIdB) !== null && ' · szedett gyógyszerrel'}
-                </span>
-              </div>
+              {(f.medicationIdA ?? f.medicationIdB) !== null && (
+                <div className="item__sub">
+                  <span className="meta">szedett gyógyszerrel</span>
+                </div>
+              )}
             </li>
           )}
         />
