@@ -19,6 +19,7 @@ import bme.mediai.recordingfinding.api.ExtractionJobRequest;
 import bme.mediai.recordingfinding.api.ExtractionResponse;
 import bme.mediai.recordingfinding.api.ExtractionResultRequest;
 import bme.mediai.recordingfinding.api.FindingCreateRequest;
+import bme.mediai.recordingfinding.api.FindingFact;
 import bme.mediai.recordingfinding.api.FindingResponse;
 import bme.mediai.recordingfinding.api.FindingsResponse;
 import bme.mediai.recordingfinding.exception.RecordingFindingConflictException;
@@ -80,6 +81,15 @@ public class RecordingFindingService {
         List<FindingResponse> items = repository.findCurrent(recordingId, current).stream()
                 .map(FindingResponse::from).toList();
         return new FindingsResponse(latest, current, items);
+    }
+
+    // Az érvényes elemek (ld. findByRecording) az orvos szerkesztett állapotában — az összefoglaló és az
+    // epikrízis bemenete. Ha még nincs kész futás, csak az orvos elemei.
+    @Transactional(readOnly = true)
+    public List<FindingFact> currentFacts(Long recordingId) {
+        Long current = extractionRepository.findFirstByRecordingIdAndStatusOrderByRequestedAtDescIdDesc(recordingId,
+                RecordingExtractionStatus.DONE).map(RecordingExtraction::getId).orElse(null);
+        return repository.findCurrent(recordingId, current).stream().map(FindingFact::from).toList();
     }
 
     /** userId null: automatikus kérés a felvétel elkészültekor. */
@@ -147,6 +157,7 @@ public class RecordingFindingService {
         ExtractionResultRequest.Model m = result.model();
         extraction.complete(result.warnings() == null ? List.of() : result.warnings(), m.modelName(), m.seed(),
                 m.promptHash());
+        settled(extraction);
         return ExtractionResponse.from(extraction);
     }
 
@@ -188,8 +199,19 @@ public class RecordingFindingService {
 
     @Transactional
     public void fail(Long id, String error) {
-        extractionRepository.findById(id).ifPresent(e -> e.fail(truncate(error == null || error.isBlank()
-                ? "Ismeretlen hiba" : error.strip())));
+        extractionRepository.findById(id).filter(e -> e.getStatus() == RecordingExtractionStatus.PROCESSING)
+                .ifPresent(e -> {
+                    e.fail(truncate(error == null || error.isBlank() ? "Ismeretlen hiba" : error.strip()));
+                    settled(e);
+                });
+    }
+
+    // Az automatikus (a felvétel elkészültekor indult) futás vége indítja az első összefoglalót; az orvos kérte
+    // újrakinyerés nem (az összefoglaló gombbal újragenerálható)
+    private void settled(RecordingExtraction extraction) {
+        if (extraction.getRequestedBy() == null) {
+            events.publishEvent(new RecordingFindingsSettledEvent(extraction.getRecordingId()));
+        }
     }
 
     private RecordingFinding findOfRecording(Long recordingId, Long id) {

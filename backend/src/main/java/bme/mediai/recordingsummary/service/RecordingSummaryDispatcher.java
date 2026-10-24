@@ -12,10 +12,11 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.RestClientException;
 
 import bme.mediai.processing.service.VoiceServiceClient;
-import bme.mediai.recording.service.RecordingTranscribedEvent;
+import bme.mediai.recordingfinding.service.RecordingFindingsSettledEvent;
 import bme.mediai.recordingsummary.exception.RecordingSummaryConflictException;
 
-// (1) A felvétel elkészültekor (commit után) automatikusan kér egy összefoglalót. (2) A kérést a
+// (1) A felvétel automatikus csoport-kinyerése után (commit után) automatikusan kér egy összefoglalót — így az
+// első összefoglaló már a csoportokat is bemenetként kapja. (2) A kérést a
 // commit után, külön szálon adja át a hangszolgáltatásnak; ha nem érhető el, FAILED.
 @Component
 public class RecordingSummaryDispatcher {
@@ -31,9 +32,10 @@ public class RecordingSummaryDispatcher {
         this.service = service;
     }
 
+    // fallbackExecution: ha a kinyerés el sem indult, az esemény tranzakción kívül jön
     @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onTranscribed(RecordingTranscribedEvent event) {
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onFindingsSettled(RecordingFindingsSettledEvent event) {
         try {
             service.request(event.recordingId(), null);
         } catch (RecordingSummaryConflictException e) {

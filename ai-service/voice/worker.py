@@ -116,6 +116,7 @@ class SummaryJob:
     utterances: list
     keywords: list
     callback_url: str
+    findings: tuple = ()  # a csoportok érvényes elemei (az orvos szerkesztett állapotában)
 
     @property
     def key(self) -> tuple:
@@ -126,7 +127,7 @@ class SummaryJob:
         return f"felvétel-összefoglaló {self.summary_id}"
 
     def run(self) -> dict:
-        return summary.summarize(self.mode, self.utterances, self.keywords)
+        return summary.summarize(self.mode, self.utterances, self.keywords, list(self.findings))
 
 
 @dataclass(frozen=True, eq=False)

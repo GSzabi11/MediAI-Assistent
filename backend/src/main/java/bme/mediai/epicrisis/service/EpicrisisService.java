@@ -242,8 +242,9 @@ public class EpicrisisService {
             if (!recordingIds.contains(recordingId)) {
                 throw new IllegalArgumentException("A(z) " + recordingId + " felvétel nem volt az epikrízis bemenete");
             }
+            // üres turnIds: az orvos kézzel felvett csoportelem, amely nem hangzott el szó szerint — a forrás a felvétel
             List<Integer> turns = nonNull(turnIds);
-            if (turns.isEmpty() || utteranceRepository.findByRecordingIdAndTurnIdInOrderByTurnId(recordingId, turns)
+            if (!turns.isEmpty() && utteranceRepository.findByRecordingIdAndTurnIdInOrderByTurnId(recordingId, turns)
                     .stream().map(Utterance::getTurnId).distinct().count() != turns.stream().distinct().count()) {
                 throw new IllegalArgumentException("A(z) " + recordingId + " felvételnek nincs ilyen megszólalása: "
                         + turns);

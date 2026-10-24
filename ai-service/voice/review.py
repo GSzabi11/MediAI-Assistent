@@ -9,7 +9,8 @@ helyeket determinisztikusan jelöljük ki, és csak ezekről kérdezünk:
   - érték (echo módban mindegyik, sbo-ban a bizonytalan): számérték mértékegységgel — ez soha nem
     íródik át, csak ellenőrizendőként jelöljük (review_note).
 A modell válaszát determinisztikus őrök szűrik (szám, mértékegység, tagadás nem változhat; a csere
-csak a kérdezett szakaszt érintheti). Az eredeti ASR-szöveg és -beszélő megmarad (utterance.asr_*).
+csak a kérdezett szakaszt érintheti, egész szóként — szón belüli egyezést sosem cserélünk, és a 2 betűs
+egyszavas szakaszról nem kérdezünk). Az eredeti ASR-szöveg és -beszélő megmarad (utterance.asr_*).
 """
 import difflib
 import hashlib
@@ -44,6 +45,10 @@ UNITS = {u.lower() for u in UNIT_WORDS}
 # érték = szám + (opcionális) mértékegység, ahogy az átiratban áll
 _VALUE = re.compile(r"\d+(?:[.,]\d+)?(?:\s*(?:" + "|".join(re.escape(u) for u in
                     sorted(UNIT_WORDS, key=len, reverse=True)) + r"))?", re.IGNORECASE)
+# Ennél rövidebb egyszavas bizonytalan szakaszról nem kérdezünk: a névelő / kötőszó („a”, „az”, „és”)
+# alacsony Whisper-valószínűsége gyakori, a kis modell „javítása” ilyenkor tipp (mért: «a» → «nap»).
+MIN_SPAN_LETTERS = 3
+
 # Nyelvi jel: az orvos első személyben a saját panaszáról / gyógyszeréről beszél, ill. a beteg kérdez
 _FIRST_PERSON = re.compile(r"\b(fáj|fájt|szedek|szedtem|voltam|lettem|érzem|éreztem|vagyok|nekem|nálam|"
                            r"engem|kaptam|műtöttek|allergiás vagyok)\b", re.IGNORECASE)
@@ -107,6 +112,17 @@ def check_text_change(old: str, new: str) -> str | None:
     return None
 
 
+def find_span(text: str, span: str) -> re.Match | None:
+    """A szakasz első előfordulása EGÉSZ szóként (két oldalán nem betű / számjegy). A sima
+    részszöveg-keresés szón belül is talál: az «a» a „napot” közepére esne („Jó nappot”)."""
+    return re.search(r"(?<!\w)" + re.escape(span) + r"(?!\w)", text)
+
+
+def _askable(span: str) -> bool:
+    w = _WORD.findall(span)
+    return not (len(w) == 1 and len(w[0]) < MIN_SPAN_LETTERS and not _NUMBER.fullmatch(w[0]))
+
+
 def check_span_change(span: str, answer: str) -> str | None:
     """A kérdezett szakasz cseréje: legfeljebb 2 szóval hosszabb, és hasonlítson az eredetire
     (félreismert szó javítása, nem új mondat)."""
@@ -139,7 +155,7 @@ def _speaker_suspicious(turn: dict) -> bool:
 def build_questions(batch: list[dict], mode: str) -> list[dict]:
     questions = []
     for t in batch:
-        spans = [s for s in t.get("uncertain", []) if s in t["text"]]
+        spans = [s for s in t.get("uncertain", []) if _askable(s) and find_span(t["text"], s)]
         for s in spans:
             kind = "ertek" if _NUMBER.search(s) else "szo"
             q = {"kind": kind, "turn": t, "span": s}
@@ -165,7 +181,9 @@ def _ask(mode: str, batch: list[dict], questions: list[dict]) -> list[dict]:
         marked = t["text"]
         for q in questions:
             if q["turn"] is t and q["span"] and f"«{q['span']}»" not in marked:
-                marked = marked.replace(q["span"], f"«{q['span']}»", 1)
+                m = find_span(marked, q["span"])
+                if m:
+                    marked = f"{marked[:m.start()]}«{q['span']}»{marked[m.end():]}"
         lines.append(f"[{t['id']}] {t['role'].upper()}: {marked}")
     qtext = "\n".join(
         f"{k}. ({q['kind']}) [{q['turn']['id']}]: "
@@ -221,8 +239,11 @@ def _apply(questions: list[dict], answers: list[dict], warnings: list[str]) -> t
         # szo
         if not answer or answer == q["span"]:
             continue
+        m = find_span(turn["text"], q["span"])
+        if not m:
+            continue
         problem = check_span_change(q["span"], answer)
-        new_text = turn["text"].replace(q["span"], answer, 1)
+        new_text = turn["text"][:m.start()] + answer + turn["text"][m.end():]
         problem = problem or check_text_change(turn["text"], new_text)
         if problem:
             rejected += 1

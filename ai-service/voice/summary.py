@@ -1,5 +1,5 @@
-"""A felvétel összefoglalója a teljes átiratból és az orvos által jóváhagyott / hozzáadott
-kulcsszavakból (POST /recording-summaries).
+"""A felvétel összefoglalója a teljes átiratból, az orvos által jóváhagyott / hozzáadott
+kulcsszavakból és a csoportok (panasz, diagnózis, beutaló, …) érvényes elemeiből (POST /recording-summaries).
 
 Egyszerű szöveges hívás (nem kötött JSON): a docproc mérése szerint a 4B-s modell a JSON-kimenetben
 hosszabb szövegnél hurokba esett (docproc/summarize.py). A modell mondatonként megszólalás-
@@ -7,12 +7,17 @@ sorszámra hivatkozik ([3] vagy [3, 5]); ezt determinisztikusan feldolgozzuk és
   - a hivatkozott sorszám létezik (ha nem, a hivatkozás kimarad, figyelmeztetéssel);
   - hivatkozás nélküli mondatnál a forrást szótő-egyezéssel keressük meg (ground); ha így sincs,
     figyelmeztetést kap (nincs mögötte forrás);
-  - az összefoglaló minden száma szerepel az átiratban (kitalált érték ellen).
+  - az összefoglaló minden száma szerepel az átiratban (kitalált érték ellen);
+  - a csoportok MINDEN eleme szerepel az összefoglalóban (laza szóegyezés, ld. covers): ami a modell
+    kimenetéből kimaradt, determinisztikusan pótoljuk ("Diagnózis: sérv gyanú", a csoportelem forrásával),
+    és a figyelmeztetés felsorolja;
+  - az "X nem hangzott el / nem említette" mondat nem az átirat ténye: kimarad (nem figyelmeztetünk rá).
 """
 import hashlib
 import json
 import logging
 import re
+import unicodedata
 
 import requests
 
@@ -42,7 +47,8 @@ RULES = """SZABÁLYOK:
 - Legfeljebb {n} rövid mondat, mindegyik külön sorban, "- " kezdettel.
 - Minden mondat végére írd szögletes zárójelben azoknak a megszólalásoknak a sorszámát, amelyekből az adat
   származik — az átirat sorainak elején álló szám, pl. [3] vagy [3, 5]; ne a saját mondataidat számozd.
-{keywords}Csak a felsorolást írd, bevezetés és cím nélkül."""
+- Ne írj arról, ami NEM hangzott el ("nem említette", "nem esett szó róla").
+{keywords}{findings}Csak a felsorolást írd, bevezetés és cím nélkül."""
 
 _REF = re.compile(r"\[(\d+(?:\s*,\s*\d+)*)\]")
 _NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
@@ -53,6 +59,28 @@ def _keywords_line(keywords: list[str]) -> str:
         return ""
     return ("- Az orvos ezeket a kulcsszavakat emelte ki — ha elhangzottak, mindegyikre térj ki: "
             + "; ".join(keywords) + "\n")
+
+
+CATEGORY_LABEL = {"COMPLAINT": "Panasz", "DIAGNOSIS": "Diagnózis", "REFERRAL": "Beutaló",
+                  "EXAM_FINDING": "Vizsgálati megállapítás", "MEDICATION": "Javasolt gyógyszer",
+                  "RECOMMENDATION": "Javaslat / kontroll"}
+# ennyi pont jöhet a modelltől + a pótolt csoportelemek (a Spring legfeljebb 30-at fogad)
+MAX_TOTAL_POINTS = 30
+
+
+def finding_label(f: dict) -> str:
+    """A csoportelem egy sorban: "Diagnózis: sérv gyanú (BNO K40.9)"."""
+    return (f"{CATEGORY_LABEL.get(f.get('category'), 'Csoportelem')}: {f['text']}"
+            + (f" (BNO {f['bnoCode']})" if f.get("bnoCode") else ""))
+
+
+def _findings_line(findings: list[dict]) -> str:
+    if not findings:
+        return ""
+    items = "\n".join(f"  - {finding_label(f)}" + (f" {list(f['turnIds'])}" if f.get("turnIds") else "")
+                      for f in findings)
+    return ("- Az orvos a beszélgetésből ezeket az elemeket rögzítette — MINDEGYIK szerepeljen az összefoglalóban "
+            "(a szögletes zárójelben a forrás-megszólalások):\n" + items + "\n")
 
 
 def prompt_hash(mode: str) -> str:
@@ -71,7 +99,7 @@ def _stems(text: str) -> set[str]:
     ("IVS", "HF", "LVF") és a számok — az echo-összefoglaló sorai ("IVS 9 mm") gyakran csak ezekből
     állnak, szótő nélkül semmihez nem kötődtek volna."""
     stems = {w[:_STEM] for w in re.findall(r"[0-9a-záéíóöőúüű]{4,}", text.lower()) if w not in _STOP}
-    stems |= {w.lower() for w in re.findall(r"[A-ZÁÉÍÓÖŐÚÜŰ]{2,}", text)}
+    stems |= {w.lower() for w in re.findall(r"\b[A-ZÁÉÍÓÖŐÚÜŰ]{2,}\b", text)}
     stems |= {n.replace(",", ".") for n in _NUMBER.findall(text)}
     return stems
 
@@ -91,7 +119,58 @@ def ground(sentence: str, utterances: list[dict]) -> list[int]:
     return sorted(t for n, t in scored if n == best)[:5]
 
 
-def parse(text: str, utterances: list[dict], warnings: list[str]) -> list[dict]:
+# Laza szóegyezés (ragozás, ékezet): a szó első legfeljebb 5 betűje (ékezet nélkül) egy másik szó eleje. A 4
+# betűs tő ("sérv") így a ragozott alakot ("sérve", "sérvre") is megtalálja — a _stems 5 betűs töve nem.
+_FUZZY_STOP = {"beteg", "betegnek", "orvos", "gyanu", "gyanuja", "javasolt", "szerint", "jelenleg", "kerul",
+               "kell", "lehet", "van", "nincs", "mint", "vagy", "es", "is", "a", "az", "egy"}
+
+
+def _fold(text: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFKD", text.lower()) if not unicodedata.combining(c))
+
+
+def _words(text: str) -> list[str]:
+    return [w for w in re.findall(r"[0-9a-z]+", _fold(text)) if (len(w) >= 3 or w.isdigit()) and w not in _FUZZY_STOP]
+
+
+def _word_in(word: str, words: list[str]) -> bool:
+    if word.isdigit():
+        return word in words
+    stem = word[:5]
+    return any(w.startswith(stem) or (len(w) >= 4 and word.startswith(w[:5])) for w in words)
+
+
+def covers(text: str, needle: str, share: float = 0.6) -> bool:
+    """A needle (pl. csoportelem) tartalmas szavainak legalább `share` része szerepel a text-ben (laza
+    szóegyezéssel); 1–2 tartalmas szónál mind."""
+    need = _words(needle)
+    if not need:
+        return False
+    hay = _words(text)
+    hit = sum(1 for w in need if _word_in(w, hay))
+    return hit == len(need) if len(need) <= 2 else hit / len(need) >= share
+
+
+def loose_ground(sentence: str, utterances: list[dict]) -> list[int]:
+    """Laza forrás (a ground után): a megszólalás(ok), amely(ek) a mondat tartalmas szavainak legalább felét
+    tartalmazzák (laza szóegyezés)."""
+    need = _words(sentence)
+    if not need:
+        return []
+    scored = [(sum(1 for w in need if _word_in(w, _words(u["text"]))), u["turnId"]) for u in utterances]
+    best = max((n for n, _ in scored), default=0)
+    if best == 0 or best < len(need) / 2:
+        return []
+    return sorted(t for n, t in scored if n == best)[:5]
+
+
+# "nem említette", "nem esett szó", "nem hangzott el", "nincs adat" — nem az átirat ténye, hanem a hiánya
+_NOT_MENTIONED = re.compile(r"\bnem\s+(?:említ|esett\s+szó|hangzott\s+el|tér\s+ki|beszélt|szerepel)|"
+                            r"\bnincs\s+(?:adat|információ|említés)|\bnem\s+ismert\b|\bnem\s+derült\s+ki",
+                            re.IGNORECASE)
+
+
+def parse(text: str, utterances: list[dict], warnings: list[str], findings: list[dict] | None = None) -> list[dict]:
     turn_ids = {u["turnId"] for u in utterances}
     transcript = " ".join(u["text"] for u in utterances)
     points: list[dict] = []
@@ -112,10 +191,18 @@ def parse(text: str, utterances: list[dict], warnings: list[str]) -> list[dict]:
             continue  # a korábbi pontok egybefűzött ismétlése
         valid = sorted({r for r in refs if r in turn_ids})
         invalid = sorted({r for r in refs if r not in turn_ids})
+        if not valid and _NOT_MENTIONED.search(sentence):
+            log.info("„%s”: az el nem hangzott dologról szóló mondat kimaradt", sentence[:80])
+            continue
+        if not valid:
+            # a mondat egy csoportelemet ír le: annak forrása (az orvos jóváhagyta)
+            valid = next((sorted(t for t in f.get("turnIds") or [] if t in turn_ids)
+                          for f in findings or [] if covers(sentence, f["text"])), [])
         if not valid:
             # A rossz sorszám (a modell gyakran a saját mondatait számozza) helyett a szótő-egyezés
-            # dönt; csak akkor figyelmeztetünk, ha így sem köthető megszólaláshoz
-            valid = ground(sentence, utterances)
+            # dönt, utána a laza (ragozás-, ékezettűrő) szóegyezés; csak akkor figyelmeztetünk, ha így sem
+            # köthető megszólaláshoz
+            valid = ground(sentence, utterances) or loose_ground(sentence, utterances)
             if not valid:
                 reason = f"nem létező megszólalásra hivatkozott ({invalid}), és " if invalid else ""
                 warnings.append(f"„{sentence[:80]}”: {reason}nem köthető megszólaláshoz — forrás nélküli mondat, "
@@ -154,8 +241,30 @@ def _generate(content: str) -> str:
 DOCTOR_ONLY_MODES = {"echo"}
 
 
-def summarize(mode: str, utterances: list[dict], keywords: list[str]) -> dict:
+def add_missing_findings(points: list[dict], findings: list[dict], utterances: list[dict],
+                         warnings: list[str]) -> None:
+    """A csoportelem, amelyre a modell egyik pontja sem tér ki (covers), determinisztikusan bekerül: a
+    csoport szövegével és forrás-megszólalásaival (ha azok a hivatkozhatók között vannak; különben szótő-
+    egyezéssel). A figyelmeztetés felsorolja, mi került be így."""
+    turn_ids = {u["turnId"] for u in utterances}
+    added = []
+    for f in findings:
+        if any(covers(p["text"], f["text"]) for p in points):
+            continue
+        if len(points) >= MAX_TOTAL_POINTS:
+            warnings.append(f"Csoportelem nem fért az összefoglalóba: {finding_label(f)}"[:500])
+            continue
+        refs = sorted(t for t in f.get("turnIds") or [] if t in turn_ids) or ground(f["text"], utterances)
+        points.append({"text": finding_label(f)[:1000], "turnIds": refs[:20]})
+        added.append(finding_label(f))
+    if added:
+        # nem figyelmeztetés: az elem bekerült (Szabi: ami szerepel, arra ne jelezzünk)
+        log.info("%d csoportelem a modell összefoglalójából kimaradt, pótolva: %s", len(added), "; ".join(added))
+
+
+def summarize(mode: str, utterances: list[dict], keywords: list[str], findings: list[dict] | None = None) -> dict:
     mode = mode.lower()
+    findings = [f for f in findings or [] if (f.get("text") or "").strip()]
     warnings: list[str] = []
     if mode in DOCTOR_ONLY_MODES:
         doctor = [u for u in utterances if u.get("speaker") == "DOCTOR"]
@@ -167,12 +276,14 @@ def summarize(mode: str, utterances: list[dict], keywords: list[str]) -> dict:
                             f"összefoglalóból")
         utterances = doctor
     dialog = "\n".join(f"[{u['turnId']}] {SPEAKER_LABEL.get(u['speaker'], 'EGYÉB')}: {u['text']}" for u in utterances)
-    content = (PROMPT[mode] + "\n" + RULES.format(n=MAX_POINTS, keywords=_keywords_line(keywords))
+    content = (PROMPT[mode] + "\n" + RULES.format(n=MAX_POINTS, keywords=_keywords_line(keywords),
+                                                  findings=_findings_line(findings))
                + "\n\n--- ÁTIRAT ---\n" + dialog + "\n--- ÁTIRAT VÉGE ---")
     raw = _generate(content)
-    points = parse(raw, utterances, warnings)
-    if not points:
+    points = parse(raw, utterances, warnings, findings)
+    if not points and not findings:
         raise RuntimeError("a modell nem adott értelmezhető összefoglalót")
+    add_missing_findings(points, findings, utterances, warnings)
     missing = [k for k in keywords if not kw.occurs(k, [{"text": raw}])]
     if missing:
         warnings.append(f"Az összefoglaló nem tér ki ezekre a kulcsszavakra: {', '.join(missing)}"[:500])

@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -15,7 +16,8 @@ import bme.mediai.processing.service.VoiceServiceClient;
 import bme.mediai.recording.service.RecordingTranscribedEvent;
 import bme.mediai.recordingfinding.exception.RecordingFindingConflictException;
 
-// (1) A felvétel elkészültekor (commit után) automatikusan kéri a csoportok kinyerését. (2) A kérést a
+// (1) A felvétel elkészültekor (commit után) automatikusan kéri a csoportok kinyerését (ennek vége indítja az
+// első összefoglalót: RecordingFindingsSettledEvent). (2) A kérést a
 // commit után, külön szálon adja át a hangszolgáltatásnak; ha nem érhető el, FAILED.
 @Component
 public class RecordingExtractionDispatcher {
@@ -25,10 +27,13 @@ public class RecordingExtractionDispatcher {
 
     private final VoiceServiceClient client;
     private final RecordingFindingService service;
+    private final ApplicationEventPublisher events;
 
-    public RecordingExtractionDispatcher(VoiceServiceClient client, RecordingFindingService service) {
+    public RecordingExtractionDispatcher(VoiceServiceClient client, RecordingFindingService service,
+            ApplicationEventPublisher events) {
         this.client = client;
         this.service = service;
+        this.events = events;
     }
 
     @Async
@@ -38,8 +43,11 @@ public class RecordingExtractionDispatcher {
             service.request(event.recordingId(), null);
         } catch (RecordingFindingConflictException e) {
             LOG.info("A(z) {} felvétel automatikus kinyerése nem indult: {}", event.recordingId(), e.getMessage());
+            events.publishEvent(new RecordingFindingsSettledEvent(event.recordingId()));
         } catch (RuntimeException e) {
             LOG.error("A(z) {} felvétel automatikus kinyerése nem indult", event.recordingId(), e);
+            // az összefoglaló csoportok nélkül is elkészülhet
+            events.publishEvent(new RecordingFindingsSettledEvent(event.recordingId()));
         }
     }
 

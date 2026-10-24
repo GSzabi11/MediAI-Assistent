@@ -2,7 +2,7 @@
 
     POST /profiles   Spring → Python: hangprofil a felolvasott mondatokból (sorba áll, 202)
     POST /recordings Spring → Python: felvétel átírása, szerepkiosztás, MedGemma-átnézés (202)
-    POST /recording-summaries  Spring → Python: összefoglaló az átiratból + kulcsszavakból (202)
+    POST /recording-summaries  Spring → Python: összefoglaló az átiratból + kulcsszavakból + csoportokból (202)
     POST /recording-findings   Spring → Python: csoportok (panasz, diagnózis, beutaló, …) az átiratból (202)
     GET  /health     sor állapota
 
@@ -81,11 +81,19 @@ class SummaryTurn(BaseModel):
     text: str
 
 
+class SummaryFinding(BaseModel):
+    category: str = Field(pattern=r"^(COMPLAINT|DIAGNOSIS|REFERRAL|EXAM_FINDING|MEDICATION|RECOMMENDATION)$")
+    text: str = Field(min_length=1, max_length=1000)
+    bnoCode: str | None = None
+    turnIds: list[int] = Field(default_factory=list, max_length=50)
+
+
 class SummaryRequest(BaseModel):
     summaryId: int = Field(gt=0)
     mode: str = Field(pattern=r"^(SBO|ECHO)$")
     utterances: list[SummaryTurn] = Field(min_length=1, max_length=5000)
     keywords: list[str] = Field(default_factory=list, max_length=100)
+    findings: list[SummaryFinding] = Field(default_factory=list, max_length=200)
     callbackUrl: str = Field(pattern=r"^https?://")
 
 
@@ -93,7 +101,8 @@ class SummaryRequest(BaseModel):
 def submit_summary(req: SummaryRequest, x_internal_token: str | None = Header(default=None)):
     _check_token(x_internal_token)
     position = jobs.submit(SummaryJob(req.summaryId, req.mode, [u.model_dump() for u in req.utterances],
-                                      req.keywords, req.callbackUrl))
+                                      req.keywords, req.callbackUrl,
+                                      tuple(f.model_dump() for f in req.findings)))
     if position is None:
         return JSONResponse(status_code=202, content={"summaryId": req.summaryId, "alreadyQueued": True})
     return {"summaryId": req.summaryId, "queuePosition": position}

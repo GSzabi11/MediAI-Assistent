@@ -24,10 +24,11 @@ public record EpicrisisResultRequest(
     @Size(max = 100)
     List<@Valid Diagnosis> diagnoses,
 
-    @Size(max = 10)
+    // a modell legfeljebb 6-6 pontja + a felvételek csoportjaiból determinisztikusan pótolt elemek
+    @Size(max = 60)
     List<@Valid Finding> findings,
 
-    @Size(max = 10)
+    @Size(max = 60)
     List<@NotBlank @Size(max = 500) String> recommendations,
 
     List<@NotBlank @Size(max = 500) String> warnings,

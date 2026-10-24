@@ -15,6 +15,7 @@ import bme.mediai.recording.exception.RecordingNotFoundException;
 import bme.mediai.recording.persistence.Recording;
 import bme.mediai.recording.persistence.RecordingRepository;
 import bme.mediai.recording.persistence.RecordingStatus;
+import bme.mediai.recordingfinding.service.RecordingFindingService;
 import bme.mediai.recordingsummary.api.RecordingSummaryJobRequest;
 import bme.mediai.recordingsummary.api.RecordingSummaryResponse;
 import bme.mediai.recordingsummary.api.RecordingSummaryResultRequest;
@@ -32,7 +33,7 @@ import bme.mediai.utterance.persistence.UtteranceRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
-// A felvétel összefoglalója a teljes átiratból és a (nem elutasított) kulcsszavakból. A Spring
+// A felvétel összefoglalója a teljes átiratból, a (nem elutasított) kulcsszavakból és a csoportok elemeiből. A Spring
 // gyűjti az adatot és tárolja az eredményt; az Ollamát a Python hangszolgáltatás hívja.
 @Service
 public class RecordingSummaryService {
@@ -44,18 +45,21 @@ public class RecordingSummaryService {
     private final UtteranceRepository utteranceRepository;
     private final UserRepository userRepository;
     private final KeywordService keywordService;
+    private final RecordingFindingService findingService;
     private final VoiceServiceClient voiceService;
     private final ApplicationEventPublisher events;
     private final Validator validator;
 
     public RecordingSummaryService(RecordingSummaryRepository repository, RecordingRepository recordingRepository,
             UtteranceRepository utteranceRepository, UserRepository userRepository, KeywordService keywordService,
-            VoiceServiceClient voiceService, ApplicationEventPublisher events, Validator validator) {
+            RecordingFindingService findingService, VoiceServiceClient voiceService, ApplicationEventPublisher events,
+            Validator validator) {
         this.repository = repository;
         this.recordingRepository = recordingRepository;
         this.utteranceRepository = utteranceRepository;
         this.userRepository = userRepository;
         this.keywordService = keywordService;
+        this.findingService = findingService;
         this.voiceService = voiceService;
         this.events = events;
         this.validator = validator;
@@ -94,6 +98,7 @@ public class RecordingSummaryService {
                         .map(u -> new RecordingSummaryJobRequest.Turn(u.getTurnId(), u.getSpeaker().name(), u.getText()))
                         .toList(),
                 keywords,
+                findingService.currentFacts(recordingId),
                 voiceService.callbackUrl("/api/recording-summaries/" + saved.getId() + "/result"))));
         return RecordingSummaryResponse.from(saved);
     }

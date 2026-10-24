@@ -18,7 +18,6 @@ import { usePatient } from '../patient/PatientContext';
 import { ellatasRovid } from './EllatasValaszto';
 import { SzintMero } from './HangprofilPanel';
 import { Icon } from './Icon';
-import { Segmented } from './Segmented';
 import { TranscriptView } from './TranscriptView';
 
 /** Az Átirat fül: új felvétel rögzítése (kérésre vagy ha még nincs) + a kiválasztott felvétel átirata. */
@@ -76,8 +75,8 @@ function FelvetelForm({ onDone, onCancel }: { onDone: (id: number) => void; onCa
   const { patient, frissit } = usePatient();
   const { kontextus, lezarult } = useEllatasKontextus();
   const ellatas = kontextus.mod === 'ellatas' ? kontextus.ellatas : null;
-  // az echo-ellátásban az echo diktálás a kézenfekvő mód
-  const [mod, setMod] = useState<FelvetelResponse['mod']>(ellatas?.tipus === 'echo' ? 'echo_diktalas' : 'surgossegi');
+  // a mód az ellátás típusából jön: echo-ellátás → echo diktálás, SBO / ambuláns → orvos–beteg beszélgetés
+  const mod: FelvetelResponse['mod'] = ellatas?.tipus === 'echo' ? 'echo_diktalas' : 'surgossegi';
   const [fut, setFut] = useState(false);
   const [hossz, setHossz] = useState(0);
   const [szint, setSzint] = useState(0);
@@ -157,20 +156,10 @@ function FelvetelForm({ onDone, onCancel }: { onDone: (id: number) => void; onCa
         <h2 className="h2 h2--sm">Új felvétel</h2>
         <span className="meta">a felvétel végén a hang feltöltődik, az átirat a háttérben készül</span>
       </div>
-      <div className="formgrid">
-        <div className="field">
-          <span className="field__legend">Mód</span>
-          <Segmented
-            label="Felvétel módja"
-            value={mod}
-            onChange={(v) => !fut && setMod(v)}
-            options={[
-              ['surgossegi', 'Sürgősségi'],
-              ['echo_diktalas', 'Echo diktálás'],
-            ]}
-          />
-        </div>
-      </div>
+      <p className="meta">
+        Mód: {mod === 'echo_diktalas' ? 'Echo diktálás (csak az orvos hangja)' : 'Orvos–beteg beszélgetés'} — az
+        ellátás típusából
+      </p>
       {fut && (
         <div className="recbar" role="status">
           <span className="recbar__dot" aria-hidden="true" />

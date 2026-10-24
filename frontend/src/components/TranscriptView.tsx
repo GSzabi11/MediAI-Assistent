@@ -13,7 +13,7 @@ import { usePatient } from '../patient/PatientContext';
 import { IdezetForm } from './allitas/IdezetForm';
 import { csoportApi, csoportok, type FindingCategoryDto } from '../api/felvetelCsoportok';
 import { FelvetelCsoportokPanel } from './FelvetelCsoportok';
-import { FelvetelOsszefoglaloPanel, KulcsszoPanel } from './FelvetelElemzes';
+import { FelvetelOsszefoglaloPanel } from './FelvetelElemzes';
 import { Icon, type IconName } from './Icon';
 import { ErrorState, Loading, PatientMatch } from './shell';
 
@@ -41,9 +41,6 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
   const [idezet, setIdezet] = useState<{ turn: number; szoveg: string } | null>(null);
   const irhato = useIrhato();
   const kiemeltKulcs = kiemeltTurnIds.join(',');
-  const kulcsszoLista = useAsync(() => api.listKulcsszavak(felvetelId), [felvetelId]);
-  const kulcsszavak = kulcsszoLista.state.status === 'ok' ? kulcsszoLista.state.data : [];
-  const aktivKulcsszavak = kulcsszavak.filter((k) => k.allapot !== 'elutasitva').map((k) => k.kifejezes);
   // az összefoglaló hivatkozására kattintva kiemelt megszólalások (az URL-es kiemelés mellett)
   const [ugrott, setUgrott] = useState<number[]>([]);
   const [kwHiba, setKwHiba] = useState<string | null>(null);
@@ -64,7 +61,7 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
   useEffect(() => {
     if (!automatikusFeldolgozas) return;
     const t = window.setInterval(() => {
-      void Promise.all([felvetelAllapot.refresh(), refresh(), kulcsszoLista.refresh()])
+      void Promise.all([felvetelAllapot.refresh(), refresh()])
         .then(() => frissit())
         .catch(() => undefined);
     }, 3000);
@@ -171,8 +168,7 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
       )}
       {state.status === 'ok' && sameP && state.data.length > 0 && felvetel.allapot === 'kesz' && (
         <div className="docview__hint">
-          <KulcsszoPanel felvetelId={felvetel.id} kulcsszavak={kulcsszavak} onValtozott={kulcsszoLista.refresh} />
-          <FelvetelOsszefoglaloPanel felvetelId={felvetel.id} kulcsszavak={kulcsszavak} onUgras={ugras} />
+          <FelvetelOsszefoglaloPanel felvetelId={felvetel.id} onUgras={ugras} />
           <FelvetelCsoportokPanel felvetelId={felvetel.id} frissites={csoportFrissites} onUgras={ugras} />
         </div>
       )}
@@ -207,7 +203,7 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
                         data-turn={m.sorszam}
                         className={`bubble bubble--${m.beszelo}${kiemelt ? ' bubble--ref' : ''}`}
                       >
-                        {kiemel(m.szoveg, aktivKulcsszavak, felvetel.mod === 'echo_diktalas')}
+                        {kiemel(m.szoveg, [], felvetel.mod === 'echo_diktalas')}
                       </p>
                       {m.megjegyzes && (
                         <p className="turn__note" role="note">
@@ -248,27 +244,6 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
                 <Icon name="quote" size={14} />
                 Idézet állításként…
               </button>
-              {felvetel.allapot === 'kesz' && kijeloles.szoveg.trim().length <= 200 && (
-                <button
-                  type="button"
-                  className="btn btn--sm"
-                  disabled={irhato.tiltva}
-                  title={irhato.title}
-                  onClick={() =>
-                    void api
-                      .addKulcsszo(felvetel.id, kijeloles.szoveg)
-                      .then(() => kulcsszoLista.refresh())
-                      .then(() => {
-                        setKwHiba(null);
-                        setKijeloles(null);
-                      })
-                      .catch((e: Error) => setKwHiba(e.message))
-                  }
-                >
-                  <Icon name="plus" size={14} />
-                  Kulcsszóként
-                </button>
-              )}
               {felvetel.allapot === 'kesz' && kijeloles.szoveg.trim().length <= 500 && (
                 <select
                   className="input input--sm"

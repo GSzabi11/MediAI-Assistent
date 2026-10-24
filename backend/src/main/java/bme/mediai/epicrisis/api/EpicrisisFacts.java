@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import bme.mediai.medicalhistory.api.MedicalHistoryFacts;
+import bme.mediai.recordingfinding.api.FindingFact;
 import bme.mediai.summary.api.SummaryFacts;
 
 // Spring → Python: az epikrízis bemenete. Név, TAJ, lakcím SZÁNDÉKOSAN nincs benne (a szövegekben is
@@ -25,9 +26,10 @@ public record EpicrisisFacts(
     public record Care(String type, LocalDate start, LocalDate end) {
     }
 
-    // truncated: az átirat vége terjedelmi okból kimaradt
+    // truncated: az átirat vége terjedelmi okból kimaradt. findings: a felvétel csoportjainak érvényes elemei
+    // (az orvos szerkesztett állapotában, maszkolva) — mindegyiknek szerepelnie kell az epikrízisben
     public record RecordingInput(Long id, String mode, OffsetDateTime recordedAt, boolean truncated,
-            List<UtteranceInput> utterances) {
+            List<UtteranceInput> utterances, List<FindingFact> findings) {
     }
 
     // text: a (javított) megszólalás, a beteg nevével / TAJ-ával maszkolva

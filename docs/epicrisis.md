@@ -69,6 +69,20 @@ hivatkozik. Beragadt feladat (a docproc leállt): mint a kórtörténetnél, a l
 - **Diagnózis**: a leletekből a kivonat szabályai szerint (idézettel; BNO-kód csak ha a leletben szó szerint áll); a
   modell az átiratból csak szó szerinti idézettel adhat diagnózist, BNO-kódot nem.
 - **Javaslat**: gyógyszeradag-eltérés a listától, ellenőrizetlen szám → figyelmeztetés.
+- **Hangfelvétel-idézet toleránsan** (Szabi kérése, 2026-10-24): a lelet-szabály (`history.quote_in_text`, 85%) VAGY
+  szavanként ragozás- és ékezettűrően (`epicrisis.audio_quote_ok`, a tartalmas szavak 85%-a); rossz megszólalás-sorszámnál
+  az idézet megszólalását megkeressük; a csoportelemet leíró pontot a csoport forrás-megszólalásai támasztják alá.
+
+## A felvétel csoportjai (V34) — mind bekerül
+
+Szabi kérése (2026-10-24). A Spring a felvétel érvényes csoportelemeit (`RecordingFindingService.currentFacts`: az
+orvos szerkesztett szövege / BNO-ja, a törölt nélkül, maszkolva) a felvétel mellé adja. A modell látja őket, és
+determinisztikus utóellenőrzés (`epicrisis.covers`, laza szóegyezés) pótolja, ami kimaradt — forrással (csak naplózva):
+diagnózis → DIAGNÓZISOK (a csoport BNO-jával; leletdiagnózissal nem ismétlődik), panasz / vizsgálati megállapítás →
+KRITIKUS MEGÁLLAPÍTÁSOK, beutaló / javasolt gyógyszer / javaslat → JAVASLATOK. Ezért a megállapítás és a javaslat
+legfeljebb 60 lehet (a modelltől továbbra is 6-6). Az orvos kézi eleme (nincs `turnIds`) forrása a felvétel: ha szavai
+elhangzottak, a megszólalás; különben üres `turnIds`-szel (a Spring ezt a felvétel-forrásnál elfogadja). Az idézet elől a
+modell által kimásolt „[H14:6]” jelölés levágódik.
 
 ## Szerkesztés és export
 

@@ -84,7 +84,9 @@ semmit sem javított, vagy tartalmat hagyott el. A bizonytalan helyeket determin
 | érték | echo: **minden** szám+mértékegység; sbo: a bizonytalan | **nem írhatja át**, csak „gyanús” jelölés → `review_note` |
 
 Őrök (a modell válasza után, kódban): szám, mértékegység, tagadás nem változhat; a csere legfeljebb
-2 szóval hosszabb és hasonlít az eredetire. Elvetett javítás → figyelmeztetés. Az eredeti ASR-szöveg
+2 szóval hosszabb és hasonlít az eredetire; a szakaszt csak egész szóként keressük és cseréljük (a részszöveg-csere
+az «a» → «nap» javítást a „napot” közepébe írta: „Jó nappot”), és 3 betűnél rövidebb egyszavas szakaszról nem
+kérdezünk (névelő, kötőszó). Elvetett javítás → figyelmeztetés. Az eredeti ASR-szöveg
 és -beszélő az `utterance.asr_text` / `asr_speaker`-ben marad, a `corrected_by` + `correction_reason`
 mutatja, ki és miért javította; a frontend „AI-javított” jelöléssel és az eredeti megnézhetőségével
 mutatja. **Ismert korlát**: a megszólalást nem bonthatja (ha a diarizáció egy kérdést és a választ
@@ -105,11 +107,16 @@ Tudatosan **külön táblák, nem `statement`** (mint a `clinical_summary`).
   marad meg, ha elhangzott: szótő-alapú visszakeresés (minden szó első 5 betűje, egymás után), és
   **az átiratban álló alakot** tároljuk (nem a modellét). A frontend kiemelése ugyanezt a szabályt
   használja (`lib/atiratKiemeles.tsx`).
-- **Összefoglaló** (`recording_summary`): a felvétel elkészültekor automatikusan, utána gombbal
+- **Összefoglaló** (`recording_summary`): a felvétel automatikus csoport-kinyerése után (`RecordingFindingsSettledEvent`:
+  DONE, FAILED, vagy el sem indult) automatikusan, utána gombbal
   újragenerálható (az előzmény megmarad). Bemenet: a teljes (javított) átirat + a nem elutasított
-  kulcsszavak (pillanatkép). A modell mondatonként megszólalás-sorszámra hivatkozik; a Python és a
-  Spring is ellenőrzi, hogy a hivatkozott `turn_id` létezik. Forrás nélküli mondat, az átiratban nem
-  szereplő szám, kimaradt kulcsszó → figyelmeztetés.
+  kulcsszavak (pillanatkép) + a csoportok érvényes elemei (az orvos szerkesztett állapotában; nem tárolódnak
+  pillanatképként). A modell mondatonként megszólalás-sorszámra hivatkozik; a Python és a
+  Spring is ellenőrzi, hogy a hivatkozott `turn_id` létezik. Az átiratban nem szereplő szám, kimaradt kulcsszó →
+  figyelmeztetés. **Minden csoportelem bekerül** (Szabi kérése, 2026-10-24): amire a modell egyik pontja sem tér ki
+  (laza szóegyezés, `summary.covers`), az „Diagnózis: sérv gyanú” alakban, a csoport forrásával pótlódik (nem
+  figyelmeztetés, csak napló — ami bekerült, arra nem jelzünk). Forrás nélküli mondatnál előbb a csoportelem forrása, a szótő-, majd a laza (ragozás-,
+  ékezettűrő) egyezés; csak ha egyik sem, akkor figyelmeztetés. Az „X nem hangzott el / nem említette” mondat kimarad.
 - **Echo-diktálásnál csak az orvos** (a felhasználó döntése, 2026-10-15): `echo` módban a modell csak a
   `DOCTOR` megszólalásokat kapja, és csak ezekre hivatkozhat; a beteg / egyéb megszólalás kimarad
   (figyelmeztetéssel, hány). Ha nincs orvosi megszólalás, az összefoglaló `FAILED`. Az `sbo` mód

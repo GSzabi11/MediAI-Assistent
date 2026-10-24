@@ -19,12 +19,14 @@ import bme.mediai.patient.persistence.Patient;
 import bme.mediai.recording.persistence.Recording;
 import bme.mediai.recording.persistence.RecordingRepository;
 import bme.mediai.recording.persistence.RecordingStatus;
+import bme.mediai.recordingfinding.api.FindingFact;
+import bme.mediai.recordingfinding.service.RecordingFindingService;
 import bme.mediai.utterance.persistence.Utterance;
 import bme.mediai.utterance.persistence.UtteranceRepository;
 
 // Az epikrízis bemenete: a kiválasztott leletek (a kórtörténettel közös módon: szöveg + meglévő kivonat,
 // laborleletnél a szabálymotor szerinti eltérések), az ellátás kész felvételeinek átirata, a gyógyszer- és
-// allergialista. A beteg neve / TAJ-a a szövegekben maszkolva (MedicalHistoryFactsBuilder.mask).
+// allergialista, a felvételek csoportjai (panasz, diagnózis, …). A beteg neve / TAJ-a a szövegekben maszkolva (MedicalHistoryFactsBuilder.mask).
 @Component
 public class EpicrisisFactsBuilder {
 
@@ -39,12 +41,14 @@ public class EpicrisisFactsBuilder {
     private final MedicalHistoryFactsBuilder historyFacts;
     private final RecordingRepository recordingRepository;
     private final UtteranceRepository utteranceRepository;
+    private final RecordingFindingService findingService;
 
     public EpicrisisFactsBuilder(MedicalHistoryFactsBuilder historyFacts, RecordingRepository recordingRepository,
-            UtteranceRepository utteranceRepository) {
+            UtteranceRepository utteranceRepository, RecordingFindingService findingService) {
         this.historyFacts = historyFacts;
         this.recordingRepository = recordingRepository;
         this.utteranceRepository = utteranceRepository;
+        this.findingService = findingService;
     }
 
     // Az ellátás időszakába eső, használható leletek: klinikai dátum a kezdet és a zárás (nyitottnál a mai
@@ -78,8 +82,12 @@ public class EpicrisisFactsBuilder {
                 utterances.add(new EpicrisisFacts.UtteranceInput(u.getTurnId(), u.getSpeaker().name(), text));
             }
             if (!utterances.isEmpty()) {
+                List<FindingFact> findings = findingService.currentFacts(r.getId()).stream()
+                        .map(f -> new FindingFact(f.category(), MedicalHistoryFactsBuilder.mask(patient, f.text()),
+                                f.bnoCode(), f.turnIds()))
+                        .toList();
                 recordingInputs.add(new EpicrisisFacts.RecordingInput(r.getId(), r.getMode().name(), r.getRecordedAt(),
-                        truncated, utterances));
+                        truncated, utterances, findings));
             }
         }
 
