@@ -12,9 +12,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
  * laphoz normált (0–1) téglalap — a dokumentum-feldolgozás rögzítette (lab_result.source_*),
  * nem itt keressük —, ezért százalékos pozícióval a lap átméretezésekor is a helyén marad.
  */
-// Nagyítási lépcsők; alapból akkora, hogy a lap legalább OLVASHATO_SZELESSEG px (≈ valós méret) legyen —
-// a betegoldal dokumentum-oszlopa keskeny (~300 px), a teljes lap ott olvashatatlan
-const LEPCSOK = [1, 1.5, 2, 2.5, 3, 4];
+// Nagyítási lépcsők a panel szélességéhez (1 = szélességhez igazítva); 1 alatt kicsinyítés (több lap
+// látszik egyszerre). Alapból akkora, hogy a lap legalább OLVASHATO_SZELESSEG px (≈ valós méret) legyen —
+// a betegoldal dokumentum-oszlopa keskeny (~300 px), a teljes lap ott olvashatatlan; alapból nem kicsinyít.
+const LEPCSOK = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4];
 const OLVASHATO_SZELESSEG = 600;
 
 export function PdfNezet({ dokumentumId, kiemeles }: { dokumentumId: number; kiemeles: ForrasDoboz | null }) {
@@ -24,7 +25,7 @@ export function PdfNezet({ dokumentumId, kiemeles }: { dokumentumId: number; kie
   const zoom =
     nagyitas ??
     (alapSzelesseg > 0
-      ? (LEPCSOK.find((l) => l * alapSzelesseg >= OLVASHATO_SZELESSEG) ?? LEPCSOK[LEPCSOK.length - 1])
+      ? (LEPCSOK.find((l) => l >= 1 && l * alapSzelesseg >= OLVASHATO_SZELESSEG) ?? LEPCSOK[LEPCSOK.length - 1])
       : 1);
   const markRef = useRef<HTMLDivElement>(null);
   const [allapot, setAllapot] = useState<'betoltes' | 'kesz' | Error>('betoltes');
@@ -126,8 +127,15 @@ export function PdfNezet({ dokumentumId, kiemeles }: { dokumentumId: number; kie
   if (allapot instanceof Error) return <ErrorState error={allapot} />;
   return (
     <div className="pdfview">
-      <div className="row-inline pdfview__toolbar" role="group" aria-label="Nagyítás">
-        <button type="button" className="btn btn--sm" onClick={() => lepes(-1)} disabled={zoom <= LEPCSOK[0]}>
+      <div className="row-inline pdfview__toolbar" role="group" aria-label="Nagyítás és kicsinyítés">
+        <button
+          type="button"
+          className="btn btn--sm"
+          onClick={() => lepes(-1)}
+          disabled={zoom <= LEPCSOK[0]}
+          aria-label="Kicsinyítés"
+          title="Kicsinyítés"
+        >
           −
         </button>
         <span className="meta mono" aria-live="polite">
@@ -138,6 +146,8 @@ export function PdfNezet({ dokumentumId, kiemeles }: { dokumentumId: number; kie
           className="btn btn--sm"
           onClick={() => lepes(1)}
           disabled={zoom >= LEPCSOK[LEPCSOK.length - 1]}
+          aria-label="Nagyítás"
+          title="Nagyítás"
         >
           +
         </button>

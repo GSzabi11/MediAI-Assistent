@@ -2049,6 +2049,8 @@ select.input {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* kicsinyítve (100% alatt) középen; nagyítva az auto margó 0, a görgetés balról indul */
+  margin: 0 auto;
 }
 .pdfview__page {
   position: relative;
