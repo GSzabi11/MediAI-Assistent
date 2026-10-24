@@ -16,7 +16,8 @@ public record SummaryFacts(
         List<MedicationFact> medications,
         List<AllergyFact> allergies,
         List<DocumentFact> documents,
-        List<RecordingFact> recordings
+        List<RecordingFact> recordings,
+        List<InteractionFact> interactions
 ) {
     // status: "felett" | "alatt" | "eltér" | null (a szabálymotor kiértékelése, nem a modellé)
     public record LabFact(Long id, String name, String value, String unit, String reference, LocalDate date,
@@ -41,6 +42,11 @@ public record SummaryFacts(
     // text: a (nem labor-) lelet kinyert szövege, csonkolva. A Python ebből a vizsgálat típusát
     // (Holter, MR, …) és az eredmény-szakaszát olvassa ki; a beteg-fejléc (név, TAJ) a modellhez nem megy
     public record DocumentFact(Long id, String type, LocalDate date, String text) {
+    }
+
+    // a gyógyszer-interakció szabály (drug-interaction) állításai a szedett gyógyszerekre, WARNING / CRITICAL
+    // (docs/drug-interaction.md). A javaslatok ezekre is épülhetnek; a modell nem számol interakciót.
+    public record InteractionFact(Long id, String text, String severity) {
     }
 
     // a hangfelvétel legutóbbi elkészült összefoglalója (az orvos szerkesztett szövege, ha van)

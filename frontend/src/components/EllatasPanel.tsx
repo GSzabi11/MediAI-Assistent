@@ -5,11 +5,11 @@ import type { Ellatas, EllatasTipus } from '../api/types';
 import { formatDatumIdo } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useEllatasKontextus, useIrhato } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
 import { FelhasznaloNev } from './FelhasznaloNev';
 import { EpikrizisPanel } from './EpikrizisPanel';
 import { Icon } from './Icon';
-import { Segmented } from './Segmented';
 import { ErrorState, Loading } from './shell';
 
 const ellatasFelirat: Record<EllatasTipus, string> = {
@@ -19,50 +19,22 @@ const ellatasFelirat: Record<EllatasTipus, string> = {
 };
 
 /**
- * Ellátások: nyitás (a belépett orvos nevében), lezárás (egyszer, DB-idővel), és a
- * hozzájuk rögzített felvételek. Több nyitott ellátás is lehet (pl. SBO alatt echo).
+ * Ellátások: lista, részletek, lezárás (egyszer, DB-idővel), és a hozzájuk rögzített felvételek.
+ * Több nyitott ellátás is lehet (pl. SBO alatt echo). Új ellátás a beteg megnyitásakor, az
+ * ellátás-választóban nyílik (EllatasValaszto, docs/care-context.md) — itt nem.
  */
 export function EllatasPanel() {
   const { patient } = usePatient();
   const { state, reload, refresh } = useAsync(() => api.listEllatasok(patient.id), [patient.id]);
-  const [tipus, setTipus] = useState<EllatasTipus>('sbo');
-  const nyitas = useAkcio();
-
-  async function nyit() {
-    const e = await nyitas.run(() => api.createEllatas(patient.id, tipus));
-    if (e) await refresh();
-  }
 
   return (
     <div className="tabbody">
       <div className="row-baseline">
         <h2 className="h2 h2--sm">Ellátások</h2>
-        <span className="meta">egy betegnél egyszerre több nyitott ellátás is lehet</span>
+        <span className="meta">
+          egy betegnél egyszerre több nyitott ellátás is lehet · új ellátás a fejléc kontextus-chipjéről nyitható
+        </span>
       </div>
-      <div className="row-end">
-        <div className="field">
-          <span className="field__legend">Új ellátás típusa</span>
-          <Segmented
-            label="Ellátás típusa"
-            value={tipus}
-            onChange={setTipus}
-            options={[
-              ['sbo', 'SBO'],
-              ['ambulans', 'Ambuláns'],
-              ['echo', 'Echo'],
-            ]}
-          />
-        </div>
-        <button type="button" className="btn btn--primary" onClick={() => void nyit()} disabled={nyitas.busy}>
-          <Icon name="plus" size={16} strokeWidth={2.4} />
-          {nyitas.busy ? 'Nyitás…' : 'Ellátás nyitása'}
-        </button>
-      </div>
-      {nyitas.error && (
-        <p className="form-error" role="alert">
-          {nyitas.error}
-        </p>
-      )}
 
       {state.status === 'loading' && <Loading what="Ellátások" />}
       {state.status === 'error' && <ErrorState error={state.error} onRetry={reload} />}
@@ -88,12 +60,19 @@ function EllatasSor({ ellatas, onValtozott }: { ellatas: Ellatas; onValtozott: (
   const [reszletek, setReszletek] = useState(false);
   const [epikrizis, setEpikrizis] = useState(false);
   const zaras = useAkcio();
+  const irhato = useIrhato();
+  const { kontextus, lezarult } = useEllatasKontextus();
+  // ez az aktív ellátás? (docs/care-context.md) — epikrízis csak ehhez készíthető / szerkeszthető
+  const aktiv = kontextus.mod === 'ellatas' && kontextus.ellatas.id === ellatas.id;
   const felvetelei = felvetelek.filter((f) => f.ellatasId === ellatas.id);
   const nyitott = ellatas.veg === null;
 
   async function lezar() {
     const e = await zaras.run(() => api.lezarEllatas(ellatas.id));
-    if (e) await onValtozott();
+    if (!e) return;
+    // az aktív ellátás lezárása után nincs munkakeret: vissza az ellátás-választóhoz
+    if (aktiv) lezarult();
+    else await onValtozott();
   }
 
   return (
@@ -103,6 +82,7 @@ function EllatasSor({ ellatas, onValtozott }: { ellatas: Ellatas; onValtozott: (
         <strong>
           #{ellatas.id} · {ellatasFelirat[ellatas.tipus]}
         </strong>
+        {aktiv && <span className="tag">aktív ellátás</span>}
         <span className="meta">
           {formatDatumIdo(ellatas.kezdet)}
           {ellatas.veg && ` – ${formatDatumIdo(ellatas.veg)}`} · <FelhasznaloNev id={ellatas.orvosId} />
@@ -126,7 +106,13 @@ function EllatasSor({ ellatas, onValtozott }: { ellatas: Ellatas; onValtozott: (
             Epikrízis
           </button>
           {nyitott && (
-            <button type="button" className="btn btn--sm" onClick={() => void lezar()} disabled={zaras.busy}>
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => void lezar()}
+              disabled={zaras.busy || irhato.tiltva}
+              title={irhato.title}
+            >
               <Icon name="stop" size={14} />
               {zaras.busy ? 'Lezárás…' : 'Lezárás'}
             </button>
@@ -139,7 +125,7 @@ function EllatasSor({ ellatas, onValtozott }: { ellatas: Ellatas; onValtozott: (
         </p>
       )}
       {reszletek && <EllatasReszlet id={ellatas.id} />}
-      {epikrizis && <EpikrizisPanel ellatas={ellatas} />}
+      {epikrizis && <EpikrizisPanel ellatas={ellatas} szerkesztheto={aktiv} />}
       {felvetelei.length > 0 && (
         <div className="item__sub">
           <span className="meta">Felvételek:</span>

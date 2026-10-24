@@ -4,6 +4,7 @@ import type { ClaimResponse } from '../api/types';
 import { parseSzam } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
 import { GyogyszerInterakcio } from './GyogyszerInterakcio';
 import { Icon } from './Icon';
@@ -102,6 +103,7 @@ function AllergiaResz() {
   const [forras, setForras] = useState('');
   const [reszlet, setReszlet] = useState<number | null>(null);
   const mentes = useAkcio();
+  const irhato = useIrhato();
   const anyagId = useId();
 
   async function submit(e: FormEvent) {
@@ -163,7 +165,7 @@ function AllergiaResz() {
           />
         </div>
         <ForrasValaszto value={forras} onChange={setForras} />
-        <button type="submit" className="btn btn--primary" disabled={mentes.busy || !anyag.trim()}>
+        <button type="submit" className="btn btn--primary" disabled={irhato.tiltva || mentes.busy || !anyag.trim()} title={irhato.title}>
           <Icon name="plus" size={16} strokeWidth={2.4} />
           Allergia rögzítése
         </button>
@@ -209,6 +211,7 @@ function GyogyszerResz({ onChanged }: { onChanged: () => void }) {
   );
   const [reszlet, setReszlet] = useState<number | null>(null);
   const leallitas = useAkcio();
+  const irhato = useIrhato();
 
   async function leallit(id: number) {
     const g = await leallitas.run(() => api.leallitGyogyszer(id));
@@ -266,7 +269,7 @@ function GyogyszerResz({ onChanged }: { onChanged: () => void }) {
                         type="button"
                         className="btn btn--sm"
                         onClick={() => void leallit(g.id)}
-                        disabled={leallitas.busy}
+                        disabled={irhato.tiltva || leallitas.busy} title={irhato.title}
                       >
                         <Icon name="stop" size={14} />
                         Leállítás
@@ -334,6 +337,7 @@ function GyogyszerForm({ onSaved }: { onSaved: () => Promise<void> }) {
   const [forras, setForras] = useState('');
   const [tried, setTried] = useState(false);
   const { busy, error, run } = useAkcio();
+  const irhato = useIrhato();
   const ids = { nev: useId(), hat: useId(), doz: useId(), egy: useId(), alk: useId() };
 
   const dozisSzam = dozis.trim() ? parseSzam(dozis, 3) : null;
@@ -431,7 +435,7 @@ function GyogyszerForm({ onSaved }: { onSaved: () => Promise<void> }) {
         </p>
       )}
       <div className="actions">
-        <button type="submit" className="btn btn--primary" disabled={busy}>
+        <button type="submit" className="btn btn--primary" disabled={irhato.tiltva || busy} title={irhato.title}>
           <Icon name="plus" size={16} strokeWidth={2.4} />
           {busy ? 'Mentés…' : 'Gyógyszer rögzítése'}
         </button>

@@ -496,7 +496,7 @@ export interface Kortortenet {
   szerkesztve: string | null;
   elavult: boolean;
   /** készülés közben az aktuális lépés */
-  haladas: { uzenet: string; lepes: number | null; osszes: number | null; ota: string } | null;
+  haladas: { uzenet: string; lepes: number | null; osszes: number | null; modell?: string | null; ota: string } | null;
 }
 
 // ---------- felvétel: kulcsszó, összefoglaló ----------

@@ -432,7 +432,7 @@ export interface MedicalHistoryDto {
   editedAt: string | null;
   stale: boolean;
   /** PROCESSING alatt: az aktuális lépés (pl. "Dokumentum-kivonat 5/16") */
-  progress: { message: string; step: number | null; total: number | null; at: string } | null;
+  progress: { message: string; step: number | null; total: number | null; model: string | null; at: string } | null;
 }
 
 /** GET/POST /chat-messages — klinikai asszisztens (nem állítás, nem tárolódik) */

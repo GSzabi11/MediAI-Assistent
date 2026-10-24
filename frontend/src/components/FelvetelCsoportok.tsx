@@ -3,6 +3,7 @@ import { csoportApi, csoportok, type CsoportElem, type FindingCategoryDto } from
 import { formatDatumIdo } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { Icon } from './Icon';
 import { ErrorState, Loading } from './shell';
 
@@ -26,6 +27,7 @@ export function FelvetelCsoportokPanel({
 }) {
   const lista = useAsync(() => csoportApi.list(felvetelId), [felvetelId]);
   const { busy, error, run } = useAkcio();
+  const irhato = useIrhato();
   const adat = lista.state.status === 'ok' ? lista.state.data : undefined;
   const keszul = adat?.futas?.allapot === 'feldolgozas';
 
@@ -62,7 +64,7 @@ export function FelvetelCsoportokPanel({
       <div className="row-baseline">
         <h3 className="h2 h2--sm">Csoportok</h3>
         <span className="tag tag--modell">AI · ellenőrizendő</span>
-        <button type="button" className="btn btn--sm push-right" onClick={ujra} disabled={busy || keszul}>
+        <button type="button" className="btn btn--sm push-right" onClick={ujra} disabled={irhato.tiltva || busy || keszul} title={irhato.title}>
           <Icon name="spark" size={14} />
           {adat?.futas ? 'Újrakinyerés' : 'Kinyerés'}
         </button>
@@ -144,6 +146,7 @@ function CsoportLista({
   // null: nincs nyitott űrlap; 'uj': új elem; szám: annak az elemnek a szerkesztése
   const [nyitott, setNyitott] = useState<'uj' | number | null>(null);
   const { busy, error, run } = useAkcio();
+  const irhato = useIrhato();
 
   const ment = (szoveg: string, kod: string) =>
     run(async () => {
@@ -170,7 +173,7 @@ function CsoportLista({
           className="chip__btn push-right"
           aria-label={`Új elem: ${cim}`}
           onClick={() => setNyitott('uj')}
-          disabled={busy || nyitott !== null}
+          disabled={irhato.tiltva || busy || nyitott !== null} title={irhato.title}
         >
           <Icon name="plus" size={14} strokeWidth={2.6} />
         </button>
@@ -208,7 +211,7 @@ function CsoportLista({
                   className="chip__btn"
                   aria-label={`„${e.szoveg}” szerkesztése`}
                   onClick={() => setNyitott(e.id)}
-                  disabled={busy || nyitott !== null}
+                  disabled={irhato.tiltva || busy || nyitott !== null} title={irhato.title}
                 >
                   <Icon name="pencil" size={12} />
                 </button>
@@ -217,7 +220,7 @@ function CsoportLista({
                   className="chip__btn"
                   aria-label={`„${e.szoveg}” törlése`}
                   onClick={() => torol(e)}
-                  disabled={busy || nyitott !== null}
+                  disabled={irhato.tiltva || busy || nyitott !== null} title={irhato.title}
                 >
                   <Icon name="x" size={12} strokeWidth={2.8} />
                 </button>

@@ -19,7 +19,9 @@ interakció-API (az NLM 2024-ben megszüntette), DrugBank (regisztrációhoz kö
 
 ```
 havonta (3-án 03:30) / induláskor, ha üres / „Adatbázis frissítése” gomb
-  DrugReferenceDownloader: NEAK oldal → legfrissebb PUPHA_ééééhhnn_vN.zip; DDInter 8 CSV (A,B,D,H,L,P,R,V)
+  DrugReferenceDownloader: NEAK oldal → legfrissebb PUPHA_ééééhhnn_vN.zip; DDInter 14 CSV (ATC-főcsoportonként; a
+      letöltési oldal csak 8-at hivatkoz — A,B,D,H,L,P,R,V —, de a C,G,J,M,N,S is ott van, és nélkülük pl. a
+      bisoprolol–atazanavir pár hiányzik)
       → data/drug-reference/ (gitignore); letöltési hiba esetén a korábbi helyi fájl
   PuphaReader (GYOGYSZ, ATCKONYV) + DdinterReader + RxNormAtcLookup (gyorsítótár: rxnorm-atc.tsv)
   ATC → DDInter-hatóanyag (atc_ddi_drug): az ATC angol / magyar nevének részei, RxNorm-nevek, kézi szinonimák
@@ -43,6 +45,11 @@ hív kifelé, betegadat nélkül (fájlletöltés + ATC-kód). A NEAK tanúsítv
 2. **Hatóanyag mező** (és ha nincs PUPHA-találat, maga a név): részekre bontva (`+`, `/`, `,`, `és`, `and`),
    minden rész → DDInter-név vagy ATC-név (magyar / angol) a kulcs szerint.
 3. ATC → DDInter-hatóanyagok.
+4. **Helyi alkalmazás** (`DrugRoutes`): ha a tétel neve, alkalmazás mezője vagy a forrás-állítás szövege (a
+   dokumentum sora) szemcseppet / krémet / orrsprayt / fülcseppet jelez — vagy a PUPHA-találatok mind ilyen formájúak —,
+   a hatóanyag DDInter-változata lép a helyére (`Hydrocortisone` → `Hydrocortisone (ophthalmic)`), amelynek kevesebb,
+   más interakciója van. Ha nincs ilyen változat, a szisztémás marad (inkább fölösleges riasztás, mint elmaradt).
+   Szabi jelezte (2026-10-24): a SOFTACORT szemcsepp + bisoprolol riasztás téves volt.
 
 **Nincs hasonlóság-alapú illesztés**: egy rossz hatóanyag hamis riasztást vagy hamis biztonságot adna. A kulcs:
 kisbetű, ékezet / szóköz / írásjel nélkül (`DrugNames.key`); sóutótag (`sodium`, `hydrochloride`, …) csak akkor
@@ -56,11 +63,11 @@ riasztás hiánya nem jelenti, hogy nincs interakció.
 
 ## A szabály (`DrugInteractionRule`, `ruleId = drug-interaction`, v1)
 
-- Gyógyszer-páronként (a beteg két aktív tétele) egy állítás, ha bármely hatóanyag-párjuk szerepel a DDInterben,
-  vagy azonos a hatóanyaguk (kettőzés). Egy készítményen belüli hatóanyagok egymással nem riasztanak (szándékos
+- Gyógyszer-páronként (a beteg két aktív tétele) egy állítás, ha bármely hatóanyag-párjuk szerepel a DDInterben.
+  Egy hatóanyagot önmagával nem vetünk össze: azonos hatóanyag nem riasztás (Szabi döntése, 2026-10-24). Egy készítményen belüli hatóanyagok egymással nem riasztanak (szándékos
   kombináció).
 - Szöveg (MI): `Marevan + Algoflex: súlyos interakció (Acenocoumarol – Ibuprofen). Forrás: DDInter 2.0`.
-- Súlyosság: Major → `CRITICAL`; Moderate, kettőzés → `WARNING`; Minor, Unknown → `INFO`. Az „Unknown” (a párok
+- Súlyosság: Major → `CRITICAL`; Moderate → `WARNING`; Minor, Unknown → `INFO`. Az „Unknown” (a párok
   ~20%-a: ismert, de klinikailag nem besorolt) figyelmeztetésként a lista nagy részét adná, és elfedné a valódi riasztásokat.
 - MERRE: új forrástípus **`MEDICATION {medicationIds}`** (rendezett id-k); DB CHECK: csak szabály-állításé lehet,
   az API 400-zal elutasítja. Egyedi index: `(ruleId, medicationIds)`.
@@ -98,3 +105,5 @@ ellenőrzés (márkanév-javaslattal).
 - Gyógyszer–allergia ellenőrzés még nincs (külön szabály lenne).
 - A gyógyszer–étel és a gyógyszer–betegség interakció (a DDInter weboldalán van) a letölthető fájlban nincs.
 - Dózisfüggő interakciót nem vizsgálunk; a DDInter mechanizmus-leírása a tömeges letöltésben nincs benne.
+- A szabály hibája nem állítja meg a gyógyszer mentését (pl. a dokumentum-feldolgozást): naplózódik, és induláskor pótlódik.
+  (2026-10-24: egy `Set.of` ismétlődő szóra kivételt dobott, és emiatt több dokumentum feldolgozása FAILED lett.)

@@ -4,6 +4,7 @@ import type { ClaimResponse } from '../api/types';
 import { formatDatum } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
 import { Icon } from './Icon';
 import { ErrorState, Loading } from './shell';
@@ -140,6 +141,7 @@ function NemEllenorizheto({ sorok }: { sorok: { nev: string; feloldas: Feloldas 
 function ReferenciaAllapotSor() {
   const { state, reload } = useAsync(() => interakcioApi.allapot(), []);
   const frissites = useAkcio();
+  const irhato = useIrhato();
   if (state.status === 'loading') return <Loading what="Interakciós adatbázis" />;
   if (state.status === 'error') return <ErrorState error={state.error} onRetry={reload} />;
   const s = state.data;
@@ -167,7 +169,7 @@ function ReferenciaAllapotSor() {
       {s.running ? (
         <span className="meta">frissítés folyamatban…</span>
       ) : (
-        <button type="button" className="btn btn--sm" onClick={() => void indit()} disabled={frissites.busy}>
+        <button type="button" className="btn btn--sm" onClick={() => void indit()} disabled={irhato.tiltva || frissites.busy} title={irhato.title}>
           Adatbázis frissítése
         </button>
       )}
@@ -334,6 +336,9 @@ function EllenorzesEredmenye({ e }: { e: EllenorzesEredmeny }) {
           )}
         />
       )}
+      <p className="meta">
+        Minden pár össze van vetve; amelyik nem szerepel a listán, arra a DDInterben nincs interakciós bejegyzés.
+      </p>
       <NemEllenorizheto sorok={hianyos} />
     </div>
   );

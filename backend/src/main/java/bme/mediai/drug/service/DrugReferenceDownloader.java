@@ -42,7 +42,9 @@ class DrugReferenceDownloader {
 
     // "PUPHA_20261101_v3.zip" — a "_kozos" (közös, OEP-intézményi) változat nem kell
     private static final Pattern PUPHA_ZIP = Pattern.compile("PUPHA_(\\d{8})_v(\\d+)\\.zip");
-    static final List<String> DDINTER_GROUPS = List.of("A", "B", "D", "H", "L", "P", "R", "V");
+    // A letöltési oldal csak 8 csoportot hivatkoz, de a szerveren mind a 14 ATC-főcsoport fájlja megvan
+    // (C, G, J, M, N, S nélkül pl. a béta-blokkoló × antiretrovirális párok hiányoznának)
+    static final List<String> DDINTER_GROUPS = List.of("A", "B", "C", "D", "G", "H", "J", "L", "M", "N", "P", "R", "S", "V");
 
     // A NEAK tanúsítványa a Microsec e-Szigno Root CA 2009-re vezet, ami a JDK alap-truststore-jában
     // nincs benne (a Windowséban igen). Ezt az egy gyökeret a csomagban hozzuk (resources/certs,

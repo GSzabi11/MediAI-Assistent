@@ -38,8 +38,9 @@ public class DrugResolver {
     public record AtcRef(String code, String name) {
     }
 
+    // route: a felismert helyi alkalmazás ("ophthalmic", "topical", "nasal", "otic") vagy null (szisztémásnak vesszük)
     public record Resolution(String input, Status status, List<String> products, List<AtcRef> atcCodes,
-            List<Ingredient> ingredients, List<String> unresolved) {
+            List<Ingredient> ingredients, List<String> unresolved, String route) {
     }
 
     private static final int MAX_PRODUCTS = 5;
@@ -52,6 +53,12 @@ public class DrugResolver {
     }
 
     public Resolution resolve(String name, String activeIngredient) {
+        return resolve(name, activeIngredient, null);
+    }
+
+    // context: további szöveg az alkalmazási mód felismeréséhez (a tétel alkalmazás mezője, a forrás-
+    // állítás szövege — pl. "SOFTACORT 3,35 MG/ML OLDATOS SZEMCSEPP …")
+    public Resolution resolve(String name, String activeIngredient, String context) {
         String input = activeIngredient == null || activeIngredient.isBlank() ? name : name + " (" + activeIngredient.strip() + ")";
         List<Product> products = products(name);
         Set<String> atcCodes = new LinkedHashSet<>();
@@ -92,6 +99,20 @@ public class DrugResolver {
         atcInfos.stream().filter(a -> !"FULL".equals(a.mapping()))
                 .forEach(a -> unresolved.add(a.code() + " " + (a.nameEn() != null ? a.nameEn() : a.nameHu())));
 
+        // Helyi alkalmazásnál a DDInter külön hatóanyagként vezeti (pl. "Hydrocortisone (ophthalmic)"),
+        // kevesebb, más interakcióval: ha van ilyen változat, az lép a szisztémás helyére. Ha nincs, a
+        // szisztémás marad (inkább egy fölösleges riasztás, mint egy elmaradt).
+        String route = DrugRoutes.detect(name + " " + (context == null ? "" : context), products);
+        if (route != null) {
+            Map<Integer, Ingredient> local = new LinkedHashMap<>();
+            for (Ingredient i : ingredients.values()) {
+                Ingredient v = repository.ingredientByKey(DrugNames.key(i.name() + " " + route)).orElse(i);
+                local.putIfAbsent(v.id(), v);
+            }
+            ingredients.clear();
+            ingredients.putAll(local);
+        }
+
         Status status;
         if (ingredients.isEmpty()) {
             status = products.isEmpty() && atcCodes.isEmpty() ? Status.NOT_FOUND : Status.NO_DATA;
@@ -103,7 +124,7 @@ public class DrugResolver {
                 .toList();
         return new Resolution(input, status,
                 products.stream().map(Product::name).distinct().limit(MAX_PRODUCTS).toList(),
-                atcRefs, List.copyOf(ingredients.values()), unresolved);
+                atcRefs, List.copyOf(ingredients.values()), unresolved, route);
     }
 
     // Márkakulcs-egyezés, majd a márkakulcs eleje ("ASPIRIN PLUS C" → "ASPIRIN PLUS C PEZSGOTABLETTA"); ha nincs, a végéről szavanként rövidítve ("ALGOFLEX FORTE DOLO" → "ALGOFLEX FORTE"

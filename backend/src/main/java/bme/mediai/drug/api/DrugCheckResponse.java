@@ -20,6 +20,6 @@ public record DrugCheckResponse(
     }
 
     public record Finding(String labelA, Long medicationIdA, String labelB, Long medicationIdB, Severity severity,
-            List<IngredientPair> interactions, List<String> duplicates, String text) {
+            List<IngredientPair> interactions, String text) {
     }
 }

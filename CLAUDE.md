@@ -34,6 +34,9 @@ Hangmodul (külön prototípus, még nincs integrálva): @docs/voice-module.md
   helyi referenciatáblákból (NEAK PUPHA: név → ATC; DDInter 2.0: hatóanyag-párok). A havi frissítés (`drug` modul)
   tölti le őket — kifelé csak fájlkérés és ATC-kód (RxNorm) megy, betegadat soha; futás közben nincs hálózati hívás.
   A riasztás `DETERMINISTIC_RULE` állítás `MEDICATION {medicationIds}` forrással.
+- **Ellátás-kontextus** (`docs/care-context.md`): betegválasztás után nyitott ellátás VAGY Informálódás (csak
+  olvasás); a felvétel automatikusan az aktív ellátásba kerül; csak-olvasás módban `X-Access-Mode: READ_ONLY`
+  fejléc, a `common/api/ReadOnlyModeInterceptor` engedélylistán kívül 403-mal tilt (auth nélkül csak tévedés ellen).
 - **frontend/** — React (Figma-terv alapján, még nincs kód).
 
 ## A rendszer központi elve: az Allitas (Statement)

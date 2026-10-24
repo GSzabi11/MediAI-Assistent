@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { setCurrentUser, szerepkorFelirat, useCurrentUser } from '../api/currentUser';
 import type { PatientResponse } from '../api/types';
@@ -89,7 +90,7 @@ function UserMenu() {
  * patient = null → "Nincs kiválasztott beteg" állapot (csíkozott, hogy ne
  * lehessen összetéveszteni egy beteg fejlécével).
  */
-export function PatientBand({ patient }: { patient: PatientResponse | null }) {
+export function PatientBand({ patient, extra }: { patient: PatientResponse | null; extra?: ReactNode }) {
   if (!patient) {
     return (
       <section className="pband pband--empty" aria-label="Aktív beteg">
@@ -127,6 +128,8 @@ export function PatientBand({ patient }: { patient: PatientResponse | null }) {
           <span>{patient.lakcim}</span>
         </div>
       )}
+      {/* pl. az ellátás-kontextus chipje (EllatasValaszto.KontextusChip) */}
+      {extra}
       <Link to="/patients" className="btn btn--on-dark pband__switch">
         Beteg váltása
       </Link>

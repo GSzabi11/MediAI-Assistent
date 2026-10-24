@@ -45,8 +45,10 @@ proaktív javaslatokat adsz egy orvosnak a dokumentumai és — ha vannak — a 
 konkrét következő lépéseket (kontroll-labor, konzílium, vizsgálat, terápia felülvizsgálata).
 Szabályok:
 - Legfeljebb 5 javaslat, mindegyik külön sorban, "- " kezdettel, egy mondatban.
-- Mindegyik egy megadott tényre (tartományon kívüli értékre, diagnózisra, gyógyszerre, a hangfelvételen
-  elhangzott panaszra) épüljön.
+- Mindegyik egy megadott tényre (tartományon kívüli értékre, diagnózisra, gyógyszerre, gyógyszer-interakcióra,
+  a hangfelvételen elhangzott panaszra) épüljön.
+- Ha a tények között GYÓGYSZER-INTERAKCIÓ szerepel, az első javaslat a legsúlyosabbal foglalkozzon: nevezd
+  meg a két gyógyszert és a teendőt (terápia felülvizsgálata, monitorozás). Új interakciót ne állíts.
 - Feltételes mód ("javasolt", "mérlegelendő") — a döntés az orvosé.
 - Ha nincs indokolt teendő, írd: "- Nincs sürgős teendő; rutin kontroll javasolt."
 - Csak a felsorolást írd, bevezetés nélkül."""
@@ -203,6 +205,14 @@ def render_facts(facts: dict, include_labs: bool = True) -> str:
         for m in meds:
             parts = [m["name"]] + [p for p in (m.get("activeIngredient"), m.get("dose"), m.get("route")) if p]
             lines.append("- " + ", ".join(parts) + ("" if m.get("verified") else " (nem ellenőrzött)"))
+
+    # Csak a javaslatok bemenetébe (include_labs=True): az összefoglaló szövege nem változik. A súlyosság a
+    # szabálymotoré (DDInter), nem a modellé.
+    interactions = (facts.get("interactions") or []) if include_labs else []
+    if interactions:
+        severity_hu = {"CRITICAL": "SÚLYOS", "WARNING": "közepes"}
+        lines.append("\nGYÓGYSZER-INTERAKCIÓK a szedett gyógyszerek között (szabálymotor, DDInter 2.0):")
+        lines += [f"- [{severity_hu.get(i.get('severity'), i.get('severity'))}] {i['text']}" for i in interactions]
 
     allergies = facts.get("allergies") or []
     if allergies:
@@ -438,6 +448,18 @@ def dose_mismatches(text: str, facts: dict) -> list[str]:
     return out
 
 
+def missing_interactions(recommendations: list[str], facts: dict) -> list[str]:
+    """Súlyos interakció van, de egyik javaslat sem foglalkozik interakcióval / gyógyszer-felülvizsgálattal:
+    figyelmeztetés (a javaslatot nem írjuk át — az interakció a Klinikai státusz tetején úgyis látszik)."""
+    critical = [i for i in facts.get("interactions") or [] if i.get("severity") == "CRITICAL"]
+    if not critical:
+        return []
+    text = fold(" ".join(recommendations))
+    if "interakc" in text or "kolcsonhat" in text:
+        return []
+    return [f"A javaslatok nem térnek ki a súlyos gyógyszer-interakció(k)ra ({len(critical)} db) — ellenőrizendő"]
+
+
 def write_summary(facts: dict) -> tuple[str, bool, str]:
     """Az összefoglaló megírása (stream): (nyers szöveg, hurok/csonkolás volt-e, a modellnek átadott tények
     szövege). A Medical history is ezt használja (a felhasználó döntése, 2026-10-23: ott az összefoglaló
@@ -482,6 +504,7 @@ def summarize(facts: dict) -> dict:
     warnings += [w for w in contradictions(" ".join(recommendations), facts) if w not in warnings]
     warnings += [f"Ellenőrizetlen szám a javaslatokban: {n} (nem szerepel a beteg adatai között)"
                  for n in unverified_numbers(" ".join(recommendations), facts_text)]
+    warnings += missing_interactions(recommendations, facts)
     return {
         "status": "DONE",
         "summary": summary[:4000],

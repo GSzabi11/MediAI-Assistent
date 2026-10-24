@@ -5,6 +5,7 @@ import { formatDatum, formatMeret } from '../lib/format';
 import { kijeloltTartomany } from '../lib/kijeles';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
 import { IdezetForm } from './allitas/IdezetForm';
 import { Icon } from './Icon';
@@ -54,6 +55,7 @@ export function DocumentViewer({
   const [kijeloles, setKijeloles] = useState<Kijeloles | null>(null);
   const [idezet, setIdezet] = useState<Kijeloles | null>(null);
   const letoltes = useAkcio();
+  const irhato = useIrhato();
   const chars = useMemo(
     () => (state.status === 'ok' && state.data.szoveg !== null ? Array.from(state.data.szoveg) : []),
     [state],
@@ -208,7 +210,13 @@ export function DocumentViewer({
                   kar. {kijeloles.kezdet}–{kijeloles.veg}
                 </span>
               </span>
-              <button type="button" className="btn btn--sm btn--primary" onClick={() => setIdezet(kijeloles)}>
+              <button
+                type="button"
+                className="btn btn--sm btn--primary"
+                onClick={() => setIdezet(kijeloles)}
+                disabled={irhato.tiltva}
+                title={irhato.title}
+              >
                 <Icon name="quote" size={14} />
                 Idézet állításként…
               </button>
@@ -252,6 +260,7 @@ export function DocumentViewer({
 /** Az automatikus (AI) feldolgozás állapota, kihagyásai és a kinyerő modell (HOGY). */
 function FeldolgozasInfo({ doc, onUjraindult }: { doc: DokumentumResponse; onUjraindult: () => void }) {
   const ujra = useAkcio();
+  const irhato = useIrhato();
   // Csak kinyert szöveg nélküli PDF indítható újra (a kézzel rögzített szövegre állítások hivatkozhatnak)
   const ujraindithato = doc.allapot === 'hiba' && doc.mimeTipus === 'application/pdf' && !doc.vanSzoveg;
   async function ujraindit() {
@@ -273,7 +282,13 @@ function FeldolgozasInfo({ doc, onUjraindult }: { doc: DokumentumResponse; onUjr
       )}
       {ujraindithato && (
         <div className="actions">
-          <button type="button" className="btn btn--sm" onClick={() => void ujraindit()} disabled={ujra.busy}>
+          <button
+            type="button"
+            className="btn btn--sm"
+            onClick={() => void ujraindit()}
+            disabled={ujra.busy || irhato.tiltva}
+            title={irhato.title}
+          >
             {ujra.busy ? 'Indítás…' : 'Feldolgozás újraindítása'}
           </button>
         </div>

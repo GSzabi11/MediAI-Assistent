@@ -7,6 +7,16 @@ const BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
 type Body = { json: unknown } | { form: FormData } | undefined;
 
+/**
+ * Informálódás mód (docs/care-context.md): amíg be van kapcsolva, minden kérés `X-Access-Mode:
+ * READ_ONLY` fejlécet kap, és a backend az író hívásokat (az engedélylistán kívül) 403-mal tiltja.
+ * Az ellátás-kontextus (EllatasKontextus) kapcsolja, a betegoldal elhagyásakor kikapcsol.
+ */
+let csakOlvasas = false;
+export function setCsakOlvasas(be: boolean) {
+  csakOlvasas = be;
+}
+
 async function request(method: string, path: string, body?: Body): Promise<Response> {
   const headers: Record<string, string> = {};
   // multipart-nál a böngésző állítja a Content-Type-ot (a boundary miatt), ezért ott nem
@@ -14,6 +24,7 @@ async function request(method: string, path: string, body?: Body): Promise<Respo
   // Hozzáférési napló: ki a hívó. Ideiglenes, a Security-fázisban auth váltja ki.
   const user = getCurrentUser();
   if (user) headers['X-User-Id'] = String(user.id);
+  if (csakOlvasas) headers['X-Access-Mode'] = 'READ_ONLY';
 
   const res = await fetch(`${BASE}${path}`, {
     method,

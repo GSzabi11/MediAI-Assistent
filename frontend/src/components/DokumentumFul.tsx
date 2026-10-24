@@ -19,6 +19,7 @@ export function DokumentumFul({
 }) {
   const { dokumentumok } = usePatient();
   const [params, setParams] = useSearchParams();
+  // Informálódás módban is feltölthető — ideiglenes, amíg nincs EESZT-import (docs/care-context.md)
   const feltoltesNyitva = params.get('feltoltes') === '1' || dokumentumok.length === 0;
 
   return (

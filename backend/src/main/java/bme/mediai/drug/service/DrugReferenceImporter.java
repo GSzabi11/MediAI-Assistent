@@ -109,10 +109,11 @@ public class DrugReferenceImporter {
             return new AtcMapping(atc.code(), "NONE", found);
         }
         boolean enAll = matchAll(DrugNames.parts(atc.nameEn()), ddiByKey, found, "ATC_NAME");
-        matchAll(DrugNames.parts(atc.nameHu()), ddiByKey, found, "ATC_NAME");
+        // a PUPHA-ban az angol név néha üres (pl. J05AE08 atazanavir): ilyenkor a magyar név dönt
+        boolean huAll = matchAll(DrugNames.parts(atc.nameHu()), ddiByKey, found, "ATC_NAME");
         List<String> rxParts = rxNames.stream().flatMap(n -> DrugNames.parts(n).stream()).toList();
         boolean rxAll = matchAll(rxParts, ddiByKey, found, "RXNORM");
-        String status = found.isEmpty() ? "NONE" : enAll || rxAll ? "FULL" : "PARTIAL";
+        String status = found.isEmpty() ? "NONE" : enAll || huAll || rxAll ? "FULL" : "PARTIAL";
         return new AtcMapping(atc.code(), status, found);
     }
 

@@ -118,9 +118,9 @@ public class MedicalHistoryService {
 
     // Python → Spring: a készülő kórtörténet aktuális lépése; lezárt kórtörténetnél figyelmen kívül marad
     @Transactional(readOnly = true)
-    public void progress(Long id, String message, Integer step, Integer total) {
+    public void progress(Long id, String message, Integer step, Integer total, String model) {
         if (reload(id).getStatus() == MedicalHistoryStatus.PROCESSING) {
-            progressStore.put(id, message, step, total);
+            progressStore.put(id, message, step, total, model);
         }
     }
 

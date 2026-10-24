@@ -56,6 +56,14 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             """, nativeQuery = true)
     int markFailed(@Param("id") Long id, @Param("error") String error);
 
+    // A feldolgozásra váró PDF-ek (a docproc újraindulása után újra átadandók, ld. DocumentProcessingResume)
+    @Query(value = """
+            SELECT id FROM document
+             WHERE status = 'PROCESSING' AND mime_type = 'application/pdf'
+             ORDER BY uploaded_at, id
+            """, nativeQuery = true)
+    List<Long> findProcessingPdfIds();
+
     // Újrafeldolgozás: FAILED → PROCESSING, a hiba törlődik. Csak PDF-re, és csak ha nincs kinyert
     // szöveg (a kézzel rögzített szövegre már állítások hivatkozhatnak; a sikertelen callback
     // visszagörgetett, így részleges adat nincs). Atomikus: kétszeri kattintás → második 0 sor.

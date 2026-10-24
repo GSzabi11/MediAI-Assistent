@@ -11,15 +11,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class MedicalHistoryProgressStore {
 
-    public record Progress(String message, Integer step, Integer total, OffsetDateTime at) {
+    public record Progress(String message, Integer step, Integer total, String model, OffsetDateTime at) {
     }
 
     private final Map<Long, Progress> progress = new ConcurrentHashMap<>();
 
-    public void put(Long historyId, String message, Integer step, Integer total) {
+    public void put(Long historyId, String message, Integer step, Integer total, String model) {
         String m = message == null || message.isBlank() ? "Feldolgozás" : message.strip();
         progress.put(historyId, new Progress(m.length() > 500 ? m.substring(0, 500) : m, step, total,
-                OffsetDateTime.now()));
+                model == null || model.isBlank() ? null : model.strip(), OffsetDateTime.now()));
     }
 
     public Progress get(Long historyId) {

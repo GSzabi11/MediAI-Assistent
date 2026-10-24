@@ -54,6 +54,14 @@ A `filePath` abszolút út; a Python ugyanazon a gépen olvassa (közös fájlre
 Ha a Python nem érhető el, a Spring 3× újrapróbál (2 s, 10 s, 30 s), utána a dokumentum
 `FAILED` („Az AI-feldolgozó szolgáltatás nem érhető el…”).
 
+**Félbemaradt feldolgozás folytatása** (`processing/service/DocumentProcessingResume`): a Python sora
+és a Spring `@Async` átadása is csak memóriában él. Induláskor (15 s) és utána percenként a Spring a
+`PROCESSING` PDF-ek közül azokat, amelyek nincsenek a Python `/health` `pending` listájában
+(`document:{id}`), újra átadja — a Spring vagy a docproc újraindulása után a feldolgozás magától
+folytatódik. Idempotens: a Python a sorban állót nem veszi fel kétszer, átadás előtt az állapotot
+újraolvassuk, a callback csak `PROCESSING`-ből ír. Ha a Python nem érhető el, a dokumentum
+`PROCESSING` marad (a következő körben próbáljuk újra), nem `FAILED`.
+
 ## 2. Python → Spring: `POST /api/documents/{id}/processing-result`
 
 Fejléc: `X-Internal-Token: <token>`. DTO: `processing/api/ProcessingResultRequest`.
@@ -241,9 +249,8 @@ törzset sem tudta értelmezni).
 
 ## Ismert rések
 
-1. **Beragadt `PROCESSING`**: a Python sora memóriában van. Ha a Python feldolgozás közben
-   újraindul, vagy a callback minden próbálkozásra elbukik, a dokumentum `PROCESSING`-ben
-   marad; nincs automatikus újraküldés (reconciler).
+1. ~~**Beragadt `PROCESSING`**~~ — megoldva: `DocumentProcessingResume` (ld. fent). Ára: ha a
+   callback minden próbálkozásra elbukott (a Spring nem futott), a dokumentum elejétől újra fut.
 2. **Hibás PDF nem tölthető fel újra**: `UNIQUE (patient_id, sha256)` — egy `FAILED`
    dokumentum ugyanazzal a fájllal nem indítható újra, és nincs újrafeldolgozó végpont (a
    feladat szerint kézi indítás nincs). Döntés kell: újrapróbálás, vagy `FAILED` sor cseréje.

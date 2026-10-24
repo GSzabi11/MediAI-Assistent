@@ -18,6 +18,8 @@ import { allapotFelirat } from '../lib/feliratok';
 import { formatDatum, formatIdo } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 import { megszolalasKulcs, PatientContext, usePatient, type PatientCtx } from '../patient/PatientContext';
+import { CsakOlvasasSav, EllatasValaszto, KontextusChip } from '../components/EllatasValaszto';
+import { EllatasKontextus, useEllatasKapu, useIrhato } from '../patient/EllatasKontextus';
 
 const NEZETEK = ['statusz', 'kortortenet', 'dokumentum', 'labor', 'atirat', 'ellatas', 'gyogyszer', 'szakirodalom'] as const;
 type Nezet = (typeof NEZETEK)[number];
@@ -95,15 +97,38 @@ export function PatientPage() {
     [setData],
   );
 
+  // Ellátás-kontextus (docs/care-context.md): nyitott ellátás VAGY Informálódás — választás nélkül nincs munkaterület
+  const kapu = useEllatasKapu(patientId);
+
   return (
     <div className="app">
       <AppBar />
-      <PatientBand patient={state.status === 'ok' ? state.data.patient : null} />
+      <PatientBand
+        patient={state.status === 'ok' ? state.data.patient : null}
+        extra={
+          state.status === 'ok' && (
+            <KontextusChip
+              betegNev={state.data.patient.nev}
+              kontextus={kapu.ctx?.kontextus ?? null}
+              onValtas={() => kapu.ctx?.valtas()}
+            />
+          )
+        }
+      />
       {state.status === 'loading' && <Loading what="Beteg" />}
       {state.status === 'error' && <ErrorState error={state.error} onRetry={reload} />}
       {state.status === 'ok' && (
         <PatientContext.Provider value={{ ...state.data, frissit: refresh } satisfies PatientCtx}>
-          <Workspace allitasok={state.data.allitasok} onDecided={onDecided} />
+          {kapu.ctx ? (
+            <EllatasKontextus.Provider value={kapu.ctx}>
+              {kapu.ctx.csakOlvas && <CsakOlvasasSav onMegnyitas={kapu.ctx.valtas} />}
+              <Workspace allitasok={state.data.allitasok} onDecided={onDecided} />
+            </EllatasKontextus.Provider>
+          ) : kapu.varakozik ? (
+            <Loading what="Ellátás" />
+          ) : (
+            <EllatasValaszto kapu={kapu} />
+          )}
         </PatientContext.Provider>
       )}
     </div>
@@ -326,6 +351,7 @@ function SourcesRail({ onExpand, dokId, nezet }: { onExpand: () => void; dokId?:
   const { patient, dokumentumok } = usePatient();
   const laborok = dokumentumok.filter((d) => d.tipus === 'labor').sort(dokSorrend);
   const egyebek = dokumentumok.filter((d) => d.tipus !== 'labor').sort(dokSorrend);
+  const irhato = useIrhato();
   const megnyitott = nezet === 'dokumentum' ? dokumentumok.find((d) => d.id === dokId) : undefined;
   const legfrissebb = egyebek[0];
   const legfrissebbLabor = laborok[0];
@@ -363,6 +389,7 @@ function SourcesRail({ onExpand, dokId, nezet }: { onExpand: () => void; dokId?:
           <Icon name="flask" size={20} strokeWidth={2} />
         </span>
       )}
+      {/* Informálódás módban is — ideiglenes, amíg nincs EESZT-import (docs/care-context.md) */}
       <Link
         to={`/betegek/${patient.id}?nezet=dokumentum&feltoltes=1`}
         className="iconbtn iconbtn--ghost"
@@ -372,11 +399,12 @@ function SourcesRail({ onExpand, dokId, nezet }: { onExpand: () => void; dokId?:
         <Icon name="upload" size={20} strokeWidth={2} />
       </Link>
       <span className="rail__sep" />
+      {/* Informálódás módban az átiratokhoz visz, felvételt nem indít */}
       <Link
-        to={`/betegek/${patient.id}?nezet=atirat&uj=felvetel`}
+        to={`/betegek/${patient.id}?nezet=atirat${irhato.tiltva ? '' : '&uj=felvetel'}`}
         className={`iconbtn${nezet === 'atirat' ? ' iconbtn--on' : ''}`}
-        aria-label="Új hangfelvétel"
-        title="Új hangfelvétel"
+        aria-label={irhato.tiltva ? 'Átiratok' : 'Új hangfelvétel'}
+        title={irhato.tiltva ? `Átiratok — új felvétel: ${irhato.title}` : 'Új hangfelvétel'}
       >
         <Icon name="mic" size={20} strokeWidth={2} />
       </Link>
@@ -440,10 +468,11 @@ function SourcesPanel({
         </button>
       </div>
       {/* csoportonként időrendben, a legfrissebb elöl */}
-      <NavGroup cim="Dokumentumok" db={egyebek.length} aktiv={dokId} uj={{ to: feltoltes, label: 'Dokumentum feltöltése', ikon: 'upload' }}>
+      {/* a feltöltés Informálódás módban is él — ideiglenes, amíg nincs EESZT-import */}
+      <NavGroup cim="Dokumentumok" db={egyebek.length} aktiv={dokId} olvasasbanIs uj={{ to: feltoltes, label: 'Dokumentum feltöltése', ikon: 'upload' }}>
         {dokSorok(egyebek, 'doc')}
       </NavGroup>
-      <NavGroup cim="Laborleletek" db={laborok.length} aktiv={dokId} uj={{ to: feltoltes, label: 'Laborlelet feltöltése', ikon: 'upload' }}>
+      <NavGroup cim="Laborleletek" db={laborok.length} aktiv={dokId} olvasasbanIs uj={{ to: feltoltes, label: 'Laborlelet feltöltése', ikon: 'upload' }}>
         {dokSorok(laborok, 'flask')}
       </NavGroup>
       <NavGroup
@@ -485,15 +514,20 @@ function NavGroup({
   db,
   aktiv,
   uj,
+  olvasasbanIs = false,
   children,
 }: {
   cim: string;
   db: number;
   aktiv?: number;
   uj: { to: string; label: string; ikon: IconName };
+  /** az „új elem” Informálódás módban is elérhető (dokumentum-feltöltés) */
+  olvasasbanIs?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const irhato = useIrhato();
+  const tiltva = irhato.tiltva && !olvasasbanIs;
   // csak a kijelölés változásakor: a háttérfrissítés (5 mp) ne ugrassa vissza a görgetést
   useEffect(() => {
     const list = ref.current;
@@ -507,14 +541,26 @@ function NavGroup({
         <span className="navgroup__count" aria-label={`${db} elem`}>
           {db}
         </span>
-        <Link to={uj.to} className="iconbtn iconbtn--ghost iconbtn--sm push-right" aria-label={uj.label} title={uj.label}>
-          <Icon name={uj.ikon} size={16} />
-        </Link>
+        {tiltva ? (
+          <span
+            className="iconbtn iconbtn--sm iconbtn--disabled push-right"
+            aria-label={`${uj.label} (nem elérhető)`}
+            title={irhato.title}
+          >
+            <Icon name={uj.ikon} size={16} />
+          </span>
+        ) : (
+          <Link to={uj.to} className="iconbtn iconbtn--ghost iconbtn--sm push-right" aria-label={uj.label} title={uj.label}>
+            <Icon name={uj.ikon} size={16} />
+          </Link>
+        )}
       </div>
       {db > 0 ? (
         <div ref={ref} className="navgroup__list">
           {children}
         </div>
+      ) : tiltva ? (
+        <span className="navgroup__empty">Nincs még</span>
       ) : (
         <Link to={uj.to} className="navgroup__empty">
           Nincs még · {uj.label.toLowerCase()}

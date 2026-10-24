@@ -21,6 +21,8 @@ export interface Feloldas {
   atcCodes: { code: string; name: string | null }[];
   ingredients: Hatoanyag[];
   unresolved: string[];
+  /** felismert helyi alkalmazás (a DDInter külön hatóanyagként vezeti), null: szisztémás */
+  route: 'ophthalmic' | 'topical' | 'nasal' | 'otic' | null;
 }
 
 export interface ReferenciaAllapot {
@@ -54,7 +56,6 @@ export interface EllenorzesEredmeny {
     medicationIdB: number | null;
     severity: SeverityDto;
     interactions: HatoanyagPar[];
-    duplicates: string[];
     text: string;
   }[];
 }

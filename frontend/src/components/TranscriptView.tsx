@@ -8,6 +8,7 @@ import { formatDatumIdo, formatMp } from '../lib/format';
 import { kijeloltMegszolalas } from '../lib/kijeles';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
 import { IdezetForm } from './allitas/IdezetForm';
 import { csoportApi, csoportok, type FindingCategoryDto } from '../api/felvetelCsoportok';
@@ -38,6 +39,7 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
   const listRef = useRef<HTMLOListElement>(null);
   const [kijeloles, setKijeloles] = useState<{ turn: number; szoveg: string } | null>(null);
   const [idezet, setIdezet] = useState<{ turn: number; szoveg: string } | null>(null);
+  const irhato = useIrhato();
   const kiemeltKulcs = kiemeltTurnIds.join(',');
   const kulcsszoLista = useAsync(() => api.listKulcsszavak(felvetelId), [felvetelId]);
   const kulcsszavak = kulcsszoLista.state.status === 'ok' ? kulcsszoLista.state.data : [];
@@ -236,7 +238,13 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
               <span className="meta">
                 Kijelölve a <span className="mono">#{String(kijeloles.turn).padStart(2, '0')}</span> megszólalásból
               </span>
-              <button type="button" className="btn btn--sm btn--primary" onClick={() => setIdezet(kijeloles)}>
+              <button
+                type="button"
+                className="btn btn--sm btn--primary"
+                onClick={() => setIdezet(kijeloles)}
+                disabled={irhato.tiltva}
+                title={irhato.title}
+              >
                 <Icon name="quote" size={14} />
                 Idézet állításként…
               </button>
@@ -244,6 +252,8 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
                 <button
                   type="button"
                   className="btn btn--sm"
+                  disabled={irhato.tiltva}
+                  title={irhato.title}
                   onClick={() =>
                     void api
                       .addKulcsszo(felvetel.id, kijeloles.szoveg)
@@ -263,6 +273,8 @@ export function TranscriptView({ felvetelId, kiemeltTurnIds }: { felvetelId: num
                 <select
                   className="input input--sm"
                   aria-label="Kijelölés hozzáadása csoporthoz"
+                  disabled={irhato.tiltva}
+                  title={irhato.title}
                   value=""
                   onChange={(e) =>
                     void csoportApi
@@ -331,6 +343,7 @@ function AllapotLepesek({
 }) {
   const [hossz, setHossz] = useState('');
   const { busy, error, run } = useAkcio();
+  const irhato = useIrhato();
   const [uzenet, setUzenet] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const hosszId = useId();
@@ -379,10 +392,10 @@ function AllapotLepesek({
               onChange={(e) => setHossz(e.target.value.replace(/\D/g, ''))}
             />
           </div>
-          <button type="submit" className="btn btn--primary" disabled={busy || !hosszOk}>
+          <button type="submit" className="btn btn--primary" disabled={irhato.tiltva || busy || !hosszOk} title={irhato.title}>
             Feldolgozásra küldés
           </button>
-          <button type="button" className="btn" onClick={() => void lep('hiba')} disabled={busy}>
+          <button type="button" className="btn" onClick={() => void lep('hiba')} disabled={irhato.tiltva || busy} title={irhato.title}>
             <Icon name="x" strokeWidth={2.4} />
             Sikertelen
           </button>
@@ -404,17 +417,17 @@ function AllapotLepesek({
                   if (f) void importal(f);
                 }}
               />
-              <button type="button" className="btn" onClick={() => fileRef.current?.click()} disabled={busy}>
+              <button type="button" className="btn" onClick={() => fileRef.current?.click()} disabled={irhato.tiltva || busy} title={irhato.title}>
                 <Icon name="upload" size={16} />
                 Átirat importálása (JSON)
               </button>
             </>
           )}
-          <button type="button" className="btn btn--primary" onClick={() => void lep('kesz')} disabled={busy}>
+          <button type="button" className="btn btn--primary" onClick={() => void lep('kesz')} disabled={irhato.tiltva || busy} title={irhato.title}>
             <Icon name="check" strokeWidth={2.6} />
             Kész
           </button>
-          <button type="button" className="btn" onClick={() => void lep('hiba')} disabled={busy}>
+          <button type="button" className="btn" onClick={() => void lep('hiba')} disabled={irhato.tiltva || busy} title={irhato.title}>
             <Icon name="x" strokeWidth={2.4} />
             Sikertelen
           </button>

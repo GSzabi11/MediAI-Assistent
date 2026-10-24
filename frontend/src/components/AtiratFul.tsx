@@ -1,9 +1,9 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { useCurrentUser } from '../api/currentUser';
-import type { FelvetelResponse } from '../api/types';
-import { formatDatumIdo, formatMp } from '../lib/format';
+import { ApiError, type FelvetelResponse } from '../api/types';
+import { formatMp } from '../lib/format';
 import {
   felvetelInditasa,
   felvetelTamogatott,
@@ -13,7 +13,9 @@ import {
 } from '../lib/hangfelvetel';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useEllatasKontextus } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
+import { ellatasRovid } from './EllatasValaszto';
 import { SzintMero } from './HangprofilPanel';
 import { Icon } from './Icon';
 import { Segmented } from './Segmented';
@@ -22,8 +24,10 @@ import { TranscriptView } from './TranscriptView';
 /** Az Átirat fül: új felvétel rögzítése (kérésre vagy ha még nincs) + a kiválasztott felvétel átirata. */
 export function AtiratFul({ felvetelId, turnIds }: { felvetelId: number | undefined; turnIds: number[] }) {
   const { felvetelek } = usePatient();
+  const { csakOlvas } = useEllatasKontextus();
   const [params, setParams] = useSearchParams();
-  const ujNyitva = params.get('uj') === 'felvetel' || felvetelek.length === 0;
+  // Informálódás módban felvétel nem indítható (docs/care-context.md)
+  const ujNyitva = !csakOlvas && (params.get('uj') === 'felvetel' || felvetelek.length === 0);
   const user = useCurrentUser();
   const profil = useAsync(() => (user ? api.getAktivHangprofil(user.id) : Promise.resolve(null)), [user?.id]);
   // Hangprofil nélkül nincs felvétel (a backend is 409-cel tiltja): a szerepkiosztás erre épül
@@ -45,7 +49,13 @@ export function AtiratFul({ felvetelId, turnIds }: { felvetelId: number | undefi
         />
       ) : (
         <div className="tabbar">
-          <button type="button" className="btn btn--sm" onClick={() => setParams({ nezet: 'atirat', uj: 'felvetel' })}>
+          <button
+            type="button"
+            className="btn btn--sm"
+            onClick={() => setParams({ nezet: 'atirat', uj: 'felvetel' })}
+            disabled={csakOlvas}
+            title={csakOlvas ? 'Informálódás módban nem elérhető' : undefined}
+          >
             <Icon name="mic" size={14} />
             Új felvétel
           </button>
@@ -60,12 +70,14 @@ export function AtiratFul({ felvetelId, turnIds }: { felvetelId: number | undefi
  * Új felvétel a böngészőben: a hang a felvétel végén egyben megy a Springnek (POST /recordings,
  * multipart), onnan a Python hangszolgáltatáshoz (docs/voice-module.md). Az orvos a belépett
  * felhasználó, a hangprofilt a backend választja (az aktívat); profil nélkül 409.
+ * Az ellátás az aktív ellátás-kontextus (docs/care-context.md) — nincs külön választás.
  */
 function FelvetelForm({ onDone, onCancel }: { onDone: (id: number) => void; onCancel?: () => void }) {
   const { patient, frissit } = usePatient();
-  const ellatasok = useAsync(() => api.listEllatasok(patient.id), [patient.id]);
-  const [mod, setMod] = useState<FelvetelResponse['mod']>('surgossegi');
-  const [ellatasId, setEllatasId] = useState('');
+  const { kontextus, lezarult } = useEllatasKontextus();
+  const ellatas = kontextus.mod === 'ellatas' ? kontextus.ellatas : null;
+  // az echo-ellátásban az echo diktálás a kézenfekvő mód
+  const [mod, setMod] = useState<FelvetelResponse['mod']>(ellatas?.tipus === 'echo' ? 'echo_diktalas' : 'surgossegi');
   const [fut, setFut] = useState(false);
   const [hossz, setHossz] = useState(0);
   const [szint, setSzint] = useState(0);
@@ -73,7 +85,6 @@ function FelvetelForm({ onDone, onCancel }: { onDone: (id: number) => void; onCa
   const streamRef = useRef<MediaStream | null>(null);
   const felvevoRef = useRef<Felvevo | null>(null);
   const { busy, error, run } = useAkcio();
-  const ids = { ellatas: useId() };
 
   // Oldalváltáskor / Mégse-nél a mikrofon elengedése; a félbehagyott felvétel elvész
   useEffect(
@@ -91,9 +102,6 @@ function FelvetelForm({ onDone, onCancel }: { onDone: (id: number) => void; onCa
     }, 200);
     return () => window.clearInterval(t);
   }, [fut]);
-
-  // Lezárt ellátáshoz a backend nem enged felvételt: csak a nyitottak választhatók
-  const nyitottak = ellatasok.state.status === 'ok' ? ellatasok.state.data.filter((e) => e.veg === null) : [];
 
   async function indit() {
     setHiba(null);
@@ -121,16 +129,20 @@ function FelvetelForm({ onDone, onCancel }: { onDone: (id: number) => void; onCa
       setHiba('Túl rövid felvétel (legalább 2 másodperc kell).');
       return;
     }
+    if (!ellatas) return;
     const uj = await run(async () => {
-      const r = await api.feltoltFelvetel({
-        patientId: patient.id,
-        ellatasId: ellatasId ? Number(ellatasId) : null,
-        mod,
-        hang,
-        hosszMp: mp,
-      });
-      await frissit();
-      return r;
+      try {
+        const r = await api.feltoltFelvetel({ patientId: patient.id, ellatasId: ellatas.id, mod, hang, hosszMp: mp });
+        await frissit();
+        return r;
+      } catch (e) {
+        // 409 lehet a lezárt ellátás (vagy a hiányzó hangprofil): ha az ellátás lezárult, vissza a választóhoz
+        if (e instanceof ApiError && e.status === 409) {
+          const friss = await api.getEllatas(ellatas.id).catch(() => null);
+          if (friss && friss.veg !== null) lezarult();
+        }
+        throw e;
+      }
     });
     if (uj) onDone(uj.id);
   }
@@ -158,28 +170,6 @@ function FelvetelForm({ onDone, onCancel }: { onDone: (id: number) => void; onCa
             ]}
           />
         </div>
-        <div className="field">
-          <label htmlFor={ids.ellatas}>
-            Ellátás <span className="meta">(nem kötelező)</span>
-          </label>
-          <select
-            id={ids.ellatas}
-            className="input"
-            value={ellatasId}
-            disabled={fut}
-            onChange={(e) => setEllatasId(e.target.value)}
-          >
-            <option value="">— nincs ellátáshoz kötve —</option>
-            {nyitottak.map((e) => (
-              <option key={e.id} value={e.id}>
-                #{e.id} · {e.tipus.toUpperCase()} · {formatDatumIdo(e.kezdet)}
-              </option>
-            ))}
-          </select>
-          {ellatasok.state.status === 'ok' && nyitottak.length === 0 && (
-            <span className="meta">Nincs nyitott ellátás (az Ellátások fülön nyitható).</span>
-          )}
-        </div>
       </div>
       {fut && (
         <div className="recbar" role="status">
@@ -197,12 +187,13 @@ function FelvetelForm({ onDone, onCancel }: { onDone: (id: number) => void; onCa
         {fut ? (
           <button type="button" className="btn btn--primary" onClick={() => void leallitEsFeltolt()}>
             <Icon name="stop" size={16} />
-            Felvétel vége és feltöltés
+            Felvétel vége és feltöltés{ellatas && ` — ${ellatasRovid[ellatas.tipus]}-ellátásba`}
           </button>
         ) : (
           <button type="button" className="btn btn--primary" onClick={() => void indit()} disabled={busy}>
             <Icon name="mic" size={16} />
             {busy ? 'Feltöltés…' : 'Felvétel indítása'}
+            {!busy && ellatas && ` · Mentés: ${ellatasRovid[ellatas.tipus]}-ellátásba (#${ellatas.id})`}
           </button>
         )}
         {onCancel && (

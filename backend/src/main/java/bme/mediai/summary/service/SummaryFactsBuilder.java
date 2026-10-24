@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Component;
 
@@ -29,6 +31,7 @@ import bme.mediai.recordingsummary.persistence.RecordingSummaryStatus;
 import bme.mediai.rule.service.LabReferenceRangeRule;
 import bme.mediai.statement.api.ReviewStatus;
 import bme.mediai.statement.api.StatementResponse;
+import bme.mediai.statement.persistence.Severity;
 import bme.mediai.statement.persistence.StatementSource;
 import bme.mediai.statement.persistence.StatementType;
 import bme.mediai.statement.service.StatementService;
@@ -92,6 +95,18 @@ public class SummaryFactsBuilder {
                         s.reviewStatus().name()))
                 .toList();
 
+        // Az interakció a jelenlegi gyógyszerelésről szól, nem az időszakról: nincs időszak-szűrés. A tájékoztató
+        // szintűek (enyhe / besorolatlan) nem mennek — sokan vannak, és elfednék a lényeget a kis modell előtt.
+        List<StatementResponse> interactionStatements = statementService.findByPatient(patientId).stream()
+                .filter(s -> s.type() == StatementType.DETERMINISTIC_RULE
+                        && s.source() instanceof StatementSource.Medication)
+                .filter(s -> s.reviewStatus() != ReviewStatus.REJECTED && s.severity() != Severity.INFO)
+                .toList();
+        List<SummaryFacts.InteractionFact> interactions = interactionStatements.stream()
+                .sorted(Comparator.comparing(StatementResponse::severity).reversed())
+                .map(s -> new SummaryFacts.InteractionFact(s.id(), s.effectiveText(), s.severity().name()))
+                .toList();
+
         List<SummaryFacts.MedicationFact> medications = medicationService.findByPatient(patientId, true).stream()
                 .map(m -> new SummaryFacts.MedicationFact(m.id(), m.name(), m.activeIngredient(),
                         m.dose() == null ? null : number(m.dose()) + (m.doseUnit() == null ? "" : " " + m.doseUnit()),
@@ -121,11 +136,12 @@ public class SummaryFactsBuilder {
 
         Integer age = patient.getBirthDate() == null ? null : Period.between(patient.getBirthDate(), end).getYears();
         SummaryFacts facts = new SummaryFacts(start, end, age, labFacts, findings, statementFacts, medications,
-                allergies, documentFacts, recordings);
+                allergies, documentFacts, recordings, interactions);
 
         Map<String, List<Long>> ids = new LinkedHashMap<>();
         ids.put("labResultIds", labs.stream().map(LabResult::getId).toList());
-        ids.put("statementIds", statements.stream().map(StatementResponse::id).toList());
+        ids.put("statementIds", Stream.concat(statements.stream(), interactionStatements.stream())
+                .map(StatementResponse::id).distinct().toList());
         ids.put("medicationIds", medications.stream().map(SummaryFacts.MedicationFact::id).toList());
         ids.put("allergyIds", allergies.stream().map(SummaryFacts.AllergyFact::id).toList());
         ids.put("documentIds", documents.stream().map(Document::getId).toList());

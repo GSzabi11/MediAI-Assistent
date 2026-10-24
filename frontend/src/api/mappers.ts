@@ -545,6 +545,7 @@ export const toKortortenet = (h: MedicalHistoryDto): Kortortenet => ({
     uzenet: h.progress.message,
     lepes: h.progress.step,
     osszes: h.progress.total,
+    modell: h.progress.model,
     ota: h.progress.at,
   },
 });

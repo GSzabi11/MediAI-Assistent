@@ -4,6 +4,7 @@ import { useCurrentUser } from '../../api/currentUser';
 import type { ClaimResponse, Dontes, JovahagyasResponse } from '../../api/types';
 import { formatDatumIdo } from '../../lib/format';
 import { useAkcio } from '../../lib/useAkcio';
+import { useIrhato } from '../../patient/EllatasKontextus';
 import { Icon } from '../Icon';
 
 /**
@@ -21,6 +22,8 @@ export function ApprovalBar({ allitas, onDecided }: { allitas: ClaimResponse; on
   const { busy, error, run } = useAkcio();
   const fieldId = useId();
   const user = useCurrentUser();
+  // Informálódás módban a döntés-gombok látszanak, de le vannak tiltva
+  const irhato = useIrhato();
 
   if (allitas.claimType === 'szabaly') return null;
   const forras = allitas.claimType === 'forras';
@@ -34,7 +37,13 @@ export function ApprovalBar({ allitas, onDecided }: { allitas: ClaimResponse; on
     return (
       <DecisionFooter j={j}>
         {orvos && (
-          <button type="button" className="btn btn--sm btn--ghost-inv" onClick={() => setUjDontes(true)}>
+          <button
+            type="button"
+            className="btn btn--sm btn--ghost-inv"
+            onClick={() => setUjDontes(true)}
+            disabled={irhato.tiltva}
+            title={irhato.title}
+          >
             Új döntés
           </button>
         )}
@@ -134,7 +143,12 @@ export function ApprovalBar({ allitas, onDecided }: { allitas: ClaimResponse; on
         </p>
       )}
       <div className="actions">
-        <button className="btn btn--primary" onClick={() => void submit('jovahagyva')} disabled={busy}>
+        <button
+          className="btn btn--primary"
+          onClick={() => void submit('jovahagyva')}
+          disabled={busy || irhato.tiltva}
+          title={irhato.title}
+        >
           <Icon name="check" strokeWidth={2.6} />
           {felirat.ok}
         </button>
@@ -144,12 +158,18 @@ export function ApprovalBar({ allitas, onDecided }: { allitas: ClaimResponse; on
             setText(allitas.ervenyesSzoveg || allitas.idezet || allitas.cim);
             setMode('modositas');
           }}
-          disabled={busy}
+          disabled={busy || irhato.tiltva}
+          title={irhato.title}
         >
           <Icon name="pencil" />
           {felirat.mod}
         </button>
-        <button className="btn" onClick={() => setMode('elutasitas')} disabled={busy}>
+        <button
+          className="btn"
+          onClick={() => setMode('elutasitas')}
+          disabled={busy || irhato.tiltva}
+          title={irhato.title}
+        >
           <Icon name="x" strokeWidth={2.4} />
           Elutasítom
         </button>

@@ -5,6 +5,7 @@ import type { Kortortenet, KortortenetElem } from '../api/types';
 import { formatDatumIdo } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
 import { DokSzerkeszto, type Mentetlen } from './DokSzerkeszto';
 import { Icon } from './Icon';
@@ -126,8 +127,14 @@ export function Haladas({ k }: { k: Pick<Kortortenet, 'kerve' | 'haladas'> }) {
       )}
       {arany !== null && (
         <p className="meta">
-          {h!.lepes! - 1} / {h!.osszes} lépés kész. A medgemma:27b-vel egy lépés néhány perc; az elkészült
-          dokumentum-kivonatok megmaradnak, a következő generálás gyorsabb.
+          {h!.lepes! - 1} / {h!.osszes} lépés kész
+          {h!.modell && (
+            <>
+              {' '}
+              · modell: <span className="mono">{h!.modell}</span>
+            </>
+          )}
+          . Az elkészült dokumentum-kivonatok megmaradnak, a következő generálás gyorsabb.
         </p>
       )}
     </div>
@@ -237,6 +244,8 @@ function ExportGomb({
 }
 
 function Szerkeszto({ k, regisztral, onSaved }: SzerkesztoProps) {
+  // Informálódás módban a kórtörténet készíthető és exportálható, de kézzel nem szerkeszthető
+  const irhato = useIrhato();
   return (
     <DokSzerkeszto
       id={k.id}
@@ -245,6 +254,7 @@ function Szerkeszto({ k, regisztral, onSaved }: SzerkesztoProps) {
       szerkesztve={k.szerkesztve}
       ment={async (html) => onSaved(await api.szerkesztKortortenetet(k.id, html))}
       regisztral={regisztral}
+      tiltasOka={irhato.title}
       cimke="Anamnézis és kórtörténeti összefoglaló"
     />
   );

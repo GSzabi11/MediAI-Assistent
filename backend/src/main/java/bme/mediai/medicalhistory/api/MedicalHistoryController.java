@@ -72,7 +72,7 @@ public class MedicalHistoryController {
             @RequestHeader(name = InternalTokenVerifier.HEADER, required = false) String token,
             @RequestBody MedicalHistoryProgressRequest request) {
         tokenVerifier.verify(token);
-        service.progress(id, request.message(), request.step(), request.total());
+        service.progress(id, request.message(), request.step(), request.total(), request.model());
         return ResponseEntity.noContent().build();
     }
 

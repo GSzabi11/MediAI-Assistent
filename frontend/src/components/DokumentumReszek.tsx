@@ -6,6 +6,7 @@ import type { DokumentumListItem } from '../api/types';
 import { formatSzam } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
 import { Icon } from './Icon';
 import { ErrorState, Loading } from './shell';
@@ -21,76 +22,172 @@ async function isPdf(fajl: File): Promise<boolean> {
   }
 }
 
+type FeltoltesSor = { fajl: File; pdf: boolean | null; allapot: 'var' | 'fut' | 'kesz' | 'hiba'; uzenet?: string };
+
+function sorHiba(s: FeltoltesSor): string | null {
+  if (s.fajl.size === 0) return 'a fájl üres';
+  if (s.fajl.size > MAX_MERET) return 'nagyobb 20 MB-nál';
+  if (s.pdf === false) return 'nem PDF';
+  return null;
+}
+
 /**
  * POST /api/documents (multipart) — csak PDF, csak a fájl: a típust (labor / ambuláns), a
  * klinikai dátumot, a laborsorokat és az állításokat a háttérben futó AI-feldolgozás adja.
  * A hash-t, a méretet és a MIME-típust a szerver számolja.
+ * Egyszerre több fájl is kijelölhető: fájlonként egy kérés, egymás után — egy hibás (pl. duplikátum,
+ * 409) nem állítja meg a többit, az eredmény fájlonként látszik.
  */
 export function DokumentumFeltoltes({ onDone, onCancel }: { onDone: (id: number) => void; onCancel?: () => void }) {
   const { patient, frissit } = usePatient();
-  const [fajl, setFajl] = useState<File | null>(null);
-  const [pdf, setPdf] = useState<boolean | null>(null);
+  const [sorok, setSorok] = useState<FeltoltesSor[]>([]);
   const [tried, setTried] = useState(false);
-  const { busy, error, run } = useAkcio();
+  const [busy, setBusy] = useState(false);
+  const [huzas, setHuzas] = useState(false);
+  const [osszegzes, setOsszegzes] = useState<string | null>(null);
   const fajlId = useId();
 
-  const hiba = !fajl
-    ? 'Válassz fájlt.'
-    : fajl.size === 0
-      ? 'A fájl üres.'
-      : fajl.size > MAX_MERET
-        ? 'A fájl nagyobb 20 MB-nál.'
-        : pdf === false
-          ? 'Csak PDF tölthető fel.'
-          : null;
+  function valaszt(fajlok: File[]) {
+    if (busy) return;
+    setTried(false);
+    setOsszegzes(null);
+    setSorok(fajlok.map((fajl) => ({ fajl, pdf: null, allapot: 'var' })));
+    fajlok.forEach((f, i) =>
+      void isPdf(f).then((pdf) => setSorok((lista) => lista.map((s, j) => (j === i && s.fajl === f ? { ...s, pdf } : s)))),
+    );
+  }
+
+  // feltöltendő: érvényes és még nem feltöltött (a sikertelen újrapróbálható)
+  const ervenyes = sorok.filter((s) => s.allapot !== 'kesz' && !sorHiba(s));
+  const ellenorzesAlatt = sorok.some((s) => s.pdf === null);
+  // Kész köteg után nem hiba, hogy nincs több feltöltendő — csak ha a kijelölésben eleve nem volt érvényes PDF
+  const vanFeltoltott = sorok.some((s) => s.allapot === 'kesz');
+  const hiba =
+    sorok.length === 0
+      ? 'Válassz fájlt.'
+      : ervenyes.length === 0 && !ellenorzesAlatt && !vanFeltoltott
+        ? 'Nincs feltölthető PDF.'
+        : null;
+
+  const frissitSor = (i: number, uj: Partial<FeltoltesSor>) =>
+    setSorok((lista) => lista.map((s, j) => (j === i ? { ...s, ...uj } : s)));
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (busy || ellenorzesAlatt) return;
     setTried(true);
-    if (hiba || !fajl || !pdf) return;
-    const d = await run(async () => {
-      const uj = await api.feltoltDokumentum({ patientId: patient.id, fajl, tipus: null, klinikaiDatum: null });
-      await frissit();
-      return uj;
+    if (hiba || ervenyes.length === 0) return;
+    setBusy(true);
+    setOsszegzes(null);
+    let utolsoId: number | null = null;
+    let volthiba = false;
+    let sikeres = 0;
+    const osszes = sorok.filter((s) => s.allapot !== 'kesz' && !sorHiba(s)).length;
+    for (const [i, s] of sorok.entries()) {
+      if (s.allapot === 'kesz' || sorHiba(s)) continue;
+      frissitSor(i, { allapot: 'fut', uzenet: undefined });
+      try {
+        const uj = await api.feltoltDokumentum({ patientId: patient.id, fajl: s.fajl, tipus: null, klinikaiDatum: null });
+        utolsoId = uj.id;
+        sikeres++;
+        frissitSor(i, { allapot: 'kesz' });
+      } catch (err) {
+        volthiba = true;
+        frissitSor(i, { allapot: 'hiba', uzenet: (err as Error).message });
+      }
+    }
+    await frissit().catch(() => {
+      /* a lista a következő frissítéskor pótolódik */
     });
-    if (d) onDone(d.id);
+    setBusy(false);
+    setTried(false);
+    setOsszegzes(`${sikeres}/${osszes} feltöltve`);
+    // egy fájlnál sikeres feltöltés után megnyitjuk; több fájlnál / hibánál az űrlap marad, fájlonkénti eredménnyel
+    if (utolsoId !== null && !volthiba && osszes === 1) onDone(utolsoId);
   }
 
   return (
-    <form className="tabform" onSubmit={submit} noValidate aria-label="Dokumentum feltöltése">
+    <form
+      className={`tabform${huzas ? ' tabform--drop' : ''}`}
+      onSubmit={submit}
+      noValidate
+      aria-label="Dokumentum feltöltése"
+      // több fájl ide is behúzható
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (!busy) setHuzas(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHuzas(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setHuzas(false);
+        valaszt(Array.from(e.dataTransfer.files));
+      }}
+    >
       <div className="row-baseline">
         <h2 className="h2 h2--sm">Dokumentum feltöltése</h2>
-        <span className="meta">PDF, legfeljebb 20 MB — a típust és a dátumot az automatikus feldolgozás adja</span>
+        <span className="meta">
+          PDF, fájlonként legfeljebb 20 MB, egyszerre több is (kijelölve vagy ide húzva) — a típust és a dátumot az
+          automatikus feldolgozás adja
+        </span>
       </div>
       <div className="field">
-        <label htmlFor={fajlId}>Fájl</label>
+        <label htmlFor={fajlId}>Fájlok</label>
         <input
           id={fajlId}
           type="file"
+          multiple
           className="input input--file"
           accept=".pdf,application/pdf"
-          onChange={(e) => {
-            const f = e.target.files?.[0] ?? null;
-            setFajl(f);
-            setPdf(null);
-            if (f) void isPdf(f).then(setPdf);
-          }}
+          disabled={busy}
+          onChange={(e) => valaszt(Array.from(e.target.files ?? []))}
         />
       </div>
+      {sorok.length > 1 || sorok.some((s) => s.allapot !== 'var' || sorHiba(s)) ? (
+        <ul className="itemlist" aria-label="Kijelölt fájlok">
+          {sorok.map((s, i) => {
+            const h = sorHiba(s);
+            return (
+              <li key={i} className="item">
+                <div className="item__row">
+                  <Icon name={s.allapot === 'kesz' ? 'checkCircle' : h || s.allapot === 'hiba' ? 'alert' : 'doc'} size={16} />
+                  <span>{s.fajl.name}</span>
+                  <span className={`meta push-right${h || s.allapot === 'hiba' ? ' form-error' : ''}`}>
+                    {h ??
+                      (s.allapot === 'fut'
+                        ? 'feltöltés…'
+                        : s.allapot === 'kesz'
+                          ? 'feltöltve — feldolgozás a háttérben'
+                          : s.allapot === 'hiba'
+                            ? s.uzenet
+                            : 'feltöltésre vár')}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
       {tried && hiba && <p className="form-error">{hiba}</p>}
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
+      {osszegzes && (
+        <p className="meta" role="status">
+          {osszegzes}
         </p>
       )}
       <div className="actions">
-        <button type="submit" className="btn btn--primary" disabled={busy}>
+        <button
+          type="submit"
+          className="btn btn--primary"
+          disabled={busy || ellenorzesAlatt || (sorok.length > 0 && ervenyes.length === 0)}
+        >
           <Icon name="upload" strokeWidth={2.4} />
-          {busy ? 'Feltöltés…' : 'Feltöltés'}
+          {busy ? 'Feltöltés…' : ervenyes.length > 1 ? `Feltöltés (${ervenyes.length} fájl)` : 'Feltöltés'}
         </button>
         {onCancel && (
           <button type="button" className="btn" onClick={onCancel} disabled={busy}>
-            Mégse
+            {sorok.some((s) => s.allapot === 'kesz') ? 'Bezárás' : 'Mégse'}
           </button>
         )}
       </div>
@@ -107,6 +204,7 @@ export function KinyertSzovegForm({ dokumentum, onSaved }: { dokumentum: Dokumen
   const { busy, error, run } = useAkcio();
   const betoltes = useAkcio();
   const mezoId = useId();
+  const irhato = useIrhato();
 
   // Szöveges fájlnál maga a fájl a szöveg: átvehető, nem kell begépelni
   async function atvetel() {
@@ -149,7 +247,12 @@ export function KinyertSzovegForm({ dokumentum, onSaved }: { dokumentum: Dokumen
         </p>
       )}
       <div className="actions">
-        <button type="submit" className="btn btn--primary" disabled={busy || !szoveg.trim()}>
+        <button
+          type="submit"
+          className="btn btn--primary"
+          disabled={busy || !szoveg.trim() || irhato.tiltva}
+          title={irhato.title}
+        >
           <Icon name="check" strokeWidth={2.6} />
           {busy ? 'Rögzítés…' : 'Szöveg rögzítése'}
         </button>
@@ -174,6 +277,7 @@ export function RagDarabok({ dokumentum }: { dokumentum: DokumentumListItem }) {
   const [nyitva, setNyitva] = useState(false);
   const { state, reload } = useAsync(() => api.listRagDarabok(dokumentum.id), [dokumentum.id]);
   const importAkcio = useAkcio();
+  const irhato = useIrhato();
   const [uzenet, setUzenet] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -243,7 +347,8 @@ export function RagDarabok({ dokumentum }: { dokumentum: DokumentumListItem }) {
                 type="button"
                 className="btn btn--sm"
                 onClick={() => fileRef.current?.click()}
-                disabled={importAkcio.busy}
+                disabled={importAkcio.busy || irhato.tiltva}
+                title={irhato.title}
               >
                 <Icon name="upload" size={14} />
                 {importAkcio.busy ? 'Import…' : 'Darabok importálása (JSON)'}

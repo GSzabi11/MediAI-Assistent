@@ -412,7 +412,8 @@ def build(facts: dict, progress=None) -> dict:
     new_digests: list[dict] = []
     missing = [d for d in documents if not (d.get("digest") and d["digest"].get("promptHash") == current)]
     total = len(missing) + 2
-    report = progress or (lambda message, step, total: None)
+    # model: a lépést ténylegesen végző modell (a felület ezt írja ki, nem egy beégetett nevet)
+    report = progress or (lambda message, step, total, model=None: None)
     for doc in documents:
         old = doc.get("digest")
         if old and old.get("promptHash") == current:
@@ -420,7 +421,7 @@ def build(facts: dict, progress=None) -> dict:
             continue
         step = missing.index(doc) + 1
         report(f"Dokumentum-kivonat {step}/{len(missing)}: {doc.get('date')} "
-               f"{_KINDS.get(doc.get('type'), 'lelet')}", step, total)
+               f"{_KINDS.get(doc.get('type'), 'lelet')}", step, total, config.HISTORY_LLM_MODEL)
         try:
             dg = make_digest(doc)
         except (ValueError, requests.RequestException) as e:
@@ -445,7 +446,7 @@ def build(facts: dict, progress=None) -> dict:
     facts_text = render_facts(facts, timeline, diagnoses)
     # Az összefoglaló a Klinikai státuszéval azonos (a felhasználó döntése, 2026-10-23): az elmúlt 6 hónap
     # tényeiből, ugyanazzal a prompttal és ellenőrzéssel (summarize.py), a proaktív javaslatok nélkül
-    report("Összefoglaló (elmúlt 6 hónap) írása", total - 1, total)
+    report("Összefoglaló (elmúlt 6 hónap) írása", total - 1, total, config.SUMMARY_LLM_MODEL)
     sfacts = facts.get("summaryFacts") or {}
     if any(sfacts.get(k) for k in ("statements", "documents", "recordings", "labs", "medications")):
         summary, cut1, summary_facts_text = summarize.write_summary(sfacts)
@@ -454,7 +455,7 @@ def build(facts: dict, progress=None) -> dict:
         summary, cut1, summary_facts_text = ("Az elmúlt 6 hónapból nincs feldolgozott dokumentum vagy adat — a "
                                              "korábbi események az idővonalon láthatók.", False, "")
         summary_warnings = []
-    report("Javaslatok", total, total)
+    report("Javaslatok", total, total, config.HISTORY_LLM_MODEL)
     recs_text, cut2 = _stream(SYSTEM_RECOMMENDATIONS, "A beteg kórtörténetének tényei:\n\n" + facts_text, 450,
                               _loop_start)
     recommendations = []

@@ -6,6 +6,7 @@ import { formatDatum, formatDatumIdo, formatHonap, formatSzam, helyiToIso, parse
 import { ertekSzoveg, kivul, statusz, tizedes, tizedesOf } from '../lib/laborErtek';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { usePatient } from '../patient/PatientContext';
 import { Icon } from './Icon';
 import { Segmented } from './Segmented';
@@ -33,6 +34,7 @@ function refSzoveg(p: LaborParameter) {
  */
 export function LabTrend() {
   const { patient, frissit } = usePatient();
+  const irhato = useIrhato();
   const [nevSzuro, setNevSzuro] = useState('');
   const osszes = useAsync(() => api.getLaborIdosor(patient.id), [patient.id]);
   const szurt = useAsync(
@@ -152,7 +154,13 @@ export function LabTrend() {
             ]}
           />
           {!rogzites && (
-            <button type="button" className="btn btn--sm" onClick={() => setRogzites(true)}>
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => setRogzites(true)}
+              disabled={irhato.tiltva}
+              title={irhato.title}
+            >
               <Icon name="plus" size={14} strokeWidth={2.4} />
               Labor rögzítése
             </button>

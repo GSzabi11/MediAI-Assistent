@@ -101,5 +101,13 @@ normál) és hurokba esett. Ezért:
   számot fogja meg, a stílust nem.
 - A javaslatok orvosszakmai helyességét semmi nem ellenőrzi — ezért feltételes mód és a
   „döntés az orvosé” jelzés.
-- A képen szereplő „Labor kérés / Beutalók / Kutatás indítása” gombok és a „Gyógyszer-
-  interakció” chip kimaradt: nincs mögöttük funkció (interakció-motor sincs még).
+- A képen szereplő „Labor kérés / Beutalók / Kutatás indítása” gombok kimaradtak: nincs mögöttük funkció.
+
+## Gyógyszer-interakciók (2026-10-24)
+
+- A kártya tetején a szabálymotor meglévő interakció-állításai (`MEDICATION` forrás, `docs/drug-interaction.md`),
+  nem a modelltől: súlyos (`CRITICAL`) piros, közepes (`WARNING`) borostyán; a tájékoztatók és az elutasítottak
+  csak számként, link a Gyógyszer és allergia fülre.
+- A proaktív javaslatok bemenete (`SummaryFacts.interactions`) is megkapja őket: a nem elutasított WARNING /
+  CRITICAL interakciók időszak-szűrés nélkül (a jelenlegi gyógyszerelésről szólnak). Az összefoglaló szövegének
+  bemenete nem változik. Ha van súlyos interakció, de egyik javaslat sem tér ki rá, figyelmeztetés.

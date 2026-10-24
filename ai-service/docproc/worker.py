@@ -250,7 +250,7 @@ class JobQueue:
                     elif isinstance(job, SummaryJob):
                         payload = summarize.summarize(job.facts)
                     elif isinstance(job, MedicalHistoryJob):
-                        payload = history.build(job.facts, lambda m, step, total: send_step(job, m, step, total))
+                        payload = history.build(job.facts, lambda m, step, total, model=None: send_step(job, m, step, total, model))
                     elif isinstance(job, EpicrisisJob):
                         payload = epicrisis.build(job.facts, lambda m, step, total: send_step(job, m, step, total))
                     elif isinstance(job, ResearchContextJob):
@@ -311,12 +311,13 @@ class SearchRunner:
             self._queue.task_done()
 
 
-def send_step(job: "MedicalHistoryJob | EpicrisisJob", message: str, step: int, total: int) -> None:
+def send_step(job: "MedicalHistoryJob | EpicrisisJob", message: str, step: int, total: int,
+              model: str | None = None) -> None:
     """Lépésenkénti haladás a Springnek (a kórtörténet); ha nem megy át, a feldolgozás ettől folytatódik."""
     if not job.progress_url:
         return
     try:
-        requests.post(job.progress_url, json={"message": message[:500], "step": step, "total": total},
+        requests.post(job.progress_url, json={"message": message[:500], "step": step, "total": total, "model": model},
                       headers={"X-Internal-Token": config.TOKEN}, timeout=10)
     except requests.RequestException as e:
         log.warning("Állapotüzenet nem ment át (%s): %s", job.label, e)

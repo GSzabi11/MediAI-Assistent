@@ -16,8 +16,8 @@ import bme.mediai.drug.persistence.DrugReferenceRepository.Interaction;
 import bme.mediai.statement.persistence.Severity;
 
 // Páronkénti ellenőrzés: két gyógyszer (tétel) között interakció, ha valamelyik hatóanyaguk-párja
-// szerepel a DDInterben; kettőzés, ha ugyanaz a hatóanyag mindkettőben. Egy készítményen belüli
-// hatóanyagok (kombináció) egymással nem riasztanak — az szándékos összetétel.
+// szerepel a DDInterben. Egy hatóanyagot önmagával nem vetünk össze (két tétel azonos hatóanyaga nem
+// riasztás — Szabi kérése, 2026-10-24), és egy készítményen belüli hatóanyagok (kombináció) sem riasztanak.
 @Service
 public class DrugInteractionChecker {
 
@@ -29,8 +29,7 @@ public class DrugInteractionChecker {
     public record IngredientPair(String ingredientA, String ingredientB, String level, String levelHu) {
     }
 
-    public record PairFinding(int itemA, int itemB, Severity severity, List<IngredientPair> interactions,
-            List<String> duplicates) {
+    public record PairFinding(int itemA, int itemB, Severity severity, List<IngredientPair> interactions) {
     }
 
     // DDInter-súlyosság → állítás-súlyosság. Az „Unknown” (a párok ~20%-a) ismert, de klinikailag nem besorolt
@@ -70,13 +69,9 @@ public class DrugInteractionChecker {
 
     private static PairFinding compare(int ia, int ib, Item a, Item b, Map<Long, String> levels) {
         List<IngredientPair> pairs = new ArrayList<>();
-        List<String> duplicates = new ArrayList<>();
         for (Ingredient x : a.resolution().ingredients()) {
             for (Ingredient y : b.resolution().ingredients()) {
                 if (x.id() == y.id()) {
-                    if (!duplicates.contains(x.name())) {
-                        duplicates.add(x.name());
-                    }
                     continue;
                 }
                 String level = levels.get(pairKey(x.id(), y.id()));
@@ -85,15 +80,11 @@ public class DrugInteractionChecker {
                 }
             }
         }
-        if (pairs.isEmpty() && duplicates.isEmpty()) {
+        if (pairs.isEmpty()) {
             return null;
         }
         pairs.sort(Comparator.comparing(p -> ORDER.indexOf(p.level())));
-        Severity severity = pairs.isEmpty() ? Severity.WARNING : SEVERITY.get(pairs.getFirst().level());
-        if (!duplicates.isEmpty() && severity == Severity.INFO) {
-            severity = Severity.WARNING;
-        }
-        return new PairFinding(ia, ib, severity, pairs, duplicates);
+        return new PairFinding(ia, ib, SEVERITY.get(pairs.getFirst().level()), pairs);
     }
 
     // Az orvosnak mutatott szöveg (MI): mindkét gyógyszer, az érintett hatóanyag-párok, és a forrás
@@ -103,14 +94,7 @@ public class DrugInteractionChecker {
         for (IngredientPair p : f.interactions()) {
             parts.add(p.levelHu() + " interakció (" + p.ingredientA() + " – " + p.ingredientB() + ")");
         }
-        if (!f.duplicates().isEmpty()) {
-            parts.add("azonos hatóanyag (" + String.join(", ", f.duplicates()) + ") — kettőzött adagolás?");
-        }
-        sb.append(String.join("; ", parts));
-        if (!f.interactions().isEmpty()) {
-            sb.append(". Forrás: ").append(SOURCE_NAME);
-        }
-        return sb.toString();
+        return sb.append(String.join("; ", parts)).append(". Forrás: ").append(SOURCE_NAME).toString();
     }
 
     private static long pairKey(int x, int y) {

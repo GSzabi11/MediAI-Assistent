@@ -6,12 +6,13 @@ frondend:
 cd frondend
 npm run dev
 
-ai:
+doc ai:
 .venv\Scripts\activate
 $env:DOC_LLM_MODEL = "medgemma:latest"
 python app.py
 .venv\Scripts\python app.py
 
+vioce ai:
 cd .\ai-service\
 cd .\voice\
 ai_env\Scripts\activate 

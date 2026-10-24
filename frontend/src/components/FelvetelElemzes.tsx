@@ -4,6 +4,7 @@ import type { FelvetelOsszefoglalo, Kulcsszo } from '../api/types';
 import { formatDatumIdo } from '../lib/format';
 import { useAkcio } from '../lib/useAkcio';
 import { useAsync } from '../lib/useAsync';
+import { useIrhato } from '../patient/EllatasKontextus';
 import { Icon } from './Icon';
 import { ErrorState, Loading } from './shell';
 
@@ -24,6 +25,7 @@ export function KulcsszoPanel({
   const [ujNyitva, setUjNyitva] = useState(false);
   const [uj, setUj] = useState('');
   const { busy, error, run } = useAkcio();
+  const irhato = useIrhato();
   const inputId = useId();
   const aktiv = kulcsszavak.filter((k) => k.allapot !== 'elutasitva');
   const elutasitott = kulcsszavak.filter((k) => k.allapot === 'elutasitva');
@@ -68,7 +70,7 @@ export function KulcsszoPanel({
                   className="chip__btn"
                   aria-label={`„${k.kifejezes}” elfogadása`}
                   onClick={() => void dont(k, true)}
-                  disabled={busy}
+                  disabled={irhato.tiltva || busy} title={irhato.title}
                 >
                   <Icon name="check" size={12} strokeWidth={2.8} />
                 </button>
@@ -77,7 +79,7 @@ export function KulcsszoPanel({
                   className="chip__btn"
                   aria-label={`„${k.kifejezes}” elutasítása`}
                   onClick={() => void dont(k, false)}
-                  disabled={busy}
+                  disabled={irhato.tiltva || busy} title={irhato.title}
                 >
                   <Icon name="x" size={12} strokeWidth={2.8} />
                 </button>
@@ -101,7 +103,7 @@ export function KulcsszoPanel({
                 onChange={(e) => setUj(e.target.value)}
                 onKeyDown={(e) => e.key === 'Escape' && setUjNyitva(false)}
               />
-              <button type="submit" className="chip__btn" aria-label="Kulcsszó mentése" disabled={busy || !uj.trim()}>
+              <button type="submit" className="chip__btn" aria-label="Kulcsszó mentése" disabled={irhato.tiltva || busy || !uj.trim()} title={irhato.title}>
                 <Icon name="check" size={12} strokeWidth={2.8} />
               </button>
               <button type="button" className="chip__btn" aria-label="Mégse" onClick={() => setUjNyitva(false)}>
@@ -114,6 +116,8 @@ export function KulcsszoPanel({
               className="chip chip--add"
               onClick={() => setUjNyitva(true)}
               aria-label="Kulcsszó hozzáadása"
+              disabled={irhato.tiltva}
+              title={irhato.title}
             >
               <Icon name="plus" size={14} strokeWidth={2.6} />
             </button>
@@ -148,6 +152,7 @@ export function FelvetelOsszefoglaloPanel({
 }) {
   const lista = useAsync(() => api.listFelvetelOsszefoglalok(felvetelId), [felvetelId]);
   const { busy, error, run } = useAkcio();
+  const irhato = useIrhato();
   const legfrissebb: FelvetelOsszefoglalo | undefined = lista.state.status === 'ok' ? lista.state.data[0] : undefined;
   const keszul = legfrissebb?.allapot === 'feldolgozas';
 
@@ -194,7 +199,7 @@ export function FelvetelOsszefoglaloPanel({
       <div className="row-baseline">
         <h3 className="h2 h2--sm">Összefoglaló</h3>
         <span className="tag tag--modell">AI · ellenőrizendő</span>
-        <button type="button" className="btn btn--sm push-right" onClick={() => void ujra()} disabled={busy || keszul}>
+        <button type="button" className="btn btn--sm push-right" onClick={() => void ujra()} disabled={irhato.tiltva || busy || keszul} title={irhato.title}>
           <Icon name="spark" size={14} />
           {legfrissebb ? 'Újragenerálás' : 'Összefoglaló készítése'}
         </button>
@@ -238,12 +243,12 @@ export function FelvetelOsszefoglaloPanel({
                   type="button"
                   className="btn btn--primary"
                   onClick={() => void ment(legfrissebb)}
-                  disabled={busy}
+                  disabled={irhato.tiltva || busy} title={irhato.title}
                 >
                   <Icon name="check" size={14} strokeWidth={2.6} />
                   {busy ? 'Mentés…' : 'Mentés'}
                 </button>
-                <button type="button" className="btn" onClick={() => setSzerkeszt(null)} disabled={busy}>
+                <button type="button" className="btn" onClick={() => setSzerkeszt(null)} disabled={irhato.tiltva || busy} title={irhato.title}>
                   Mégse
                 </button>
               </div>
@@ -294,7 +299,13 @@ export function FelvetelOsszefoglaloPanel({
           )}
           {szerkeszt === null && (
             <div className="actions">
-              <button type="button" className="btn btn--sm" onClick={() => kezdSzerkesztes(legfrissebb)}>
+              <button
+                type="button"
+                className="btn btn--sm"
+                onClick={() => kezdSzerkesztes(legfrissebb)}
+                disabled={irhato.tiltva}
+                title={irhato.title}
+              >
                 <Icon name="pencil" size={14} />
                 Szerkesztés
               </button>

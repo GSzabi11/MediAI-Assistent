@@ -64,6 +64,8 @@ export function KlinikaiStatusz() {
           </p>
         )}
 
+        <Interakciok />
+
         {state.status === 'loading' && <Loading what="Összefoglaló" />}
         {state.status === 'error' && <ErrorState error={state.error} onRetry={reload} />}
         {state.status === 'ok' && !utolso && (
@@ -154,6 +156,53 @@ function Osszefoglalo({ o }: { o: KlinikaiOsszefoglalo }) {
         Labor-idősor és a Dokumentum fül forrásaival ellenőrizd.
       </p>
     </>
+  );
+}
+
+/**
+ * Gyógyszer-interakciók: a szabálymotor meglévő állításai (MEDICATION forrás, docs/drug-interaction.md),
+ * itt nem számolunk újra. Súlyos (kritikus) piros, közepes (figyelmeztetés) borostyán; a tájékoztatók
+ * és az orvos által elutasítottak csak számként, a részletek a Gyógyszer és allergia fülön.
+ */
+function Interakciok() {
+  const { patient, allitasok } = usePatient();
+  const interakciok = allitasok.filter((a) => a.forrasok.some((f) => f.tipus === 'gyogyszer'));
+  if (interakciok.length === 0) return null;
+  const elutasitott = (a: (typeof interakciok)[number]) => a.jovahagyas?.dontes === 'elutasitva';
+  const fontos = interakciok
+    .filter((a) => a.sulyossag !== 'info' && !elutasitott(a))
+    .sort((a, b) => (a.sulyossag === 'critical' ? 0 : 1) - (b.sulyossag === 'critical' ? 0 : 1));
+  const tobbi = interakciok.length - fontos.length;
+  const reszletek = `/betegek/${patient.id}?nezet=gyogyszer`;
+
+  if (fontos.length === 0) {
+    return (
+      <p className="meta">
+        {tobbi} tájékoztató vagy elutasított gyógyszer-interakció — <Link to={reszletek}>részletek</Link>
+      </p>
+    );
+  }
+  return (
+    <section className="klinstatus__ddi" role="alert" aria-label="Gyógyszer-interakciók">
+      <span className="klinstatus__label">
+        <Icon name="alert" size={14} strokeWidth={2.4} />
+        Gyógyszer-interakció · szabály-alapú (DDInter 2.0)
+      </span>
+      <ul>
+        {fontos.map((a) => (
+          <li key={a.id} className={`ddirow ddirow--${a.sulyossag}`}>
+            <span className="ddirow__sev">{a.sulyossag === 'critical' ? 'Súlyos' : 'Közepes'}</span>
+            <span>
+              {a.ervenyesSzoveg || a.idezet || a.cim}
+              {a.jovahagyas?.dontes === 'jovahagyva' && <span className="meta"> · orvos elfogadta</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <Link to={reszletek} className="klinstatus__ddilink">
+        {tobbi > 0 ? `További ${tobbi} tájékoztató / elutasított · ` : ''}Részletek a Gyógyszer és allergia fülön
+      </Link>
+    </section>
   );
 }
 

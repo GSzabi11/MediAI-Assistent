@@ -31,16 +31,18 @@ public class DrugInteractionService {
     private final MedicationRepository medicationRepository;
     private final PatientRepository patientRepository;
     private final DrugReferenceRefresh refresh;
+    private final MedicationContext medicationContext;
 
     public DrugInteractionService(DrugReferenceRepository referenceRepository, DrugResolver resolver,
             DrugInteractionChecker checker, MedicationRepository medicationRepository,
-            PatientRepository patientRepository, DrugReferenceRefresh refresh) {
+            PatientRepository patientRepository, DrugReferenceRefresh refresh, MedicationContext medicationContext) {
         this.referenceRepository = referenceRepository;
         this.resolver = resolver;
         this.checker = checker;
         this.medicationRepository = medicationRepository;
         this.patientRepository = patientRepository;
         this.refresh = refresh;
+        this.medicationContext = medicationContext;
     }
 
     public DrugReferenceStatusResponse status() {
@@ -62,7 +64,7 @@ public class DrugInteractionService {
         boolean loaded = referenceRepository.isLoaded();
         List<DrugCoverageResponse.MedicationCoverage> rows = loaded
                 ? meds.stream().map(m -> new DrugCoverageResponse.MedicationCoverage(m.getId(), m.getName(),
-                        resolver.resolve(m.getName(), m.getActiveIngredient()))).toList()
+                        medicationContext.resolve(m))).toList()
                 : List.of();
         return new DrugCoverageResponse(loaded, rows);
     }
@@ -83,7 +85,7 @@ public class DrugInteractionService {
         int entered = items.size();
         List<DrugCheckResponse.Entry> current = new ArrayList<>();
         for (Medication m : meds) {
-            DrugResolver.Resolution r = resolver.resolve(m.getName(), m.getActiveIngredient());
+            DrugResolver.Resolution r = medicationContext.resolve(m);
             current.add(new DrugCheckResponse.Entry(m.getId(), m.getName(), r));
             items.add(new Item(m.getName(), r));
         }
@@ -97,7 +99,7 @@ public class DrugInteractionService {
             DrugCheckResponse.Entry a = f.itemA() < entered ? entries.get(f.itemA()) : current.get(f.itemA() - entered);
             DrugCheckResponse.Entry b = f.itemB() < entered ? entries.get(f.itemB()) : current.get(f.itemB() - entered);
             findings.add(new DrugCheckResponse.Finding(a.label(), a.medicationId(), b.label(), b.medicationId(),
-                    f.severity(), f.interactions(), f.duplicates(),
+                    f.severity(), f.interactions(),
                     DrugInteractionChecker.text(a.label(), b.label(), f)));
         }
         return new DrugCheckResponse(true, entries, current, findings);

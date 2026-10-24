@@ -24,14 +24,17 @@ function idoszakban(d: DokumentumListItem, e: Ellatas) {
   return d.klinikaiDatum >= kezdet && d.klinikaiDatum <= veg;
 }
 
+const NEM_AKTIV = 'Epikrízis csak az aktív ellátáshoz készíthető és szerkeszthető (Informálódás módban sem)';
+
 const valaszthato = (d: DokumentumListItem) => d.allapot === 'kesz' && d.tipus !== null && d.klinikaiDatum !== null;
 
 /**
  * Epikrízis egy ellátáshoz (docs/epicrisis.md): az orvos által kiválasztott leletekből, az ellátás
  * hangfelvételeinek átiratából és az aktuális gyógyszerekből. A fejléc (Beteg, TAJ, Dátum) az adatbázisból
  * jön; a három szakasz az AI javaslata — szerkeszthető, az eredeti megmarad, DOCX-be exportálható.
+ * Készíteni és szerkeszteni csak az aktív ellátásét lehet (docs/care-context.md); máskor csak olvasható.
  */
-export function EpikrizisPanel({ ellatas }: { ellatas: Ellatas }) {
+export function EpikrizisPanel({ ellatas, szerkesztheto }: { ellatas: Ellatas; szerkesztheto: boolean }) {
   const { patient } = usePatient();
   const { state, reload, refresh, setData } = useAsync(() => api.listEpikrizisek(patient.id), [patient.id]);
   const sajat = useMemo(
@@ -74,12 +77,15 @@ export function EpikrizisPanel({ ellatas }: { ellatas: Ellatas }) {
             type="button"
             className="btn btn--sm"
             onClick={() => void keszit()}
-            disabled={keszites.busy || keszul || state.status !== 'ok'}
+            disabled={keszites.busy || keszul || state.status !== 'ok' || !szerkesztheto}
+            title={szerkesztheto ? undefined : NEM_AKTIV}
           >
             <Icon name="doc" size={14} />
             {keszul ? 'Készül…' : kesz ? 'Újragenerálás' : 'Epikrízis készítése'}
           </button>
-          {kesz && <ExportGomb e={kesz} mentetlen={() => mentetlen.current} onSaved={frissult} />}
+          {kesz && (
+            <ExportGomb e={kesz} mentetlen={() => (szerkesztheto ? mentetlen.current : null)} onSaved={frissult} />
+          )}
         </div>
       </div>
 
@@ -100,7 +106,9 @@ export function EpikrizisPanel({ ellatas }: { ellatas: Ellatas }) {
           Az epikrízis nem készült el: {utolso.hiba}
         </p>
       )}
-      {kesz && <KeszEpikrizis key={kesz.id} e={kesz} regisztral={regisztral} onSaved={frissult} />}
+      {kesz && (
+        <KeszEpikrizis key={kesz.id} e={kesz} regisztral={regisztral} onSaved={frissult} szerkesztheto={szerkesztheto} />
+      )}
     </div>
   );
 }
@@ -123,9 +131,14 @@ function EllatasAnyagai({ ellatas }: { ellatas: Ellatas }) {
   );
 }
 
-type KeszProps = { e: Epikrizis; regisztral: (m: Mentetlen | null) => void; onSaved: (e: Epikrizis) => void };
+type KeszProps = {
+  e: Epikrizis;
+  regisztral: (m: Mentetlen | null) => void;
+  onSaved: (e: Epikrizis) => void;
+  szerkesztheto: boolean;
+};
 
-function KeszEpikrizis({ e, regisztral, onSaved }: KeszProps) {
+function KeszEpikrizis({ e, regisztral, onSaved, szerkesztheto }: KeszProps) {
   return (
     <>
       <p className="meta">
@@ -163,6 +176,7 @@ function KeszEpikrizis({ e, regisztral, onSaved }: KeszProps) {
         szerkesztve={e.szerkesztve}
         ment={async (html) => onSaved(await api.szerkesztEpikrizist(e.id, html))}
         regisztral={regisztral}
+        tiltasOka={szerkesztheto ? undefined : NEM_AKTIV}
         cimke="Epikrízis"
         fejlec={
           // az adatbázisból, nem a modelltől — nem szerkeszthető

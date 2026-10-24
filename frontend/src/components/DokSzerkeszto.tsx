@@ -25,6 +25,8 @@ type Props = {
   cimke: string;
   /** a szerkeszthető rész fölött, nem szerkeszthető tartalom (pl. az epikrízis fejléce) */
   fejlec?: ReactNode;
+  /** ha meg van adva, a Szerkesztés gomb le van tiltva, ez a tooltipje (pl. Informálódás mód) */
+  tiltasOka?: string;
 };
 
 /**
@@ -32,7 +34,7 @@ type Props = {
  * meg; a "Szerkesztés" gomb nyitja meg (contentEditable + execCommand: félkövér, dőlt, aláhúzott,
  * felsorolás, számozott lista). A mentett HTML-t a Spring szűri; az AI eredetije megmarad és megnézhető.
  */
-export function DokSzerkeszto({ id, html, aiHtml, szerkesztve, ment, regisztral, cimke, fejlec }: Props) {
+export function DokSzerkeszto({ id, html, aiHtml, szerkesztve, ment, regisztral, cimke, fejlec, tiltasOka }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [modositott, setModositott] = useState(false);
   const [eredeti, setEredeti] = useState(false);
@@ -86,7 +88,13 @@ export function DokSzerkeszto({ id, html, aiHtml, szerkesztve, ment, regisztral,
           <div className="rte__bar">
             <span className="push-right" />
             {eredetiGomb}
-            <button type="button" className="btn btn--sm btn--primary" onClick={() => setSzerkeszt(true)}>
+            <button
+              type="button"
+              className="btn btn--sm btn--primary"
+              onClick={() => setSzerkeszt(true)}
+              disabled={!!tiltasOka}
+              title={tiltasOka}
+            >
               <Icon name="pencil" size={14} />
               Szerkesztés
             </button>

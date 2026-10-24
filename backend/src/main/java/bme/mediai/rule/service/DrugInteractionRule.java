@@ -19,7 +19,7 @@ import bme.mediai.drug.persistence.DrugReferenceRepository;
 import bme.mediai.drug.service.DrugInteractionChecker;
 import bme.mediai.drug.service.DrugInteractionChecker.Item;
 import bme.mediai.drug.service.DrugInteractionChecker.PairFinding;
-import bme.mediai.drug.service.DrugResolver;
+import bme.mediai.drug.service.MedicationContext;
 import bme.mediai.medication.persistence.Medication;
 import bme.mediai.medication.persistence.MedicationRepository;
 import bme.mediai.medication.service.MedicationsChangedEvent;
@@ -48,22 +48,30 @@ public class DrugInteractionRule {
     private final MedicationRepository medicationRepository;
     private final StatementRepository statementRepository;
     private final DrugReferenceRepository referenceRepository;
-    private final DrugResolver resolver;
+    private final MedicationContext medicationContext;
     private final DrugInteractionChecker checker;
 
     public DrugInteractionRule(MedicationRepository medicationRepository, StatementRepository statementRepository,
-            DrugReferenceRepository referenceRepository, DrugResolver resolver, DrugInteractionChecker checker) {
+            DrugReferenceRepository referenceRepository, MedicationContext medicationContext,
+            DrugInteractionChecker checker) {
         this.medicationRepository = medicationRepository;
         this.statementRepository = statementRepository;
         this.referenceRepository = referenceRepository;
-        this.resolver = resolver;
+        this.medicationContext = medicationContext;
         this.checker = checker;
     }
 
-    // Minden gyógyszer-változás után, ugyanabban a tranzakcióban
+    // Minden gyógyszer-változás után, ugyanabban a tranzakcióban. A szabály hibája nem akaszthatja meg a
+    // gyógyszer mentését (pl. a dokumentum-feldolgozást): naplózzuk, és a következő indulás pótolja.
+    // (Közvetlen hívás, nem a proxyn át — így a hiba nem jelöli visszagörgetendőnek a tranzakciót.)
     @EventListener
     public void onMedicationsChanged(MedicationsChangedEvent event) {
-        reconcile(event.patientId());
+        try {
+            reconcile(event.patientId());
+        } catch (RuntimeException e) {
+            LOG.error("Interakció-szabály sikertelen, beteg {} — a gyógyszer mentése ettől még megtörténik",
+                    event.patientId(), e);
+        }
     }
 
     private record Wanted(List<Long> medicationIds, String text, PairFinding finding) {
@@ -79,7 +87,7 @@ public class DrugInteractionRule {
                 .sorted(Comparator.comparing(Medication::getId))
                 .toList();
         List<Item> items = meds.stream()
-                .map(m -> new Item(m.getName(), resolver.resolve(m.getName(), m.getActiveIngredient())))
+                .map(m -> new Item(m.getName(), medicationContext.resolve(m)))
                 .toList();
 
         Map<List<Long>, Wanted> wanted = new LinkedHashMap<>();
