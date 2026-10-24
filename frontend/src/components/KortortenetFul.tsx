@@ -256,6 +256,7 @@ function Szerkeszto({ k, regisztral, onSaved }: SzerkesztoProps) {
       regisztral={regisztral}
       tiltasOka={irhato.title}
       cimke="Anamnézis és kórtörténeti összefoglaló"
+      osszecsukhato
     />
   );
 }

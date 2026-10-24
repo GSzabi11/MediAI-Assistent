@@ -27,6 +27,8 @@ type Props = {
   fejlec?: ReactNode;
   /** ha meg van adva, a Szerkesztés gomb le van tiltva, ez a tooltipje (pl. Informálódás mód) */
   tiltasOka?: string;
+  /** összecsukható fejléc a címkével (mint a Kórtörténeti idővonal); a szerkesztő csukva is él, a mentetlen szöveg megmarad */
+  osszecsukhato?: boolean;
 };
 
 /**
@@ -34,8 +36,20 @@ type Props = {
  * meg; a "Szerkesztés" gomb nyitja meg (contentEditable + execCommand: félkövér, dőlt, aláhúzott,
  * felsorolás, számozott lista). A mentett HTML-t a Spring szűri; az AI eredetije megmarad és megnézhető.
  */
-export function DokSzerkeszto({ id, html, aiHtml, szerkesztve, ment, regisztral, cimke, fejlec, tiltasOka }: Props) {
+export function DokSzerkeszto({
+  id,
+  html,
+  aiHtml,
+  szerkesztve,
+  ment,
+  regisztral,
+  cimke,
+  fejlec,
+  tiltasOka,
+  osszecsukhato,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const [nyitva, setNyitva] = useState(true);
   const [modositott, setModositott] = useState(false);
   const [eredeti, setEredeti] = useState(false);
   // olvasási nézet az alapértelmezés; mentés után a hívó key-je újraindítja → ismét olvasási nézet
@@ -83,91 +97,109 @@ export function DokSzerkeszto({ id, html, aiHtml, szerkesztve, ment, regisztral,
 
   return (
     <section className="kortortenet__card" aria-label={cimke}>
-      {!szerkeszt && (
-        <div className="rte">
-          <div className="rte__bar">
-            <span className="push-right" />
-            {eredetiGomb}
-            <button
-              type="button"
-              className="btn btn--sm btn--primary"
-              onClick={() => setSzerkeszt(true)}
-              disabled={!!tiltasOka}
-              title={tiltasOka}
-            >
-              <Icon name="pencil" size={14} />
-              Szerkesztés
-            </button>
-          </div>
-          {fejlec}
-          {/* a Spring által előállított (escape-elt) vagy szűrt HTML */}
-          <div className="rte__body kortortenet__doc" dangerouslySetInnerHTML={{ __html: html }} />
-        </div>
-      )}
-      {szerkeszt && (
-        <div className="rte">
-          <div className="rte__bar" role="toolbar" aria-label="Formázás">
-            {ESZKOZOK.map((e, i) => (
-              <button
-                key={e.parancs}
-                type="button"
-                className={`rte__btn ${e.className ?? ''}${i === 3 ? ' rte__btn--sep' : ''}`}
-                title={e.cimke}
-                aria-label={e.cimke}
-                // mousedown: a kijelölés ne vesszen el a gombra kattintáskor
-                onMouseDown={(ev) => {
-                  ev.preventDefault();
-                  parancs(e.parancs);
-                }}
-              >
-                {e.jel}
-              </button>
-            ))}
-            <span className="push-right" />
-            {eredetiGomb}
-            <button type="button" className="btn btn--sm" onClick={visszaallit} title="Az AI szövegére">
-              Visszaállítás
-            </button>
-            <button type="button" className="btn btn--sm" onClick={megse}>
-              Mégse
-            </button>
-            <button
-              type="button"
-              className="btn btn--sm btn--primary"
-              onClick={() => void mentes_()}
-              disabled={!modositott || mentes.busy}
-            >
-              <Icon name="check" size={14} />
-              {mentes.busy ? 'Mentés…' : modositott ? 'Mentés' : 'Mentve'}
-            </button>
-          </div>
-          {fejlec}
-          <div
-            ref={ref}
-            className="rte__body kortortenet__doc"
-            contentEditable
-            suppressContentEditableWarning
-            role="textbox"
-            aria-multiline="true"
-            aria-label={`${cimke} (szerkeszthető)`}
-            spellCheck
-            onInput={() => setModositott(true)}
-          />
-        </div>
-      )}
-      {mentes.error && (
-        <p className="form-error" role="alert">
-          {mentes.error}
-        </p>
-      )}
-      {eredeti && (
-        <div className="kortortenet__orig">
-          <span className="klinstatus__label">
-            <Icon name="spark" size={12} /> Az AI eredeti szövege (nem szerkeszthető)
+      {osszecsukhato && (
+        <button
+          type="button"
+          className="kortortenet__tlhead"
+          aria-expanded={nyitva}
+          onClick={() => setNyitva((v) => !v)}
+        >
+          <Icon name="doc" size={18} />
+          <span className="kortortenet__tltitle">{cimke}</span>
+          {modositott && <span className="kortortenet__count">mentetlen</span>}
+          <span className="push-right" aria-hidden="true">
+            <Icon name={nyitva ? 'chevronUp' : 'chevronDown'} size={16} />
           </span>
-          <div className="kortortenet__doc" dangerouslySetInnerHTML={{ __html: aiHtml }} />
-        </div>
+        </button>
       )}
+      {/* hidden, nem levétel: a contentEditable tartalma és a regisztrált mentetlen szöveg csukva is megmarad */}
+      <div className="kortortenet__body" hidden={!nyitva}>
+        {!szerkeszt && (
+          <div className="rte">
+            <div className="rte__bar">
+              <span className="push-right" />
+              {eredetiGomb}
+              <button
+                type="button"
+                className="btn btn--sm btn--primary"
+                onClick={() => setSzerkeszt(true)}
+                disabled={!!tiltasOka}
+                title={tiltasOka}
+              >
+                <Icon name="pencil" size={14} />
+                Szerkesztés
+              </button>
+            </div>
+            {fejlec}
+            {/* a Spring által előállított (escape-elt) vagy szűrt HTML */}
+            <div className="rte__body kortortenet__doc" dangerouslySetInnerHTML={{ __html: html }} />
+          </div>
+        )}
+        {szerkeszt && (
+          <div className="rte">
+            <div className="rte__bar" role="toolbar" aria-label="Formázás">
+              {ESZKOZOK.map((e, i) => (
+                <button
+                  key={e.parancs}
+                  type="button"
+                  className={`rte__btn ${e.className ?? ''}${i === 3 ? ' rte__btn--sep' : ''}`}
+                  title={e.cimke}
+                  aria-label={e.cimke}
+                  // mousedown: a kijelölés ne vesszen el a gombra kattintáskor
+                  onMouseDown={(ev) => {
+                    ev.preventDefault();
+                    parancs(e.parancs);
+                  }}
+                >
+                  {e.jel}
+                </button>
+              ))}
+              <span className="push-right" />
+              {eredetiGomb}
+              <button type="button" className="btn btn--sm" onClick={visszaallit} title="Az AI szövegére">
+                Visszaállítás
+              </button>
+              <button type="button" className="btn btn--sm" onClick={megse}>
+                Mégse
+              </button>
+              <button
+                type="button"
+                className="btn btn--sm btn--primary"
+                onClick={() => void mentes_()}
+                disabled={!modositott || mentes.busy}
+              >
+                <Icon name="check" size={14} />
+                {mentes.busy ? 'Mentés…' : modositott ? 'Mentés' : 'Mentve'}
+              </button>
+            </div>
+            {fejlec}
+            <div
+              ref={ref}
+              className="rte__body kortortenet__doc"
+              contentEditable
+              suppressContentEditableWarning
+              role="textbox"
+              aria-multiline="true"
+              aria-label={`${cimke} (szerkeszthető)`}
+              spellCheck
+              onInput={() => setModositott(true)}
+            />
+          </div>
+        )}
+        {mentes.error && (
+          <p className="form-error" role="alert">
+            {mentes.error}
+          </p>
+        )}
+        {eredeti && (
+          <div className="kortortenet__orig">
+            <span className="klinstatus__label">
+              <Icon name="spark" size={12} /> Az AI eredeti szövege (nem szerkeszthető)
+            </span>
+            <div className="kortortenet__doc" dangerouslySetInnerHTML={{ __html: aiHtml }} />
+          </div>
+        )}
+      </div>
     </section>
   );
 }

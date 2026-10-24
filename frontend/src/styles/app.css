@@ -2940,6 +2940,14 @@ select.input {
 }
 
 /* idővonal */
+.kortortenet__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kortortenet__body[hidden] {
+  display: none;
+}
 .kortortenet__tlhead {
   display: flex;
   align-items: center;

@@ -89,6 +89,7 @@ DIGEST_VERSION = 3
 QUOTE_MATCH = 0.85
 DIGEST_MAX_TOKENS = 1500
 MAX_RECOMMENDATIONS = 6
+RECS_MAX_TOKENS = 800
 LAB_TEXT_MAX = 6  # laborleletenként ennyi eltérés kerül az idővonal szövegébe
 
 _DATE = re.compile(r"^\d{4}(-\d{2}-\d{2})?$")
@@ -490,8 +491,9 @@ def build(facts: dict, progress=None) -> dict:
                                              "korábbi események az idővonalon láthatók.", False, "")
         summary_warnings = []
     report("Javaslatok", total, total, config.HISTORY_LLM_MODEL)
-    recs_text, cut2 = _stream(SYSTEM_RECOMMENDATIONS, "A beteg kórtörténetének tényei:\n\n" + facts_text, 450,
-                              _loop_start)
+    # 6 egymondatos magyar javaslat ~600 token: a korábbi 450-es korlát (becslés szerint) a 6. javaslatot levágta
+    recs_text, cut2 = _stream(SYSTEM_RECOMMENDATIONS, "A beteg kórtörténetének tényei:\n\n" + facts_text,
+                              RECS_MAX_TOKENS, _loop_start)
     recommendations = []
     for r in _parse_list(recs_text):
         if suspicious(r):
@@ -508,9 +510,15 @@ def build(facts: dict, progress=None) -> dict:
         if kept:
             paragraphs.append(kept)
     summary = "\n\n".join(paragraphs)
-    if cut1 or cut2 or repeated:
-        warnings.append("A modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a szöveg az utolsó teljes "
-                        "mondatnál le lett zárva")
+    # részenként, hogy kiderüljön, melyik szöveg csonkult
+    if cut1:
+        warnings.append("Összefoglaló: a modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a szöveg az "
+                        "utolsó teljes mondatnál le lett zárva")
+    if cut2:
+        warnings.append("Javaslatok: a modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a félbemaradt "
+                        "javaslat kimaradt")
+    if repeated:
+        warnings.append(f"Összefoglaló: {repeated} ismétlődő mondat elhagyva")
     if s := suspicious(summary):
         warnings.append("Összefoglaló: " + s)
     if summary_warnings is None:
