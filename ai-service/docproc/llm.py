@@ -11,7 +11,7 @@ import re
 import requests
 
 import config
-from textutil import join_wrapped
+from textutil import anchor_span, find_span, join_wrapped
 
 LAB_SYSTEM = """Magyar nyelvű orvosi laboratóriumi leletből nyersz ki adatokat.
 Szabályok:
@@ -142,6 +142,7 @@ def prompt_hash(doc_type: str) -> str:
     payload = json.dumps({"system": system, "schema": schema, "extractor": config.EXTRACTOR_VERSION,
                           "lab_segment_rows": LAB_SEGMENT_ROWS if doc_type == "LAB" else None,
                           "ambulance_segment_chars": AMBULANCE_SEGMENT_CHARS if doc_type == "AMBULANCE" else None,
+                          "segment_continuations": SEGMENT_CONTINUATIONS if doc_type == "AMBULANCE" else None,
                           "max_output_tokens": config.LLM_MAX_OUTPUT_TOKENS},
                          ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
@@ -226,34 +227,71 @@ def extract(doc_type: str, text: str) -> tuple[dict, list[str]]:
     a dátum az első szakasz nem üres dátuma (a worker úgyis a teljes szövegen ellenőrzi)."""
     if doc_type == "AMBULANCE":
         return _extract_segmented(doc_type, ambulance_segments(text), "adatok",
-                                  lambda item: str(item.get("idezet")).casefold())
+                                  lambda item: str(item.get("idezet")).casefold(), _ambulance_rest)
     if doc_type != "LAB":
-        return _chat(doc_type, compact(text))
+        data, warnings, _ = _chat(doc_type, compact(text))
+        return data, warnings
     return _extract_segmented(doc_type, lab_segments(join_wrapped(text)), "eredmenyek",
                               lambda row: (str(row.get("nev")).casefold(), str(row.get("ertek"))))
 
 
-def _extract_segmented(doc_type: str, segments: list[str], array_key: str, item_key) -> tuple[dict, list[str]]:
+def _extract_segmented(doc_type: str, segments: list[str], array_key: str, item_key,
+                       rest_of=None) -> tuple[dict, list[str]]:
+    """`rest_of(szakasz, adat)`: ha a modell a szakasz közepén elakadt (hurok, tokenkorlát), a szakasz
+    fel nem dolgozott maradéka — ez újra a modellhez megy (legfeljebb SEGMENT_CONTINUATIONS-ször)."""
     warnings: list[str] = []
     merged: dict = {"datum": None, array_key: []}
     seen: set = set()
     for i, segment in enumerate(segments, 1):
-        data, w = _chat(doc_type, compact(segment))
-        warnings.extend(f"{i}/{len(segments)}. szakasz: {x}" for x in w)
-        if merged["datum"] is None and data.get("datum"):
-            merged["datum"] = data["datum"]
-        for item in data.get(array_key) or []:
-            key = item_key(item) if isinstance(item, dict) else None
-            if key and key not in seen:
-                seen.add(key)
-                merged[array_key].append(item)
+        part = compact(segment)
+        for attempt in range(SEGMENT_CONTINUATIONS + 1):
+            data, w, cut = _chat(doc_type, part)
+            warnings.extend(f"{i}/{len(segments)}. szakasz: {x}" for x in w)
+            if merged["datum"] is None and data.get("datum"):
+                merged["datum"] = data["datum"]
+            for item in data.get(array_key) or []:
+                key = item_key(item) if isinstance(item, dict) else None
+                if key and key not in seen:
+                    seen.add(key)
+                    merged[array_key].append(item)
+            rest = rest_of(part, data) if cut and rest_of and attempt < SEGMENT_CONTINUATIONS else None
+            if rest is None:
+                break
+            warnings.append(f"{i}/{len(segments)}. szakasz: az elakadás utáni részt ({len(rest)} karakter) "
+                            f"újra elküldtük a modellnek")
+            part = rest
     return merged, warnings
 
 
-def _chat(doc_type: str, text: str) -> tuple[dict, list[str]]:
+# Ha a modell egy ambuláns szakasz közepén hurokba esett vagy elérte a tokenkorlátot, a hurok utáni
+# elemek (a lap végén álló gyógyszerlista, diagnózisok) elvesztek. Az Ollama 0.40-re frissítése óta
+# (2026-10-23; a gemma3-at azóta a llama.cpp futtatja) a 4B-s modell gyakrabban esik hurokba, és egy
+# elemként idéz egész bekezdést — a 10-14-i állapothoz képest kevesebb gyógyszer és panasz jött ki.
+# Ezért a szakasz maradékát (az utolsó visszakereshető idézet utáni részt) újra elküldjük.
+SEGMENT_CONTINUATIONS = 2
+_MIN_REST_CHARS = 60
+
+
+def _ambulance_rest(part: str, data: dict) -> str | None:
+    """A szakasz része az utolsó, a szakaszban megtalált idézet vége után; None, ha nincs érdemi
+    maradék, vagy a modell egyetlen visszakereshető idézetet sem adott (különben ugyanazt küldenénk)."""
+    end = 0
+    for item in data.get("adatok") or []:
+        quote = str(item.get("idezet") or "").strip() if isinstance(item, dict) else ""
+        span = (find_span(part, quote) or anchor_span(part, quote)) if quote else None
+        if span:
+            end = max(end, span[1])
+    rest = part[end:].lstrip(" \t.,;:)/")
+    if end == 0 or sum(c.isalnum() for c in rest) < _MIN_REST_CHARS:
+        return None
+    return rest
+
+
+def _chat(doc_type: str, text: str) -> tuple[dict, list[str], bool]:
     """Egy Ollama-hívás, streamelve. Ha a modell egy már kiadott elemet ismétel (hurok), vagy
     eléri a tokenkorlátot, a hívás leáll, és a hurok / csonkolás előtti teljes elemek
-    maradnak meg — figyelmeztetéssel, nem 10 perces időtúllépéssel."""
+    maradnak meg — figyelmeztetéssel, nem 10 perces időtúllépéssel. A harmadik érték: elakadt-e
+    (hurok / tokenkorlát), azaz lehet-e még fel nem dolgozott rész a szövegben."""
     system, schema = PROMPTS[doc_type]
     key_re = _ITEM_KEY[doc_type]
     out = ""
@@ -303,17 +341,17 @@ def _chat(doc_type: str, text: str) -> tuple[dict, list[str]]:
     warnings: list[str] = []
     if cut_at is not None:
         warnings.append("A modell ismétlő hurokba esett; a hurok előtti elemeket használtuk fel")
-        return _repair(out[:cut_at], doc_type), warnings
+        return _repair(out[:cut_at], doc_type), warnings, True
     if done_reason == "length":
         warnings.append("A modell kimenete elérte a tokenkorlátot; a csonka utolsó elem kimaradt")
-        return _repair(out, doc_type), warnings
+        return _repair(out, doc_type), warnings, True
     try:
         data = json.loads(out)
     except json.JSONDecodeError as e:
         raise ValueError(f"A modell kimenete nem érvényes JSON: {e}") from e
     if not isinstance(data, dict):
         raise ValueError("A modell kimenete nem JSON-objektum")
-    return data, warnings
+    return data, warnings, False
 
 
 def _repair(partial: str, doc_type: str) -> dict:

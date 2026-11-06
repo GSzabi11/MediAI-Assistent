@@ -225,7 +225,7 @@ function UjKutatas({ onIndit }: { onIndit: (id: number) => void }) {
           value={kifejezes}
           maxLength={1000}
           onChange={(e) => setKifejezes(e.target.value)}
-          placeholder="Pl. (Heart Failure[MeSH Terms] OR Heart Failure[tiab]) AND SGLT2 inhibitors[tiab]"
+          placeholder="Pl. (Heart Failure[MeSH Terms] OR Heart Failure) AND SGLT2 inhibitors"
         />
         <KeresoFogalmak kifejezes={kifejezes} onChange={setKifejezes} />
         <p className="meta kutatas__kimeno">
@@ -400,10 +400,20 @@ function Talalatok({ k, onValtozas }: { k: Kutatas; onValtozas: () => void }) {
     void run(() => api.ertekelCikkeket(k.id, ids)).then(() => refresh().catch(() => {}));
   }, [adat, rangsorol, run, k.id, refresh]);
 
+  // a fejléc darabszámai („N értékelve”) a kutatásból jönnek, amit a szülő csak keresés / rangsorolás közben
+  // frissít: az értékelések alatt és végén is újratöltjük (enélkül „0 értékelve” maradt, 2026-10-26)
+  const onValtozasRef = useRef(onValtozas);
+  onValtozasRef.current = onValtozas;
   useEffect(() => {
     if (!varakozik) return;
-    const t = setInterval(() => refresh().catch(() => {}), 3000);
-    return () => clearInterval(t);
+    const t = setInterval(() => {
+      refresh().catch(() => {});
+      onValtozasRef.current();
+    }, 3000);
+    return () => {
+      clearInterval(t);
+      onValtozasRef.current();
+    };
   }, [varakozik, refresh]);
 
   async function modosit(c: Cikk, m: { kivett?: boolean; konyvjelzo?: boolean }) {

@@ -1,0 +1,44 @@
+== Betöltött referenciaadat
+ source  |               version_label               | row_count |          imported_at          
+---------+-------------------------------------------+-----------+-------------------------------
+ ATC_MAP | ATC-név + RxNorm + kézi szinonima         |      2637 | 2026-10-24 11:25:12.479668+00
+ DDINTER | DDInter 2.0                               |    234981 | 2026-10-24 11:25:12.479668+00
+ PUPHA   | PUPHA 20261101 v3 (PUPHA_20261101_v3.zip) |     44281 | 2026-10-24 11:25:12.479668+00
+(3 rows)
+
+== Forgalomban lévő ATC-kódok és DDInter-hatóanyaggal rendelkezők
+ forgalomban_atc | ddinter_adattal | szazalek 
+-----------------+-----------------+----------
+            1350 |             860 |     63.7
+(1 row)
+
+== Ugyanez termékszinten (forgalomban lévő kiszerelések)
+ forgalomban_termek | ddinter_adattal | szazalek 
+--------------------+-----------------+----------
+               7565 |            4088 |     54.0
+(1 row)
+
+== A megfeleltetés forrása (forgalomban lévő ATC-kódokra)
+  origin  | atc_kod 
+----------+---------
+ ATC_NAME |     754
+ RXNORM   |     107
+ ALIAS    |      15
+(3 rows)
+
+== Ismert interakciós párok a referenciaadatban (szúrópróba; a súlyosság a DDInter besorolása)
+         a         |       b        | mindketto_ismert |  szint  
+-------------------+----------------+------------------+---------
+ Simvastatin       | Clarithromycin | t                | Major
+ Clopidogrel       | Omeprazole     | t                | Major
+ Warfarin          | Amiodarone     | t                | Major
+ Digoxin           | Amiodarone     | t                | Major
+ Acenocoumarol     | Ibuprofen      | t                | Unknown
+ Lithium carbonate | Ibuprofen      | t                | Major
+ Tramadol          | Sertraline     | t                | Major
+ Acetaminophen     | Amoxicillin    | t                | Unknown
+ Ramipril          | Spironolactone | t                | Major
+ Methotrexate      | Trimethoprim   | t                | Major
+ Sildenafil        | Nitroglycerin  | t                | Major
+(11 rows)
+

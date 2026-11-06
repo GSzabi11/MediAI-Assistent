@@ -1,0 +1,2598 @@
+[
+  {
+    "patient": "hf",
+    "model": "qwen3.5:9b",
+    "context": "Szívelégtelenség csökkent ejekciós frakcióval (EF 30%), NYHA III. 2-es típusú diabetes mellitus, metforminnal; HbA1c 8,1%. Krónikus vesebetegség, eGFR 48 ml/perc/1,73 m². Jelenlegi kezelés: ramipril, bisoprolol, spironolakton, furoszemid. Nyitott kérdés: SGLT2-gátló bevezetése.",
+    "query": "(Heart Failure[MeSH Terms] OR Heart Failure OR heart failure with reduced ejection fraction) AND (Diabetes Mellitus, Type 2 OR type 2 diabetes OR Chronic Kidney Disease)",
+    "query_seconds": 15.38,
+    "search_seconds": [
+      6.59,
+      5.1,
+      5.08
+    ],
+    "total_found": 29547,
+    "articles_n": 50,
+    "with_abstract": 50,
+    "rank_seconds": 192.99,
+    "ranking": {
+      "status": "DONE",
+      "screened": [
+        {
+          "articleId": "39963952",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "38770818",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "38899545",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "41161687",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "37439548",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "38775253",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "40326569",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "25733495",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "33332584",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "37916745",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "23076940",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "36645291",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "36005278",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "32103487",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "32519776",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "34693515",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "38018702",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "19588353",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "27243372",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "34905228",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "26020622",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "30246878",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "27749986",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "40162571",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "29953167",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "32865377",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42896043",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "39222642",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42685090",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "34775784",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42764312",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "35762322",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42906951",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "30605420",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42730804",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "38771475",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42593559",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "34216571",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42819943",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "39217553",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42644019",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "36216487",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42667546",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "38768620",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42568490",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "37344038",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42790283",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "36030328",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42740951",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "40355922",
+          "relevance": "LOW"
+        }
+      ],
+      "picks": [
+        {
+          "articleId": "32865377",
+          "reason": "Ez a NEJM-ben megjelent RCT közvetlenül az empagliflozin hatását vizsgálja csökkent ejekciós frakcióval (EF ≤40%) és NYHA III. stádiumú szívelégtelenségben szenvedő betegeken, pontosan olyan populációban, mint a vizsgált beteg, ráadásul diabetes-független eredményeket is tartalmaz."
+        },
+        {
+          "articleId": "38768620",
+          "reason": "A Lancet Diabetes & Endocrinology-ben megjelent 2024-es metaanalízis friss összefoglalóként értékeli az SGLT2-gátlók hatását a szív- és vesebetegségek spektrumán, beleértve a krónikus vesebetegséget is, ami releváns a beteg eGFR 48-es értéke miatt."
+        },
+        {
+          "articleId": "38771475",
+          "reason": "Ez a 2024-es metaanalízis az empagliflozin biztonságosságát vizsgálja négy nagy klinikai vizsgálat adatainak egyesítésével, ami fontos kiegészítő információ a terápiás döntéshez, különösen vesebetegségben szenvedő betegeknél."
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "qwen3.5:9b",
+        "seed": 42,
+        "promptHash": "be594a7aa6309f363e6dfa25df9fdf844ba46e2c8638f8d31910bdb7c54362d0"
+      }
+    },
+    "evaluations": [
+      {
+        "pmid": "32865377",
+        "title": "Cardiovascular and Renal Outcomes with Empagliflozin in Heart Failure.",
+        "year": 2020,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 10.14,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg szívelégtelenségét (EF 30%, NYHA III) és krónikus vesebetegségét (eGFR 48) kezeli, sőt, az absztrakt kifejezetten említi, hogy a hatás független a diabetes jelenlététől, ami ideális a beteg profiljához.",
+        "summary": "A tanulmány egy randomizált kontrollált vizsgálat volt, amelyben empagliflozin (SGLT2-gátló) hatását értékelték szívelégtelen betegekben csökkent ejekciós frakcióval. Az eredmények azt mutatták, hogy a gyógyszer jelentősen csökkenti a szívbetegség miatti kórházbeutalások és kardiovaszkuláris halál kockázatát cukorbetegek és nem cukorbetegek egyaránt, továbbá lassítja a vesefunkció romlását.",
+        "warnings": []
+      },
+      {
+        "pmid": "38768620",
+        "title": "Effect of SGLT2 inhibitors on heart failure outcomes and cardiovascular death across the cardiometabolic disease spectrum: a systematic review and meta-analysis.",
+        "year": 2024,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 10.23,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg szívelégtelenségével (EF 30%), cukorbetegségével és veseelégtelenségével egyidejűleg foglalkozik, megerősítve az SGLT2-gátlók használatának indokoltságát ezen állapotok kombinációjában.",
+        "summary": "A rendszeres áttekintés és metaanalízis kimutatta, hogy az SGLT2-gátlók jelentősen csökkentik a szívelégtelenség első kórházi felvételének (29%) és a kardiovaszkuláris halál (14%) kockázatát szívelégtelen betegeknél. A hatás hasonló mértékű volt 2-es típusú cukorbetegségben és krónikus vesebetegségben szenvedő pácienseknél is, függetlenül a vizsgált alcsoportok többségétől.",
+        "warnings": []
+      },
+      {
+        "pmid": "38771475",
+        "title": "Safety of Empagliflozin: An Individual Participant-Level Data Meta-Analysis from Four Large Trials.",
+        "year": 2024,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 13.58,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns a beteg esetében, mivel az empagliflozin biztonságosságát vizsgálja olyan populációban, amely tartalmazza a beteg fő diagnózisait: szívelégtelenséget (HF), krónikus vesebetegséget (CKD) és 2-es típusú cukorbetegséget. A metaelemzés kifejezetten említi, hogy a biztonság nem változik alacsony eGFR-vel vagy szívbetegséggel rendelkező betegeknél sem, ami támogatja az orvos SGLT2-gátló bevezetését a jelenlegi terápiához képest.",
+        "summary": "A metaelemzés adatai megerősítik az empagliflozin biztonságosságát és jól tűrhetőségét hosszú távú használat esetén, beleértve a szív- és vesebetegségben szenvedő betegeket is. A vizsgálatok (EMPA-REG OUTCOME, EMPEROR-Reduced/Preserved, EMPA-KIDNEY) eredményei szerint a súlyos mellékhatások aránya hasonló volt az empagliflozin-csoportban és a placebo-csoportban, kivéve néhány specifikus esetet, mint például a nőknél gyakoribb húgyúti fertőzések vagy enyhe ketoacidózis. A készítmény nem növeli a súlyos hipoglikémia, csonttörés vagy lábszárvágás kockázatát.",
+        "warnings": []
+      },
+      {
+        "pmid": "38770818",
+        "title": "Sodium-glucose co-transporter protein 2 (SGLT2) inhibitors for people with chronic kidney disease and diabetes.",
+        "year": 2024,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 11.17,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg krónikus vesebetegséggel (eGFR 48) és 2-es típusú cukorbetegséggel rendelkezik, így az elemzés eredményei alátámasztják az SGLT2-gátló bevezetésének indoklását a jelenlegi terápiás háttér mellett.",
+        "summary": "A Cochrane áttekintés és metaanalízis 53 randomizált kontrollált tanulmány adatai alapján megerősíti, hogy SGLT2-gátlók alkalmazása cukorbetegségben szenvedő krónikus vesebetegségben (CKD) szenvedőkön csökkenti az összes halálozást, a szív- és érrendszeri események kockázatát, valamint a vesefelérgődést. A vizsgált populáció magában foglalja a CKD minden szakaszát, beleértve a metforminnal kezelt 2-es típusú cukorbetegségben szenvedőket is.",
+        "warnings": []
+      },
+      {
+        "pmid": "34693515",
+        "title": "Dipeptidyl peptidase-4 inhibitors, glucagon-like peptide 1 receptor agonists and sodium-glucose co-transporter-2 inhibitors for people with cardiovascular disease: a network meta-analysis.",
+        "year": 2021,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 11.91,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg szívelégtelenségben (NYHA III) és cukorbetegségben szenved, így az SGLT2-gátlók által igazolt HF-kórházba kerülés csökkenése és a vesefunkció védelme (eGFR 48 ml/perc) szempontjából kulcsfontosságú döntési tényező a jelenlegi terápiához.",
+        "summary": "A hálózatos metaanalízis kimutatta, hogy az SGLT2-gátlók jelentősen csökkentik a szívizomelégtelenség (HF) kórházi ápolásának kockázatát és javítják a kardiovaszkuláris túlélést. A GLP-1 receptor agonisták is csökkenthetik az érrendszeri halálozást, míg a DPP4-gátlók nem mutatnak hatékonyságot ezen területeken. Az SGLT2-gátlóknak nincs negatív hatása a vesefunkcióra vagy hipoglikémiára.",
+        "warnings": []
+      },
+      {
+        "pmid": "30246878",
+        "title": "Insulin and glucose-lowering agents for treating people with diabetes and chronic kidney disease.",
+        "year": 2018,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 10.38,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg esetében az SGLT2-gátlók bevezetését fontolgatják; a tanulmány konkrétan elemzi ezeket a gyógyszereket krónikus vesebetegségben (eGFR < 60), ami összhangban van a beteg jelenlegi állapotával (eGFR 48).",
+        "summary": "A metaelemzés azt vizsgálta, hogy a cukorcsökkentő szerek hatékonysága és biztonsága hogyan nyilvánul meg diabéteszes krónikus vesebetegségben (CKD). Az eredmények szerint az SGLT2-gátlók valószínűleg csökkentik a vérnyomást és a szívizominfarktus kockázatát, miközben növelhetik a nemi szervi fertőzések esélyét és enyhén emelhetik a kreatinin szintet.",
+        "warnings": []
+      },
+      {
+        "pmid": "42730804",
+        "title": "Clinical Evidence of Cardioprotective Effects of SGLT2 Inhibitors.",
+        "year": 2026,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 12.18,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg szívelégtelenségét (EF 30%) és krónikus vesebetegségét (eGFR 48) egyaránt támogatja az SGLT2-gátlók bevezetése, továbbá a 2-es típusú cukorbetegség jelenléte is összhangban van a vizsgált populációval. Az absztraktban említett tanulmányok eredményei alátámasztják a terápiás döntés indokoltságát ebben az esetben.",
+        "summary": "A cikk áttekinti az SGLT2-gátlók kardioprotektív hatását a szív-érrendszeri, vese- és metabolikus szindrómában. A nagy létszámú klinikai vizsgálatok (pl. EMPEROR-Reduced, DAPA-HF) kimutatták, hogy ezek a gyógyszerek jelentősen csökkentik a szívelégtelenség súlyosbodását és a szív-érrendszeri halált EF-spektrumon átívelően, beleértve a csökkent ejekciós frakciójú (HFrEF) betegek körében is. A vesebetegségben szenvedőknél szintén lassítják a betegség progresszióját.",
+        "warnings": []
+      },
+      {
+        "pmid": "34216571",
+        "title": "SGLT2 inhibitors and GLP-1 receptor agonists: established and emerging indications.",
+        "year": 2021,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 12.61,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns a beteg esetében, mivel kifejezetten az SGLT2-gátlók használatát vizsgálja szívelégtelenség (csökkent ejekciós frakció) és krónikus vesebetegség esetén, ami pontosan a beteg jelenlegi állapotához és az orvos nyitott kérdéséhez kapcsolódik. Az absztraktban szereplő információk alátámasztják az SGLT2-gátló bevezetésének indoklását ebben a klinikai képen.",
+        "summary": "A cikk áttekinti az SGLT2-gátlók és GLP-1 receptor agonisták szerepét a 2-es típusú cukorbetegségben szenvedő betegeknél, kiemelve szív- és vesevédelmi előnyöiket. Az adatok szerint az SGLT2-gátlók csökkentik a szívelégtelenség kórházi felvételének kockázatát és javítják a túlélést, míg a GLP-1 agonisták elsősorban magas szívbetegség-kockázatúaknál javasoltak. A tanulmány hangsúlyozza, hogy ezek az anyagok ma már másodlagos vagy akár elsődleges cukorszabályozó terápiák lehetnek szív- és vesebetegségben szenvedőknél.",
+        "warnings": []
+      },
+      {
+        "pmid": "42568490",
+        "title": "Incretin analogues as cardiovascular agents: a state-of-the-art review.",
+        "year": 2026,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 11.85,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg 2-es típusú diabetes mellitusban és krónikus vesebetegségben szenved (eGFR 48), így az incretin-analógok használatának kardiovaszkuláris előnyei és a vesebarát hatásuk szempontjából fontosak lehetnek az SGLT2-gátló bevezetésének alternatívájaként vagy kiegészítéseként. Azonban a cikk nem specifikusan az SGLT2-gátlókra fókuszál, hanem szélesebb körű áttekintést nyújt más cukorcsökkentő gyógyszerekre is.",
+        "summary": "A cikk áttekinti az incretin-analógok (GLP-1 receptor agonisták és tirzepatid) kardiovaszkuláris előnyeit, beleértve a szívizomfunkció javítását és a vesebetegség kockázatának csökkentését. A tanulmány összegzi az eddigi klinikai bizonyítékokat öt különböző klinikai forgatókönyvben, köztük a 2-es típusú cukorbetegséggel és krónikus vesebetegséggel járó esetekben, valamint elemzi a globális hozzáférhetőségi kihívásokat.",
+        "warnings": []
+      },
+      {
+        "pmid": "37344038",
+        "title": "Effect of SGLT2 Inhibitors on Cardiovascular Outcomes Across Various Patient Populations.",
+        "year": 2023,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 12.34,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg szívelégtelenségével (EF 30%), cukorbetegségével és veseelégtelenségével (eGFR 48) pontosan azt a három komorbiditás kombinációját képviseli, amelyre a tanulmány rákérdezett. Az absztrakt szerint az SGLT2-gátlók előnye konzisztens ilyen betegeknél is, ami alapot adhat a terápia bevezetésének indoklásához.",
+        "summary": "A metaelemzés azt vizsgálta, hogy az SGLT2-gátlók hatása a szívelégtelenség (HF), a 2-es típusú cukorbetegség (T2DM) és a krónikus vesebetegség (CKD) különböző kombinációiban szenvedő betegekre. A tanulmány 13 randomizált kontrollált vizsgálatot (összesen 90 413 beteg) elemzett, és kimutatta, hogy az SGLT2-gátlók jelentősen csökkentik a szívelégtelenség kórházi felvételét vagy kardiovaszkuláris halált mindhárom betegségcsoportban, függetlenül attól, hogy a beteg egyben több komorbiditással is rendelkezik-e.",
+        "warnings": [
+          "Ellenőrizetlen szám az összefoglalóban: 13 (nem szerepel az absztraktban)",
+          "Ellenőrizetlen szám az összefoglalóban: 90 (nem szerepel az absztraktban)",
+          "Ellenőrizetlen szám az összefoglalóban: 413 (nem szerepel az absztraktban)"
+        ]
+      }
+    ],
+    "articles": [
+      {
+        "pmid": "39963952",
+        "title": "Glucagon-like peptide 1 (GLP-1) receptor agonists for people with chronic kidney disease and diabetes.",
+        "pubYear": 2025,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 1,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "38770818",
+        "title": "Sodium-glucose co-transporter protein 2 (SGLT2) inhibitors for people with chronic kidney disease and diabetes.",
+        "pubYear": 2024,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 2,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "38899545",
+        "title": "Peritoneal dialysis versus haemodialysis for people commencing dialysis.",
+        "pubYear": 2024,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 3,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "41161687",
+        "title": "Tirzepatide for adults living with obesity.",
+        "pubYear": 2025,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 4,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "37439548",
+        "title": "First-line diuretics versus other classes of antihypertensive drugs for hypertension.",
+        "pubYear": 2023,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 5,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "38775253",
+        "title": "Continuous infusion versus bolus injection of loop diuretics for acute heart failure.",
+        "pubYear": 2024,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 6,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "40326569",
+        "title": "Dietary Approaches to Stop Hypertension (DASH) for the primary and secondary prevention of cardiovascular diseases.",
+        "pubYear": 2025,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 7,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "25733495",
+        "title": "Personalised care planning for adults with chronic or long-term health conditions.",
+        "pubYear": 2015,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 8,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "33332584",
+        "title": "Blood pressure targets in adults with hypertension.",
+        "pubYear": 2020,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 9,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "37916745",
+        "title": "Antioxidants for adults with chronic kidney disease.",
+        "pubYear": 2023,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 10,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "23076940",
+        "title": "Antioxidants for chronic kidney disease.",
+        "pubYear": 2012,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 11,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "36645291",
+        "title": "Altered dietary salt intake for preventing diabetic kidney disease and its progression.",
+        "pubYear": 2023,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 12,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "36005278",
+        "title": "Hypoxia-inducible factor stabilisers for the anaemia of chronic kidney disease.",
+        "pubYear": 2022,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 13,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "32103487",
+        "title": "Pharmacological interventions for heart failure in people with chronic kidney disease.",
+        "pubYear": 2020,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 14,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "32519776",
+        "title": "Withdrawal of antihypertensive drugs in older people.",
+        "pubYear": 2020,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 15,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "34693515",
+        "title": "Dipeptidyl peptidase-4 inhibitors, glucagon-like peptide 1 receptor agonists and sodium-glucose co-transporter-2 inhibitors for people with cardiovascular disease: a network meta-analysis.",
+        "pubYear": 2021,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 16,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "38018702",
+        "title": "HMG CoA reductase inhibitors (statins) for people with chronic kidney disease not requiring dialysis.",
+        "pubYear": 2023,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 17,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "19588353",
+        "title": "Treatment blood pressure targets for hypertension.",
+        "pubYear": 2009,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 18,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "27243372",
+        "title": "Interventions for lowering plasma homocysteine levels in dialysis patients.",
+        "pubYear": 2016,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 19,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "34905228",
+        "title": "Endovascular versus open surgical repair for complicated chronic Type B aortic dissection.",
+        "pubYear": 2021,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 20,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "26020622",
+        "title": "Zinc supplementation for the prevention of type 2 diabetes mellitus in adults with insulin resistance.",
+        "pubYear": 2015,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 21,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "30246878",
+        "title": "Insulin and glucose-lowering agents for treating people with diabetes and chronic kidney disease.",
+        "pubYear": 2018,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 22,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "27749986",
+        "title": "Insulin secretagogues for prevention or delay of type 2 diabetes mellitus and its associated complications in persons at increased risk for the development of type 2 diabetes mellitus.",
+        "pubYear": 2016,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 23,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "40162571",
+        "title": "Withdrawal of antihypertensive drugs in older people.",
+        "pubYear": 2025,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 24,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "29953167",
+        "title": "Interventions for chronic non-hypovolaemic hypotonic hyponatraemia.",
+        "pubYear": 2018,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 25,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "32865377",
+        "title": "Cardiovascular and Renal Outcomes with Empagliflozin in Heart Failure.",
+        "pubYear": 2020,
+        "journal": "The New England journal of medicine",
+        "rank": 26,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42896043",
+        "title": "Heart Failure With Reduced Ejection Fraction Is Associated With Greater Cardiovascular Risk Following Lumbar Interbody Fusion.",
+        "pubYear": 2026,
+        "journal": "Global spine journal",
+        "rank": 27,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "39222642",
+        "title": "Semaglutide versus placebo in patients with heart failure and mildly reduced or preserved ejection fraction: a pooled analysis of the SELECT, FLOW, STEP-HFpEF, and STEP-HFpEF DM randomised trials.",
+        "pubYear": 2024,
+        "journal": "Lancet (London, England)",
+        "rank": 28,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42685090",
+        "title": "Type 2 diabetes and chronic kidney disease combinations in heart failure across the ejection fraction spectrum: clinical associations, medication use, and cause-specific outcomes: a contemporary, real-world analysis of the Swedish Heart Failure Registry.",
+        "pubYear": 2026,
+        "journal": "European journal of heart failure",
+        "rank": 29,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "34775784",
+        "title": "Finerenone Reduces Risk of Incident Heart Failure in Patients With Chronic Kidney Disease and Type 2 Diabetes: Analyses From the FIGARO-DKD Trial.",
+        "pubYear": 2022,
+        "journal": "Circulation",
+        "rank": 30,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42764312",
+        "title": "Heart failure with a preserved ejection fraction: synergy between cardiac and extracardiac mechanisms and effects of novel therapies.",
+        "pubYear": 2026,
+        "journal": "Heart failure reviews",
+        "rank": 31,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "35762322",
+        "title": "Empagliflozin for Heart Failure With Preserved Left Ventricular Ejection Fraction With and Without Diabetes.",
+        "pubYear": 2022,
+        "journal": "Circulation",
+        "rank": 32,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42906951",
+        "title": "Prevalence and clinical correlates of metabolic dysfunction-associated steatotic liver disease in heart failure.",
+        "pubYear": 2026,
+        "journal": "Open heart",
+        "rank": 33,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "30605420",
+        "title": "Heart Failure in Type 2 Diabetes Mellitus.",
+        "pubYear": 2019,
+        "journal": "Circulation research",
+        "rank": 34,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42730804",
+        "title": "Clinical Evidence of Cardioprotective Effects of SGLT2 Inhibitors.",
+        "pubYear": 2026,
+        "journal": "Handbook of experimental pharmacology",
+        "rank": 35,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "38771475",
+        "title": "Safety of Empagliflozin: An Individual Participant-Level Data Meta-Analysis from Four Large Trials.",
+        "pubYear": 2024,
+        "journal": "Advances in therapy",
+        "rank": 36,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42593559",
+        "title": "Finerenone in Heart Failure with Preserved Ejection Fraction: Expanding the Role of Non-steroidal Mineralocorticoid Receptor Antagonists.",
+        "pubYear": 2026,
+        "journal": "Current atherosclerosis reports",
+        "rank": 37,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "34216571",
+        "title": "SGLT2 inhibitors and GLP-1 receptor agonists: established and emerging indications.",
+        "pubYear": 2021,
+        "journal": "Lancet (London, England)",
+        "rank": 38,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42819943",
+        "title": "Cardiovascular protection beyond glucose lowering: GLP-1 receptor agonists and dual GIP/GLP-1 receptor agonism in contemporary cardiology.",
+        "pubYear": 2026,
+        "journal": "Frontiers in cardiovascular medicine",
+        "rank": 39,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "39217553",
+        "title": "Effects of Semaglutide on Heart Failure Outcomes in Diabetes and Chronic Kidney Disease in the FLOW Trial.",
+        "pubYear": 2024,
+        "journal": "Journal of the American College of Cardiology",
+        "rank": 40,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42644019",
+        "title": "Clinical effectiveness of sodium-glucose cotransporter 2 inhibitors in heart failure with preserved ejection fraction: nationwide cohort study (REFINE-HFpEF).",
+        "pubYear": 2026,
+        "journal": "BMJ medicine",
+        "rank": 41,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "36216487",
+        "title": "SGLT2 Inhibitors and Heart Failure with Preserved Ejection Fraction.",
+        "pubYear": 2022,
+        "journal": "Heart failure clinics",
+        "rank": 42,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42667546",
+        "title": "The Role of SGLT2 Inhibitors in the Prevention of Type 2 Diabetes: A Narrative Review of Current Evidence.",
+        "pubYear": 2026,
+        "journal": "Diabetes therapy : research, treatment and education of diabetes and related disorders",
+        "rank": 43,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "38768620",
+        "title": "Effect of SGLT2 inhibitors on heart failure outcomes and cardiovascular death across the cardiometabolic disease spectrum: a systematic review and meta-analysis.",
+        "pubYear": 2024,
+        "journal": "The lancet. Diabetes & endocrinology",
+        "rank": 44,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42568490",
+        "title": "Incretin analogues as cardiovascular agents: a state-of-the-art review.",
+        "pubYear": 2026,
+        "journal": "Frontiers in endocrinology",
+        "rank": 45,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "37344038",
+        "title": "Effect of SGLT2 Inhibitors on Cardiovascular Outcomes Across Various Patient Populations.",
+        "pubYear": 2023,
+        "journal": "Journal of the American College of Cardiology",
+        "rank": 46,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42790283",
+        "title": "Practical Implementation of Steroidal and Nonsteroidal Mineralocorticoid Receptor Antagonists in the Management of Heart Failure.",
+        "pubYear": 2026,
+        "journal": "JACC. Advances",
+        "rank": 47,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "36030328",
+        "title": "Dapagliflozin across the range of ejection fraction in patients with heart failure: a patient-level, pooled meta-analysis of DAPA-HF and DELIVER.",
+        "pubYear": 2022,
+        "journal": "Nature medicine",
+        "rank": 48,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42740951",
+        "title": "Glycemic phenotype, age at diabetes diagnosis, and risk of cardiorenal syndrome type 1 in patients hospitalized with acute heart failure.",
+        "pubYear": 2026,
+        "journal": "International journal of cardiology. Heart & vasculature",
+        "rank": 49,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "40355922",
+        "title": "Circulating mediators linking cardiometabolic diseases to HFpEF: a mediation Mendelian randomization analysis.",
+        "pubYear": 2025,
+        "journal": "Cardiovascular diabetology",
+        "rank": 50,
+        "sources": [
+          "PUBMED"
+        ]
+      }
+    ]
+  },
+  {
+    "patient": "af",
+    "model": "qwen3.5:9b",
+    "context": "Paroxizmális pitvarfibrilláció, CHA2DS2-VASc 4. Krónikus vesebetegség 3b stádium (eGFR 35 ml/perc/1,73 m²). Hypertonia, korábbi TIA. Jelenleg acenokumarolt szed, az INR ingadozó. Nyitott kérdés: váltás direkt orális antikoagulánsra, és ennek adagolása vesebetegségben.",
+    "query": "(Paroxysmal Atrial Fibrillation[MeSH Terms] OR Paroxysmal Atrial Fibrillation OR paroxysmal AF OR PAF) AND (Chronic Kidney Disease OR CKD OR Hypertension OR high blood pressure OR Transient Ischemic Attack OR TIA)",
+    "query_seconds": 5.31,
+    "search_seconds": [
+      5.39,
+      4.46,
+      4.78
+    ],
+    "total_found": 21394,
+    "articles_n": 50,
+    "with_abstract": 48,
+    "rank_seconds": 157.08,
+    "ranking": {
+      "status": "DONE",
+      "screened": [
+        {
+          "articleId": "25412402",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "28220472",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "36700520",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "22161375",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "15266473",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "29105079",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "15106146",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "30102428",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "26346232",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "30019767",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "30484282",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "17636615",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "15494992",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "17636831",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "16034869",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "16235290",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "10796452",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "39601298",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "10796314",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "31544227",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "10796453",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "23925867",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "31556094",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "10796313",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "10796315",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "40162734",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42621371",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "36082387",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42343237",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "28990508",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42432966",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "38227450",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42923502",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "33640261",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42514171",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42506434",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42482902",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "15194993",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42074865",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "30507363",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42753067",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "18585497",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42666876",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "25539701",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42295760",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "34766621",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42369803",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "37222949",
+          "relevance": "MEDIUM"
+        }
+      ],
+      "picks": [
+        {
+          "articleId": "29105079",
+          "reason": "Ez a Cochrane-féle metaanalízis közvetlenül összehasonlítja a DOAC-okat (beleértve az apixaban-t és a rivaroxaban-t) a warfarinnal krónikus vesebetegségben szenvedő pitvarfibrillációs betegeknél, így leginkább releváns a beteg eGFR 35-ös értékére és acenokumarol-al történő jelenlegi kezelésére vonatkozóan."
+        },
+        {
+          "articleId": "23925867",
+          "reason": "Bár ez is egy Cochrane metaanalízis a DOAC-ok és a vitamin-K-antagonisták összehasonlításáról, az 1-es cikk specifikusan a krónikus vesebetegségben szenvedő csoportra fókuszál, míg ez általánosabb AF-betegekre vonatkozik, így az első helyezett után ez a második legfontosabb forrás."
+        },
+        {
+          "articleId": "42923502",
+          "reason": "A 2026-os irányelv gyakorlati útmutatást nyújt a DOAC-ok dózisszabályozására és a vesefunkcióra vonatkozóan, de mivel az adatbázisban szereplő legfrissebb forrás (2021-es áttekintés) nem tartalmazza ezt, és a metaanalízisek erősebb bizonyítékokat nyújtanak, ezért ez csak harmadik helyen szerepel."
+        }
+      ],
+      "warnings": [
+        "Ellenőrizetlen szám a(z) „2026 Asia Pacific Heart Rhythm Society (APHRS) Guidelines (P” indoklásában: 2021"
+      ],
+      "model": {
+        "modelName": "qwen3.5:9b",
+        "seed": 42,
+        "promptHash": "be594a7aa6309f363e6dfa25df9fdf844ba46e2c8638f8d31910bdb7c54362d0"
+      }
+    },
+    "evaluations": [
+      {
+        "pmid": "29105079",
+        "title": "Direct oral anticoagulants versus warfarin for preventing stroke and systemic embolic events among atrial fibrillation patients with chronic kidney disease.",
+        "year": 2017,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 10.37,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg krónikus vesebetegségben van (eGFR 35), ami megfelel a tanulmány vizsgált G3 stádiumának, és az orvos éppen a DOAC-váltás indokoltságát és biztonságosságát kérdezi ebben a vesefunkció-szintű populációban.",
+        "summary": "A Cochrane áttekintés 12 545 krónikus vesebetegségben szenvedő pitvarfibrillációs betegen vizsgálta a direkt orális antikoagulánsok (DOAC) és a warfarin hatékonyságát és biztonságosságát. A metaanalízis eredményei szerint a DOAC-ok valószínűleg csökkentik az agyi érkatasztrófa kockázatát, miközben nem növelik a súlyos vérzés esélyét a warfarinhoz képest, különösen a G3 stádiumban (eGFR 15-60 ml/perc).",
+        "warnings": [
+          "Ellenőrizetlen szám az összefoglalóban: 12 (nem szerepel az absztraktban)",
+          "Ellenőrizetlen szám az összefoglalóban: 545 (nem szerepel az absztraktban)"
+        ]
+      },
+      {
+        "pmid": "23925867",
+        "title": "Factor Xa inhibitors versus vitamin K antagonists for preventing cerebral or systemic embolism in patients with atrial fibrillation.",
+        "year": 2013,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 12.53,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns a beteg esetében, mivel az orvos nyitott kérdése a direkt orális antikoagulánsokra (DOAK-okra) való váltás indokoltsága és biztonságossága. A metaelemzés általános eredményei alátámasztják a DOAK-kezelés előnyeit a warfarinhoz képest, de az absztrakt nem tartalmaz specifikus adatokat a krónikus vesebetegségben (pl. eGFR 35) lévő betegek adagolásáról vagy kockázatairól, így ez a részletes döntéshez további, vesefunkcióra fókuszáló irodalomra lesz szükség.",
+        "summary": "A metaelemzés összehasonlította a faktor Xa gátlókat (pl. apixaban, rivaroxaban) a vitamin K antagonistákkal (warfarin) pitvarfibrillációjú betegekben. Az eredmények szerint a faktor Xa gátlók szignifikánsan csökkentették az iszkémiás és vérző strokek, valamint a rendszeres embóliák számát, továbbá csökkenthették a nagy súlyosságú vérzéseket és az intrakraniális vérzések kockázatát.",
+        "warnings": []
+      },
+      {
+        "pmid": "42923502",
+        "title": "2026 Asia Pacific Heart Rhythm Society (APHRS) Guidelines (Part II) on Stroke Prevention in Atrial Fibrillation.",
+        "year": 2026,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 9.87,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg esetében felmerülő kérdés – a DOAK-re váltás indokoltsága és az adagolás módja krónikus vesebetegség (eGFR 35) esetén – pontosan a dokumentum által lefedett témakörök közé tartozik.",
+        "summary": "A 2026-os APHRS irányelvek II. része a pitvarfibrillációban szenvedő betegek stroke-megelőzésére fókuszál, integrálva a globális bizonyítékokat az Ázsia-Csendes-óceáni régióra jellemző klinikai szempontokkal. A dokumentum konkrét ajánlásokat tartalmaz a vérzéskockázat és trombembolia kockázatának egyensúlyozására, valamint a direkt orális antikoagulánsok (DOAK) megfelelő dózisának kiválasztására és alkalmazására krónikus vesebetegségben szenvedő betegeknél.",
+        "warnings": []
+      },
+      {
+        "pmid": "33640261",
+        "title": "Controversies: Stroke Prevention in Chronic Kidney Disease.",
+        "year": 2021,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 10.83,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg krónikus vesebetegségben (3b stádium) szenved paroxizmális pitvarfibrillációval, és az orvos a direkt orális antikoaguláns váltásának indokoltságát kérdezi. A szöveg konkrétan összehasonlítja a warfarin (acenokumarol) és az apixaban hatását vesebetegségben, ami segíthet a terápiaváltás döntésében.",
+        "summary": "A cikk áttekinti a krónikus vesebetegségben szenvedő betegek kockázatcsökkentési stratégiáit, különös tekintettel az antikoagulációs terápiára. Az observacionális adatok alapján a faktor Xa gátló (apixaban) kedvezőbb profilmutatókat mutatott a warfarinnal szemben dialízisben lévő pitvarfibrillációs betegeknél, alacsonyabb kockázattal és kevesebb vérzéses eseménnyel. A nyomáskezelés és sztatinek hatékonysága ebben a populációban vitatott.",
+        "warnings": []
+      },
+      {
+        "pmid": "15266473",
+        "title": "Antiplatelet agents and anticoagulants for hypertension.",
+        "year": 2004,
+        "screen": "MEDIUM",
+        "picked": false,
+        "seconds": 11.87,
+        "relevance": "LOW",
+        "reason": "A cikk relevanciája alacsony, mivel a beteg fő problémája a paroxizmális pitvarfibrilláció okozta tromboembólia kockázatának kezelése (direkt orális antikoaguláns váltás), nem pedig a magas vérnyomás általános thrombosis-prevenciója.",
+        "summary": "A 2004-es Cochrane-metaanalízis azt vizsgálta, hogy magas vérnyomás esetén az antiaggregánsok és az antikoagulánsok (pl. warfarin) csökkentik-e a thrombotikus események kockázatát. A fő eredmény szerint warfarin monoterápia vagy kombináció aspirinnel nem mutatott jelentős előnyt stroke vagy koszorúér-események megelőzésében magas vérnyomásos betegekben, míg az antiaggregánsok másodlagos prevencióban hasznosak lehetnek.",
+        "warnings": []
+      },
+      {
+        "pmid": "15106146",
+        "title": "Anticoagulants for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischaemic attack.",
+        "year": 2004,
+        "screen": "MEDIUM",
+        "picked": false,
+        "seconds": 11.75,
+        "relevance": "MEDIUM",
+        "reason": "A cikk releváns a beteg fő problémájához, a pitvarfibrilláció és korábbi TIA miatti stroke-prevenció szempontjából. Azonban nem releváns az orvos konkrét kérdésére, mivel a tanulmány nem vizsgálja a krónikus vesebetegség (eGFR 35) hatását az antikoagulánsok dózisára vagy választására, és nem tesz különbset a direkt orális antikoagulánsok (DOAK) és a hagyományos antikoagulánsok között.",
+        "summary": "A 2004-es rendszeres áttekintés azt vizsgálta, hogy antikoagulánsok alkalmazása csökkenti-e az ismétlődő stroke kockázatát paroxizmális pitvarfibrillációjú és korábbi TIA vagy kis stroke történetű betegeknél. Két randomizált kontrollált vizsgálat adatai alapján megállapították, hogy az antikoagulánsok jelentősen csökkentik az ismétlődő stroke esélyét (OR 0,36), ugyanakkor növelik a súlyos extrakraniális vérzések kockázatát (OR 4,32).",
+        "warnings": []
+      },
+      {
+        "pmid": "15494992",
+        "title": "Anticoagulants versus antiplatelet therapy for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischemic attack.",
+        "year": 2004,
+        "screen": "MEDIUM",
+        "picked": false,
+        "seconds": 12.45,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns a beteg esetében, mivel a fő kérdés az antikoaguláns (pl. warfarin) és plátóellenes terápia közötti választásról szól pitvarfibrillációban szenvedő, korábbi TIA történetű betegeknél, ami megegyezik a beteg kockázati profiljával (CHA2DS2-VASc 4, korábbi TIA). Az eredmények alátámasztják az antikoaguláns váltás indokoltságát, de a véralvadási paraméterek (INR) és a vesebetegség miatt óvatosságra van szükség az adagolásnál.",
+        "summary": "A metaelemzés összehasonlítja az antikoagulánsok és a plátóellenes szerek hatékonyságát ismétlődő stroke megelőzésére nem reumás pitvarfibrillációban szenvedő, korábbi TIA vagy kis stroke történetű betegeknél. Két randomizált vizsgálat adatai alapján az antikoagulánsok szignifikánsan hatékonyabbak voltak mind az összes érrendszeri események, mind az ismétlődő stroke megelőzésében, bár nagyobb kockázattal jártak extrakraniális vérzések szempontjából.",
+        "warnings": []
+      },
+      {
+        "pmid": "10796313",
+        "title": "Anticoagulants for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischemic attacks.",
+        "year": 2000,
+        "screen": "MEDIUM",
+        "picked": false,
+        "seconds": 11.43,
+        "relevance": "MEDIUM",
+        "reason": "A cikk relevanciája korlátozott, mivel a vizsgált antikoagulánsok (pl. warfarin) INR-alapú monitorozást igényelnek, ami a beteg jelenlegi instabil INR-értéke és krónikus vesebetegsége miatt kihívást jelenthet; továbbá a tanulmány 2000-ből származik, így nem tartalmazza az újabb direkt orális antikoagulánsokat (DOAK-okat), amelyekre az orvos váltási kérése vonatkozhat.",
+        "summary": "A 2000-es évben megjelent szisztematikus áttekintés azt vizsgálta, hogy az antikoagulánsok (a korabeli célszerű INR tartományban) csökkentik-e a visszatérő stroke kockázatát nem reumás pitvarfibrillációjú és korábbi TIA vagy kis stroke történetű betegeknél. A két vizsgált randomizált kontrollált kísérlet eredményei alapján az antikoagulánsok kétharmaddal csökkentették a visszatérő stroke kockázatát, miközben nem jelentek súlyosabb agyi vérzések.",
+        "warnings": []
+      },
+      {
+        "pmid": "10796315",
+        "title": "Anticoagulants versus antiplatelet therapy for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischemic attacks.",
+        "year": 2000,
+        "screen": "MEDIUM",
+        "picked": false,
+        "seconds": 12.32,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns a beteg esetében, mivel a fő kérdés az antikoagulánsok (pl. acenokumarol) indokoltsága és hatékonysága korábbi TIA esetén, ami megerősíti az orvos által felmerült váltás szükségességét. Azonban a cikk 2000-es évi absztraktja nem tartalmaz adatot a krónikus vesebetegség (CKD 3b) specifikus adagolási ajánlásairól, így ez a rész nem alkalmazható közvetlenül a beteg vesefunkciójára vonatkozóan.",
+        "summary": "A 2000-es évben megjelent szisztémás áttekintés összehasonlította az antikoaguláns terápiát és az antiaggregánsokat (aszpirin) nem reumás pitvarfibrillációjú, korábbi agyi iszkémiás eseményt szenvedett betegek másodlagos megelőzésében. Az egyetlen bevonott randomizált kontrollált vizsgálat eredményei azt mutatták, hogy az antikoagulánsok jelentősen csökkentik a súlyos érrendszeri események és ismétlődő stroke kockázatát, ugyanakkor növelik a nagy extrakraniális vérzések gyakoriságát.",
+        "warnings": []
+      },
+      {
+        "pmid": "42621371",
+        "title": "Clinical Profile, Management Patterns, and In-Hospital Outcomes Among Patients Hospitalized With Atrial Fibrillation at a Tertiary Care Hospital: A Single-Center Retrospective Study.",
+        "year": 2026,
+        "screen": "MEDIUM",
+        "picked": false,
+        "seconds": 11.36,
+        "relevance": "MEDIUM",
+        "reason": "A cikk releváns a beteg krónikus vesebetegségének (3b stádium) szempontjából, mivel kimutatja, hogy a CRD növeli a kockázatot. Azonban a tanulmány nem specifikus adagolási irányelveket vagy DOK-okat (direkt orális antikoagulánsokat) javasol vesebetegségben, csupán általános kezelési mintázatokat és mortalitási tényezőket ír le, így nem közvetlenül válaszol a váltás indokoltságára vagy az adagolásra vonatkozó kérdésre.",
+        "summary": "A tanulmány retrospektív megfigyelés volt, amely 282 pitvarfibrillációban kórházba került felnőtt beteget vizsgált Lahore-ban. A fő eredmények szerint a krónikus vesebetegség (CRD) független tényezője volt a kórházi mortalitás növekedésének, amelyhez 3,67-es becsült relatív kockázat (OR) és 1,49-9,01 közötti 95%-os konfidencia-intervallum tartozott.",
+        "warnings": []
+      }
+    ],
+    "articles": [
+      {
+        "pmid": "25412402",
+        "title": "Interventions for enhancing medication adherence.",
+        "pubYear": 2014,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 1,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "28220472",
+        "title": "Renal denervation for resistant hypertension.",
+        "pubYear": 2017,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 2,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "36700520",
+        "title": "Antithrombotic treatment after stroke due to intracerebral haemorrhage.",
+        "pubYear": 2023,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 3,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "22161375",
+        "title": "Antiplatelet agents and anticoagulants for hypertension.",
+        "pubYear": 2011,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 4,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "15266473",
+        "title": "Antiplatelet agents and anticoagulants for hypertension.",
+        "pubYear": 2004,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 5,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "29105079",
+        "title": "Direct oral anticoagulants versus warfarin for preventing stroke and systemic embolic events among atrial fibrillation patients with chronic kidney disease.",
+        "pubYear": 2017,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 6,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "15106146",
+        "title": "Anticoagulants for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischaemic attack.",
+        "pubYear": 2004,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 7,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "30102428",
+        "title": "Hospitalisation in short-stay units for adults with internal medicine diseases and conditions.",
+        "pubYear": 2018,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 8,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "26346232",
+        "title": "Closure versus medical therapy for preventing recurrent stroke in patients with patent foramen ovale and a history of cryptogenic stroke or transient ischemic attack.",
+        "pubYear": 2015,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 9,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "30019767",
+        "title": "Polyunsaturated fatty acids for the primary and secondary prevention of cardiovascular disease.",
+        "pubYear": 2018,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 10,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "30484282",
+        "title": "Polyunsaturated fatty acids for the primary and secondary prevention of cardiovascular disease.",
+        "pubYear": 2018,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 11,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "17636615",
+        "title": "WITHDRAWN: Antiplatelet therapy for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischemic attacks.",
+        "pubYear": 1996,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 12,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "15494992",
+        "title": "Anticoagulants versus antiplatelet therapy for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischemic attack.",
+        "pubYear": 2004,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 13,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "17636831",
+        "title": "Oral anticoagulants versus antiplatelet therapy for preventing stroke in patients with non-valvular atrial fibrillation and no history of stroke or transient ischemic attacks.",
+        "pubYear": 2007,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 14,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "16034869",
+        "title": "Oral anticoagulants for preventing stroke in patients with non-valvular atrial fibrillation and no previous history of stroke or transient ischemic attacks.",
+        "pubYear": 2005,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 15,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "16235290",
+        "title": "Antiplatelet therapy for preventing stroke in patients with non-valvular atrial fibrillation and no previous history of stroke or transient ischemic attacks.",
+        "pubYear": 2005,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 16,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "10796452",
+        "title": "Antiplatelet therapy for preventing stroke in patients with non-valvular atrial fibrillation and no previous history of stroke or transient ischemic attacks.",
+        "pubYear": 2000,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 17,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "39601298",
+        "title": "Prophylactic use of inotropic agents for the prevention of low cardiac output syndrome and mortality in adults undergoing cardiac surgery.",
+        "pubYear": 2024,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 18,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "10796314",
+        "title": "Antiplatelet therapy for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischemic attacks.",
+        "pubYear": 2000,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 19,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "31544227",
+        "title": "Perioperative beta-blockers for preventing surgery-related mortality and morbidity in adults undergoing cardiac surgery.",
+        "pubYear": 2019,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 20,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "10796453",
+        "title": "Oral anticoagulants for preventing stroke in patients with non-valvular atrial fibrillation and no previous history of stroke or transient ischemic attacks.",
+        "pubYear": 2000,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 21,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "23925867",
+        "title": "Factor Xa inhibitors versus vitamin K antagonists for preventing cerebral or systemic embolism in patients with atrial fibrillation.",
+        "pubYear": 2013,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 22,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "31556094",
+        "title": "Perioperative beta-blockers for preventing surgery-related mortality and morbidity in adults undergoing non-cardiac surgery.",
+        "pubYear": 2019,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 23,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "10796313",
+        "title": "Anticoagulants for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischemic attacks.",
+        "pubYear": 2000,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 24,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "10796315",
+        "title": "Anticoagulants versus antiplatelet therapy for preventing stroke in patients with nonrheumatic atrial fibrillation and a history of stroke or transient ischemic attacks.",
+        "pubYear": 2000,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 25,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "40162734",
+        "title": "Pulsed Field or Cryoballoon Ablation for Paroxysmal Atrial Fibrillation.",
+        "pubYear": 2025,
+        "journal": "The New England journal of medicine",
+        "rank": 26,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42621371",
+        "title": "Clinical Profile, Management Patterns, and In-Hospital Outcomes Among Patients Hospitalized With Atrial Fibrillation at a Tertiary Care Hospital: A Single-Center Retrospective Study.",
+        "pubYear": 2026,
+        "journal": "Cureus",
+        "rank": 27,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "36082387",
+        "title": "[Management of transient ischemic attack].",
+        "pubYear": 2022,
+        "journal": "Revue medicale suisse",
+        "rank": 28,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42343237",
+        "title": "Prevalence and risk factors of atrial fibrillation in type 2 diabetes mellitus: a hospital-based cross-sectional study.",
+        "pubYear": 2026,
+        "journal": "BMC cardiovascular disorders",
+        "rank": 29,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "28990508",
+        "title": "Biomarkers of Atrial Fibrillation in Hypertension.",
+        "pubYear": 2019,
+        "journal": "Current medicinal chemistry",
+        "rank": 30,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42432966",
+        "title": "Efficacy and safety of apixaban versus warfarin in new-onset atrial fibrillation post coronary artery bypass grafting: A retrospective cohort study.",
+        "pubYear": 2026,
+        "journal": "Medicine",
+        "rank": 31,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "38227450",
+        "title": "Cardiovascular Disease: Atrial Fibrillation and Atrial Flutter.",
+        "pubYear": 2024,
+        "journal": "FP essentials",
+        "rank": 32,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42923502",
+        "title": "2026 Asia Pacific Heart Rhythm Society (APHRS) Guidelines (Part II) on Stroke Prevention in Atrial Fibrillation.",
+        "pubYear": 2026,
+        "journal": "Journal of arrhythmia",
+        "rank": 33,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "33640261",
+        "title": "Controversies: Stroke Prevention in Chronic Kidney Disease.",
+        "pubYear": 2021,
+        "journal": "Journal of stroke and cerebrovascular diseases : the official journal of National Stroke Association",
+        "rank": 34,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42514171",
+        "title": "Clinically Inferred Metabolic Dysfunction-Associated Steatotic Liver Disease and Its Association with Atrial Fibrillation Subtypes: A Prospective Clinical and Cardiometabolic Analysis.",
+        "pubYear": 2026,
+        "journal": "Life (Basel, Switzerland)",
+        "rank": 35,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "12603877",
+        "title": "Stroke prevention.",
+        "pubYear": 2002,
+        "journal": "Clinical evidence",
+        "rank": 36,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42506434",
+        "title": "Triglyceride-Glucose Index and Ischemic Stroke Burden in Permanent Versus Paroxysmal Atrial Fibrillation: A Real-World Retrospective Cohort Study.",
+        "pubYear": 2026,
+        "journal": "Metabolites",
+        "rank": 37,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "12230643",
+        "title": "Stroke prevention.",
+        "pubYear": 2002,
+        "journal": "Clinical evidence",
+        "rank": 38,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42482902",
+        "title": "Chronological age was not independently associated with ultra-early safety or arrhythmic outcomes after contemporary atrial fibrillation ablation: a real-world single-center study.",
+        "pubYear": 2026,
+        "journal": "Frontiers in medicine",
+        "rank": 39,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "15194993",
+        "title": "Atrial fibrillation and cardioembolic stroke.",
+        "pubYear": 2004,
+        "journal": "Minerva cardioangiologica",
+        "rank": 40,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42074865",
+        "title": "Fibrosis-4 Index as a Marker of Systemic Fibrotic Burden and Its Association with Left Atrial Thrombus in Nonvalvular Paroxysmal Atrial Fibrillation.",
+        "pubYear": 2026,
+        "journal": "Journal of clinical medicine",
+        "rank": 41,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "30507363",
+        "title": "How do neurologists diagnose transient ischemic attack: A systematic review.",
+        "pubYear": 2019,
+        "journal": "International journal of stroke : official journal of the International Stroke Society",
+        "rank": 42,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42753067",
+        "title": "First-in-human experience from RESET-AF (Rapid onE-Shot Electroporation Trial for Atrial Fibrillation).",
+        "pubYear": 2026,
+        "journal": "Journal of interventional cardiac electrophysiology : an international journal of arrhythmias and pacing",
+        "rank": 43,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "18585497",
+        "title": "Chronic atrial fibrillation: Incidence, prevalence, and prediction of stroke using the Congestive heart failure, Hypertension, Age >75, Diabetes mellitus, and prior Stroke or transient ischemic attack (CHADS2) risk stratification scheme.",
+        "pubYear": 2008,
+        "journal": "American heart journal",
+        "rank": 44,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42666876",
+        "title": "Pulsed electric field for pulmonary vein isolation in paroxysmal atrial fibrillation: A multicenter experience comparing pentaspline and lattice-tip catheters.",
+        "pubYear": 2026,
+        "journal": "Heart rhythm O2",
+        "rank": 45,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "25539701",
+        "title": "Atrial fibrillation and long-term sports practice: epidemiology and mechanisms.",
+        "pubYear": 2015,
+        "journal": "Clinical research in cardiology : official journal of the German Cardiac Society",
+        "rank": 46,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42295760",
+        "title": "Health Status Changes and Long-Term Clinical Outcomes in Patients With Atrial Fibrillation.",
+        "pubYear": 2026,
+        "journal": "JAMA network open",
+        "rank": 47,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "34766621",
+        "title": "Ischemic stroke in oral anticoagulated patients with atrial fibrillation.",
+        "pubYear": 2022,
+        "journal": "Acta neurologica Scandinavica",
+        "rank": 48,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42369803",
+        "title": "Circulating metabolomic profile and its association with atrial fibrillation and systemic inflammation.",
+        "pubYear": 2026,
+        "journal": "Heart rhythm O2",
+        "rank": 49,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "37222949",
+        "title": "Sex differences in Cardiorenal Syndrome: Insights from CARDIOREN Registry.",
+        "pubYear": 2023,
+        "journal": "Current heart failure reports",
+        "rank": 50,
+        "sources": [
+          "PUBMED"
+        ]
+      }
+    ]
+  },
+  {
+    "patient": "copd",
+    "model": "qwen3.5:9b",
+    "context": "Súlyos COPD (GOLD 3), az elmúlt évben két, kórházi kezelést igénylő exacerbáció. Eozinofilszám 350/µl. Jelenlegi kezelés: tiotropium és olodaterol inhalációban. Dohányzott, 40 csomagév, 2 éve leszokott. Nyitott kérdés: inhalációs kortikoszteroid hozzáadása vagy roflumilaszt.",
+    "query": "(Chronic Obstructive Pulmonary Disease[MeSH Terms] OR Chronic Obstructive Pulmonary Disease OR COPD) AND (Exacerbation, Chronic Obstructive Pulmonary Disease OR COPD exacerbation OR acute exacerbation of COPD OR Eosinophilia OR eosinophil count OR Inhaled Corticosteroids OR ICS)",
+    "query_seconds": 5.7,
+    "search_seconds": [
+      5.39,
+      5.01,
+      4.86
+    ],
+    "total_found": 53479,
+    "articles_n": 50,
+    "with_abstract": 50,
+    "rank_seconds": 232.74,
+    "ranking": {
+      "status": "DONE",
+      "screened": [
+        {
+          "articleId": "27930803",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "34368950",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "35616126",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "22419331",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "34495549",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "31107966",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "28702957",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "34693988",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "35993916",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "38054551",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "28777450",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "29411860",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "33945639",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "35262185",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "39329240",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "33448349",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "32356609",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "33295032",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "34496032",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "29943802",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "36971693",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "32844430",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "30371937",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "28922692",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "31425628",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "40392521",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42904223",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "27189863",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42831088",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "40293759",
+          "relevance": "LOW"
+        },
+        {
+          "articleId": "42773542",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "37348121",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42928777",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "30806700",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42377152",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "38383272",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42667442",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "38508668",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42928917",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "33146552",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42741955",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "26937187",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42928880",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "37690008",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42643717",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "33332995",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "42609817",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "24507843",
+          "relevance": "HIGH"
+        },
+        {
+          "articleId": "42699828",
+          "relevance": "MEDIUM"
+        },
+        {
+          "articleId": "39589286",
+          "relevance": "HIGH"
+        }
+      ],
+      "picks": [
+        {
+          "articleId": "38054551",
+          "reason": "Ez a legfrissebb (2023) Cochrane-metaanalízis közvetlenül a beteg döntési problémájára fókuszál: az inhalációs kortikoszteroid (ICS) hozzáadásának előnyeit és kockázatát a LAMA/LABA kombinációhoz, ami pontosan a jelenlegi terápiás dilemma."
+        },
+        {
+          "articleId": "40392521",
+          "reason": "Ez a 2025-ös áttekintés közvetlenül kapcsolódik a beteg eozinofilszáma (350/µl) alapján felismert típusú 2 gyulladásos fenotípusához, és megerősíti, hogy az ilyen betegek nagyobb valószínűséggel reagálnak az ICS-re. Bár nem specifikusan a LAMA/LABA+ICS kombinációt vizsgálja RCT-kben, a biomarker-alapú döntéshozatali keretrendszer miatt ez a második legrelevánsabb forrás."
+        },
+        {
+          "articleId": "32356609",
+          "reason": "Ez a Cochrane-metaanalízis (2020) kizárólag a roflumilaszt (PDE4-gátló) hatékonyságát és biztonságosságát vizsgálja placebo-hoz képest, így közvetlen választ ad az alternatív terápiás opcióra. Bár idősebb, mint az ICS-cikkek, a döntési folyamatban fontos összehasonlítási alapot nyújt a második opcióhoz."
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "qwen3.5:9b",
+        "seed": 42,
+        "promptHash": "be594a7aa6309f363e6dfa25df9fdf844ba46e2c8638f8d31910bdb7c54362d0"
+      }
+    },
+    "evaluations": [
+      {
+        "pmid": "38054551",
+        "title": "Inhaled corticosteroids with combination inhaled long-acting beta2-agonists and long-acting muscarinic antagonists for chronic obstructive pulmonary disease.",
+        "year": 2023,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 12.21,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg súlyos COPD-je (GOLD 3), gyakori exacerbációi és a 350/µl-es eozinofilszáma pontosan azt a populációt célozza meg, amelyre a tanulmány a triplis terápia előnyeit és kockázatait vizsgálta. Az orvos döntése az inhalációs kortikoszteroid hozzáadásáról vagy alternatívák (pl. roflumilaszt) közötti választásról ebből az adatbázisból származó bizonyítékokon alapulhat.",
+        "summary": "A rendszeres áttekintés azt vizsgálja, hogy az inhalációs kortikoszteroid (ICS) hozzáadása a LABA/LAMA kombinációhoz (triplis terápia) stabil COPD-ben hogyan befolyásolja az exacerbációkat és más kimeneteket. A fő eredmények szerint a triplis terápia csökkentheti a mérsékelt-túlsúlyos exacerbációk gyakoriságát, különösen magas eozinofilszám esetén, javíthatja az életminőséget, de növeli a tüdőgyulladás kockázatát.",
+        "warnings": []
+      },
+      {
+        "pmid": "40392521",
+        "title": "Chronic Obstructive Pulmonary Disease (COPD): Developments in Pharmacological Treatments.",
+        "year": 2025,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 9.92,
+        "relevance": "HIGH",
+        "reason": "A beteg esetében releváns, mivel jelenlegi állapotában (GOLD 3, súlyos exacerbációk) és specifikus laboreredménye alapján (eozinofilszám 350/µl) a cikk közvetlenül támogatja az inhalációs kortikoszteroid hozzáadásának fontosságát, mint a típusú 2-es gyulladásra irányuló célzott kezelést.",
+        "summary": "A cikk áttekinti a COPD gyógyszeres kezelésének új fejlesztéseit, kiemelve, hogy a magas vér-eozinofilszám (BEC) típusú 2-es gyulladásra utal és prediktív tényezővé válik az inhalációs kortikoszteroidokra vagy dupilumabra adott jobb válaszra. A tanulmány megerősíti, hogy a biomarker-alapú megközelítés lehetővé teszi a személyre szabott terápiát, különösen azoknál a betegeknél, akiknél magas az eozinofilszám.",
+        "warnings": []
+      },
+      {
+        "pmid": "32356609",
+        "title": "Phosphodiesterase-4 inhibitors for chronic obstructive pulmonary disease.",
+        "year": 2020,
+        "screen": "HIGH",
+        "picked": true,
+        "seconds": 12.35,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns az orvos által felmerült kérdésre, mivel a beteg jelenlegi állapotát (súlyos COPD, gyakori exacerbációk) és a terápiás alternatívák közötti választást (roflumilasz vs. inhalációs kortikoszteroid) vizsgálja. A cikk adatai segítenek mérlegelni a roflumilasz használatának előnyeit és kockázatait, különösen figyelembe véve a beteg korábbi exacerbációinak számát és a lehetséges mellékhatásokat.",
+        "summary": "A Cochrane áttekintés (2020) metaanalízisei kimutatták, hogy a PDE4-gátlók (mint a roflumilasz) kis mértékben javítják a tüdőfunkciót és csökkentik az exacerbációk kockázatát COPD-ben, de nem befolyásolják jelentősen a tüneteket vagy az életminőséget. A kezelés gyakori mellékhatásai a gastrointestinalis panaszok (pl. hasmenés), súlycsökkenés és pszichiátriai tünetek, amelyek különösen a roflumilasz esetén figyelhetők meg.",
+        "warnings": []
+      },
+      {
+        "pmid": "33295032",
+        "title": "Anti-IL-5 therapies for chronic obstructive pulmonary disease.",
+        "year": 2020,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 12.74,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg súlyos COPD-jében (GOLD 3) és kórházi exacerbációi miatt az orvos döntési pontja az inhalációs kortikoszteroid helyett egy biológiai szer (anti-IL-5) alkalmazása. A beteg eozinofilszáma (350/µL) meghaladja a cikkben említett határértékeket, így a tanulmány eredményei alátámasztják az anti-IL-5 terápia potenciális hasznosságát ebben a specifikus fenotípusú COPD-ben.",
+        "summary": "A rendszeres áttekintés azt vizsgálja, hogy az IL-5 elleni monoklonális antitestek (mepolizumab, benralizumab) csökkentik-e a COPD exacerbációinak gyakoriságát. A fő eredmény szerint ezek a gyógyszerek valószínűleg csökkenést okoznak a mérsékelt és súlyos rohamok arányában azoknál a betegekben, akiknél az eozinofilszám magas (pl. mepolizumab 100 mg esetén legalább 150/µL felett), míg alacsonyabb eozinofilszámnál a hatás bizonytalan vagy kisebb.",
+        "warnings": []
+      },
+      {
+        "pmid": "36971693",
+        "title": "Inhaled corticosteroids versus placebo for stable chronic obstructive pulmonary disease.",
+        "year": 2023,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 13.37,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns a beteg esetében, mivel az orvos döntési pontja az inhalációs kortikoszteroid hozzáadása (kombinált terápia) vagy elutasítása. Bár a tanulmány fókuszában a monoalkalmazás áll, a levezetésben kifejezetten támogatja az ICS kombinált használatát bronchodilatátorral, ami a beteg jelenlegi tiotropium és olodaterol kezelésének logikus kiterjesztése lehet, különösen figyelembe véve a súlyos exacerbációk történetét.",
+        "summary": "A rendszeres áttekintés azt vizsgálja, hogy az inhalációs kortikoszteroidok (ICS) monoterápia formájában stabil COPD-ben hogyan befolyásolják a súlyosbodások gyakoriságát és a tüdőfunkciót. A fő eredmények szerint a hosszú távú ICS-monoalkalmazás csökkenti a súlyosbodások arányát és lassítja az FEV1 romlását, de növeli a pneumonia kockázatát és nem csökkenti az összes halálozást. A szerzők hangsúlyozzák, hogy bár a monoalkalmazás bizonyos előnyökkel jár, az ICS-eket COPD-ben nem javasolják egyedül, hanem csak hosszúhatású bronchodilatátorral kombinálva kell alkalmazni.",
+        "warnings": []
+      },
+      {
+        "pmid": "28922692",
+        "title": "Phosphodiesterase 4 inhibitors for chronic obstructive pulmonary disease.",
+        "year": 2017,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 11.14,
+        "relevance": "HIGH",
+        "reason": "A cikk közvetlenül releváns, mivel a beteg jelenlegi döntési lehetősége között szerepel a roflumilaszt használata; az összefoglaló adatok (exacerbációk száma, súlyos GOLD 3 stádium) alátámasztják a gyógyszer potenciális előnyét a kórházi felvételek megelőzésében, ugyanakkor a mellékhatásokat is figyelembe kell venni.",
+        "summary": "A Cochrane áttekintés 34 randomizált kontrollált vizsgálat elemzésével igazolta, hogy a PDE4-gátlók (különösen a roflumilaszt) jelentősen csökkentik a COPD exacerbációk kockázatát és enyhítik a tüdőfunkciót, de kevés hatással vannak az életminőségre. A kezelés gyakori mellékhatásai a gyomor-bélrendszeri tünetek (pl. hasmenés), súlyvesztés és pszichés problémák, míg halálozási csökkenést nem találtak.",
+        "warnings": []
+      },
+      {
+        "pmid": "27189863",
+        "title": "Chronic obstructive pulmonary disease.",
+        "year": 2015,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 9.34,
+        "relevance": "HIGH",
+        "reason": "A cikk releváns, mivel a beteg eozinofilszáma (350/µl) és a GOLD 3-as COPD diagnózisa összhangban van a szövegben említett asztmás jellemzőkkel (eozinofil gyulladás), amelyekre a kortikoszteroidok használatát javasolja a szakirodalom.",
+        "summary": "A cikk áttekinti a COPD kockázati tényezőit, mechanizmusait és kezelési irányelveit, kiemelve, hogy az inhalációs kortikoszteroidok elsősorban asztmás jellemzőket (mint az eozinofil gyulladás) mutató betegek számára nyújtanak előnyt. A stabil betegség kezelésének alapja a hosszú hatású bronchodilatátorok használata, míg a betegség lefolyásának lassítására jelenleg nincs olyan gyógyszer, amely ezt közvetlenül csökkentené.",
+        "warnings": []
+      },
+      {
+        "pmid": "42831088",
+        "title": "Unmet Needs and New Opportunities in Chronic Obstructive Pulmonary Disease in Italy: A Narrative Review with Insights from the GULP Study.",
+        "year": 2026,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 13.4,
+        "relevance": "HIGH",
+        "reason": "A beteg eozinofilszáma (350/µl) az eozinofil COPD kategóriába esik, és kórházi exacerbációk történtek nála, ami közvetlenül kapcsolódik a cikkben tárgyalt típusú 2 gyulladásos mechanizmusokhoz és a biológiai terápiák (mint például a dupilumab) alkalmazásának indokoltságához. Mivel az orvos inhalációs kortikoszteroid vagy roflumilaszt adását fontolgatja, ez a cikk releváns alternatív kezelési lehetőségekkel és a típusú 2 gyulladásos útvonalra ható gyógyszerek szerepével kapcsolatban.",
+        "summary": "A cikk narratív áttekintés és elemzés formájában vizsgálja a COPD-ben fellépő típusú 2 gyulladás szerepét, különös tekintettel az eozinofília alapján kiválasztott betegek biológiai terápiára való alkalmasságára. A GULP kohorsz adatai szerint az eozinofil szám alapján felosztott betegek körében a dupilumab (egy típusú 2 elleni biológikum) jelenleg Olaszországban engedélyezett, és kedvező hatékonysággal rendelkezik instabil, tünetmentes COPD-ben szenvedők kezelésére. A tanulmány hangsúlyozza, hogy a klinikai és biomarker alapú fenotípozás elengedhetetlen a megfelelő terápiás döntés meghozatalához.",
+        "warnings": []
+      },
+      {
+        "pmid": "42773542",
+        "title": "Updates in COPD Management: From Inflammatory Pathways to Targeted Therapies.",
+        "year": 2026,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 8.78,
+        "relevance": "HIGH",
+        "reason": "A beteg eozinofilszáma (350/µl) és a kórházi exacerbációk története közvetlenül kapcsolódik a cikkben említett eozinofil gyulladásos fenotípusra és a roflumilaszt terápiás hatására vonatkozó eredményekhez.",
+        "summary": "A cikk áttekinti a COPD kezelésének új irányait, hangsúlyozva az gyulladásos fenotípusok (mint az eozinofília) és biomarkerek figyelembevételét. A tanulmány kimutatja, hogy a magas vér-eozinofil szinttel rendelkező betegekben az inhalációs kortikoszteroid vagy biológiai terápiák alkalmazása javítja az eredményeket, míg a roflumilaszt gyakori exacerbációk csökkentésére hatékony.",
+        "warnings": []
+      },
+      {
+        "pmid": "37348121",
+        "title": "Targeting Type 2 Inflammation and Epithelial Alarmins in Chronic Obstructive Pulmonary Disease: A Biologics Outlook.",
+        "year": 2023,
+        "screen": "HIGH",
+        "picked": false,
+        "seconds": 9.23,
+        "relevance": "HIGH",
+        "reason": "A beteg esetében releváns, mivel az eozinofilszáma (350/µl) II-es típusú gyulladást jelez, és a cikk közvetlenül tárgyalja ezt a mechanizmust, valamint az inhalációs kortikoszteroidok vagy más új terápiák (mint a roflumilaszt) lehetséges szerepét ebben a populációban.",
+        "summary": "A cikk áttekinti a krónikus obstruktív légúti betegségek (COPD) kezelésének jelenlegi tájképét, kiemelve, hogy míg a neutrofil gyulladás dominál, addig a betegek 20-40%-ánál előfordul II-es típusú gyulladás. A tanulmány vizsgálja az eozinofilek szerepét ebben a folyamatban és indokolja az új terápiák célzott alkalmazását ezen gyulladásos útvonalak ellen.",
+        "warnings": []
+      }
+    ],
+    "articles": [
+      {
+        "pmid": "27930803",
+        "title": "Pulmonary rehabilitation following exacerbations of chronic obstructive pulmonary disease.",
+        "pubYear": 2016,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 1,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "34368950",
+        "title": "Chronic non-invasive ventilation for chronic obstructive pulmonary disease.",
+        "pubYear": 2021,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 2,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "35616126",
+        "title": "Magnesium sulfate for acute exacerbations of chronic obstructive pulmonary disease.",
+        "pubYear": 2022,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 3,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "22419331",
+        "title": "Airway clearance techniques for chronic obstructive pulmonary disease.",
+        "pubYear": 2012,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 4,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "34495549",
+        "title": "Integrated disease management interventions for patients with chronic obstructive pulmonary disease.",
+        "pubYear": 2021,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 5,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "31107966",
+        "title": "Mucolytic agents versus placebo for chronic bronchitis or chronic obstructive pulmonary disease.",
+        "pubYear": 2019,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 6,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "28702957",
+        "title": "Non-invasive ventilation for the management of acute hypercapnic respiratory failure due to exacerbation of chronic obstructive pulmonary disease.",
+        "pubYear": 2017,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 7,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "34693988",
+        "title": "Telehealth interventions: remote monitoring and consultations for people with chronic obstructive pulmonary disease (COPD).",
+        "pubYear": 2021,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 8,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "35993916",
+        "title": "Pulmonary rehabilitation versus usual care for adults with asthma.",
+        "pubYear": 2022,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 9,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "38054551",
+        "title": "Inhaled corticosteroids with combination inhaled long-acting beta2-agonists and long-acting muscarinic antagonists for chronic obstructive pulmonary disease.",
+        "pubYear": 2023,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 10,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "28777450",
+        "title": "Self-management interventions including action plans for exacerbations versus usual care in patients with chronic obstructive pulmonary disease.",
+        "pubYear": 2017,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 11,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "29411860",
+        "title": "Self-management for bronchiectasis.",
+        "pubYear": 2018,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 12,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "33945639",
+        "title": "Combination fixed-dose beta agonist and steroid inhaler as required for adults or children with mild asthma.",
+        "pubYear": 2021,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 13,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "35262185",
+        "title": "Inhaled corticosteroids for the treatment of COVID-19.",
+        "pubYear": 2022,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 14,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "39329240",
+        "title": "Vitamin D for the management of chronic obstructive pulmonary disease.",
+        "pubYear": 2024,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 15,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "33448349",
+        "title": "Prophylactic antibiotics for adults with chronic obstructive pulmonary disease: a network meta-analysis.",
+        "pubYear": 2021,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 16,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "32356609",
+        "title": "Phosphodiesterase-4 inhibitors for chronic obstructive pulmonary disease.",
+        "pubYear": 2020,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 17,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "33295032",
+        "title": "Anti-IL-5 therapies for chronic obstructive pulmonary disease.",
+        "pubYear": 2020,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 18,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "34496032",
+        "title": "Interventions to improve adherence to pharmacological therapy for chronic obstructive pulmonary disease (COPD).",
+        "pubYear": 2021,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 19,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "29943802",
+        "title": "Influenza vaccine for chronic obstructive pulmonary disease (COPD).",
+        "pubYear": 2018,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 20,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "36971693",
+        "title": "Inhaled corticosteroids versus placebo for stable chronic obstructive pulmonary disease.",
+        "pubYear": 2023,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 21,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "32844430",
+        "title": "Proton pump inhibitors for chronic obstructive pulmonary disease.",
+        "pubYear": 2020,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 22,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "30371937",
+        "title": "Antibiotics for exacerbations of chronic obstructive pulmonary disease.",
+        "pubYear": 2018,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 23,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "28922692",
+        "title": "Phosphodiesterase 4 inhibitors for chronic obstructive pulmonary disease.",
+        "pubYear": 2017,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 24,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "31425628",
+        "title": "Statins versus placebo for people with chronic obstructive pulmonary disease.",
+        "pubYear": 2019,
+        "journal": "The Cochrane database of systematic reviews",
+        "rank": 25,
+        "sources": [
+          "COCHRANE"
+        ]
+      },
+      {
+        "pmid": "40392521",
+        "title": "Chronic Obstructive Pulmonary Disease (COPD): Developments in Pharmacological Treatments.",
+        "pubYear": 2025,
+        "journal": "Drugs",
+        "rank": 26,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42904223",
+        "title": "Real-World Effectiveness of Tezepelumab in Severe Asthma: A 12-Month Canadian Cohort Study.",
+        "pubYear": 2026,
+        "journal": "Journal of asthma and allergy",
+        "rank": 27,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "27189863",
+        "title": "Chronic obstructive pulmonary disease.",
+        "pubYear": 2015,
+        "journal": "Nature reviews. Disease primers",
+        "rank": 28,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42831088",
+        "title": "Unmet Needs and New Opportunities in Chronic Obstructive Pulmonary Disease in Italy: A Narrative Review with Insights from the GULP Study.",
+        "pubYear": 2026,
+        "journal": "International journal of chronic obstructive pulmonary disease",
+        "rank": 29,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "40293759",
+        "title": "Non-Cystic Fibrosis Bronchiectasis in Adults: A Review.",
+        "pubYear": 2025,
+        "journal": "JAMA",
+        "rank": 30,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42773542",
+        "title": "Updates in COPD Management: From Inflammatory Pathways to Targeted Therapies.",
+        "pubYear": 2026,
+        "journal": "European journal of clinical investigation",
+        "rank": 31,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "37348121",
+        "title": "Targeting Type 2 Inflammation and Epithelial Alarmins in Chronic Obstructive Pulmonary Disease: A Biologics Outlook.",
+        "pubYear": 2023,
+        "journal": "American journal of respiratory and critical care medicine",
+        "rank": 32,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42928777",
+        "title": "Comparative Real-World Effectiveness of Dupilumab, Mepolizumab, and Benralizumab in Patients with Chronic Obstructive Pulmonary Disease: A Propensity Score-Matched Cohort Study.",
+        "pubYear": 2026,
+        "journal": "Drug design, development and therapy",
+        "rank": 33,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "30806700",
+        "title": "Diagnosis and Outpatient Management of Chronic Obstructive Pulmonary Disease: A Review.",
+        "pubYear": 2019,
+        "journal": "JAMA",
+        "rank": 34,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42377152",
+        "title": "Prevalence of blood eosinophilia and its impact on lung functions in stable chronic obstructive pulmonary disease patients.",
+        "pubYear": 2026,
+        "journal": "Lung India : official organ of Indian Chest Society",
+        "rank": 35,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "38383272",
+        "title": "Multidisciplinary Management of Patients With Chronic Obstructive Pulmonary Disease and Cardiovascular Disease.",
+        "pubYear": 2024,
+        "journal": "Archivos de bronconeumologia",
+        "rank": 36,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42667442",
+        "title": "Optimizing Inhaled Corticosteroid Prescribing in COPD: Evaluating the Impact of Eosinophil Testing on Clinical Outcomes.",
+        "pubYear": 2026,
+        "journal": "Lung",
+        "rank": 37,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "38508668",
+        "title": "Inhaled versus systemic corticosteroids for acute exacerbations of COPD: a systematic review and meta-analysis.",
+        "pubYear": 2024,
+        "journal": "European respiratory review : an official journal of the European Respiratory Society",
+        "rank": 38,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42928917",
+        "title": "Real-World Impact of Mepolizumab in COPD in a US Commercial and Medicare Claims Database.",
+        "pubYear": 2026,
+        "journal": "International journal of chronic obstructive pulmonary disease",
+        "rank": 39,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "33146552",
+        "title": "Global Initiative for the Diagnosis, Management, and Prevention of Chronic Obstructive Lung Disease. The 2020 GOLD Science Committee Report on COVID-19 and Chronic Obstructive Pulmonary Disease.",
+        "pubYear": 2021,
+        "journal": "American journal of respiratory and critical care medicine",
+        "rank": 40,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42741955",
+        "title": "Risk factors for future exacerbations in patients with COPD treated with dual LABA/LAMA.",
+        "pubYear": 2026,
+        "journal": "Annals of medicine",
+        "rank": 41,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "26937187",
+        "title": "Exacerbations of COPD.",
+        "pubYear": 2016,
+        "journal": "International journal of chronic obstructive pulmonary disease",
+        "rank": 42,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42928880",
+        "title": "CONQUEST-ADVANCE: Achieving proDuctiVe implementAtioN of CONQUEST Quality Standards in COPD Care.",
+        "pubYear": 2026,
+        "journal": "Pragmatic and observational research",
+        "rank": 43,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "37690008",
+        "title": "2023 Canadian Thoracic Society Guideline on Pharmacotherapy in Patients With Stable COPD.",
+        "pubYear": 2023,
+        "journal": "Chest",
+        "rank": 44,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42643717",
+        "title": "Biological treatments for asthma and chronic obstructive pulmonary disease.",
+        "pubYear": 2026,
+        "journal": "BMJ medicine",
+        "rank": 45,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "33332995",
+        "title": "Inflammatory Endotype-associated Airway Microbiome in Chronic Obstructive Pulmonary Disease Clinical Stability and Exacerbations: A Multicohort Longitudinal Analysis.",
+        "pubYear": 2021,
+        "journal": "American journal of respiratory and critical care medicine",
+        "rank": 46,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42609817",
+        "title": "Real-World Identification of Eosinophilic COPD Patients Potentially Eligible for Dupilumab: A Retrospective Observational Study.",
+        "pubYear": 2026,
+        "journal": "International journal of chronic obstructive pulmonary disease",
+        "rank": 47,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "24507843",
+        "title": "Acute COPD exacerbations.",
+        "pubYear": 2014,
+        "journal": "Clinics in chest medicine",
+        "rank": 48,
+        "sources": [
+          "PUBMED"
+        ]
+      },
+      {
+        "pmid": "42699828",
+        "title": "A Narrative Review of Airway and Gut Microbiota in Chronic Obstructive Pulmonary Disease: Clinical Associations, Methodological Heterogeneity, and Translational Priorities.",
+        "pubYear": 2026,
+        "journal": "Cureus",
+        "rank": 49,
+        "sources": [
+          "EUROPE_PMC"
+        ]
+      },
+      {
+        "pmid": "39589286",
+        "title": "Role of Monoclonal Antibodies in the Management of Eosinophilic Chronic Obstructive Pulmonary Disease: A Meta-analysis of Randomized Controlled Trials.",
+        "pubYear": 2025,
+        "journal": "Annals of the American Thoracic Society",
+        "rank": 50,
+        "sources": [
+          "PUBMED"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,574 @@
+[
+  {
+    "model": "medgemma:latest",
+    "doc": 1,
+    "digest": {
+      "documentId": 1,
+      "title": "Kardiológiai szakrendelés",
+      "place": "Szintetikus Megyei Kórház – Kardiológiai Szakrendelés",
+      "summary": "A beteg 2-es típusú cukorbetegségben és korábbi szívinfarktusban szenvedett. Terhelésre nehézlégzést tapasztal, ami a tüdővizsgálaton is megjelent. Echokardiográfia során bal kamra tágulást és alacsony ejekciós frakciót találtak.",
+      "quote": "Krónikus szívelégtelenség csökkent ejekciós frakcióval (BNO: I50.9)",
+      "events": [
+        {
+          "date": "2018",
+          "title": "Diabetes mellitus diagnózisa",
+          "quote": "2018 óta ismert 2-es típusú diabetes mellitus"
+        },
+        {
+          "date": "2021",
+          "title": "Szívinfarktus diagnózisa",
+          "quote": "2021-ben szívinfarktus miatt a jobb koszorúéren PCI és stent beültetés történt"
+        }
+      ],
+      "diagnoses": [
+        {
+          "name": "Krónikus szívelégtelenség",
+          "bnoCode": "I50.9",
+          "since": null,
+          "quote": "Krónikus szívelégtelenség csökkent ejekciós frakcióval"
+        },
+        {
+          "name": "2-es típusú diabetes mellitus",
+          "bnoCode": "E11.9",
+          "since": null,
+          "quote": "2-es típusú diabetes mellitus"
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "5c429c6928351c71766440787f1162848ca8c8fa32cf677585fc42da5b402d01",
+        "extractorVersion": "docproc-18"
+      },
+      "promptHash": "5c429c6928351c71766440787f1162848ca8c8fa32cf677585fc42da5b402d01"
+    },
+    "seconds": 14.9
+  },
+  {
+    "model": "medgemma:latest",
+    "doc": 2,
+    "digest": {
+      "documentId": 2,
+      "title": "KONZÍLIUM",
+      "place": "Szintetikus Megyei Kórház – Nefrológiai Szakrendelés",
+      "summary": "A betegnek csökkent vesefunkciója van, a kreatininnivel és eGFR-rel is. Metformin adagját csökkenteni kell. Az anamnézisben magas vérnyomást említettek.",
+      "quote": "kreatinin 156 µmol/L, eGFR 38 mL/min/1,73m2, kálium 5,4 mmol/L.",
+      "events": [
+        {
+          "date": "2015",
+          "title": "Magas vérnyomás diagnózisa",
+          "quote": "Magas vérnyomás 2015 óta ismert."
+        }
+      ],
+      "diagnoses": [
+        {
+          "name": "Krónikus vesebetegség",
+          "bnoCode": "N18.3",
+          "since": "2026-06-02",
+          "quote": "Krónikus vesebetegség 3b stádium (BNO: N18.3)"
+        },
+        {
+          "name": "Metformintolerancia",
+          "bnoCode": null,
+          "since": null,
+          "quote": "A metformin adagja napi 2 x 500 mg-ra csökkentendő."
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "5c429c6928351c71766440787f1162848ca8c8fa32cf677585fc42da5b402d01",
+        "extractorVersion": "docproc-18"
+      },
+      "promptHash": "5c429c6928351c71766440787f1162848ca8c8fa32cf677585fc42da5b402d01"
+    },
+    "seconds": 7.0
+  },
+  {
+    "model": "medgemma:latest",
+    "doc": 3,
+    "digest": {
+      "documentId": 3,
+      "title": "Szívbetegség diagnózisa",
+      "place": "Szintetikus Megyei Kórház – Sürgősségi Betegellátó Osztály",
+      "summary": "A beteg nehézlégzéssel, ödémával jelentkezett, kórtalanul szállították be. A laboreredmények alapján szívelégtelenséget és magas kaliumszintet találtak. Furosemidot adottak neki, majd hazaengedték.",
+      "quote": "Diagnózis: Szívelégtelenség dekompenzációja (BNO: I50.9) Hyperkalaemia (BNO: E87.5)",
+      "events": [],
+      "diagnoses": [
+        {
+          "name": "Szívelégtelenség dekompenzációja",
+          "bnoCode": "I50.9",
+          "since": null,
+          "quote": "Szívelégtelenség dekompenzációja"
+        }
+      ],
+      "warnings": [
+        "Korábbi esemény (2010: X betegség diagnózisa) nem támasztható alá idézettel — kimaradt",
+        "Diagnózis (Hyperkalemia) nem támasztható alá idézettel — kimaradt"
+      ],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "5c429c6928351c71766440787f1162848ca8c8fa32cf677585fc42da5b402d01",
+        "extractorVersion": "docproc-18"
+      },
+      "promptHash": "5c429c6928351c71766440787f1162848ca8c8fa32cf677585fc42da5b402d01"
+    },
+    "seconds": 6.9
+  },
+  {
+    "model": "medgemma:latest",
+    "doc": 4,
+    "digest": {
+      "documentId": 4,
+      "title": "Echo cardiográfiás lelet",
+      "place": "Szintetikus Megyei Kórház – Kardiológia",
+      "summary": "A beteget echo cardiográfiára küldték a tágult bal kamaráról és alacsony EF-ról szólva. A vélemény szerint a bal kamra végdiasztolése nagy volt (64mm), az ejekciós frakció pedig csak 30%. Van is mitralis regurgitáció.",
+      "quote": "Bal kamra végdiasztolés átmérő: 64 mm Ejekciós frakció: 30 % Vélemény: Tágult bal kamra, súlyosan csökkent bal kamrai funkció (EF 30%), közepes fokú mitralis regurgitáció.",
+      "events": [
+        {
+          "date": "2026-09-21",
+          "title": "Echo cardiográfiás vizsgálat",
+          "quote": "Bal kamra végdiasztolés átmérő: 64 mm Ejekciós frakció: 30 %"
+        }
+      ],
+      "diagnoses": [
+        {
+          "name": "Táguló bal kamra",
+          "bnoCode": null,
+          "since": null,
+          "quote": "Tágult bal kamra"
+        },
+        {
+          "name": "Csökken a bal kamrai funkció",
+          "bnoCode": null,
+          "since": null,
+          "quote": "súlyosan csökkent bal kamrai funkció (EF 30%)"
+        },
+        {
+          "name": "Mitralis regurgitáció",
+          "bnoCode": null,
+          "since": null,
+          "quote": "közepes fokú mitralis regurgitáció"
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "5c429c6928351c71766440787f1162848ca8c8fa32cf677585fc42da5b402d01",
+        "extractorVersion": "docproc-18"
+      },
+      "promptHash": "5c429c6928351c71766440787f1162848ca8c8fa32cf677585fc42da5b402d01"
+    },
+    "seconds": 8.4
+  },
+  {
+    "model": "medgemma:latest",
+    "doc": null,
+    "timeline": [
+      {
+        "date": "2015",
+        "title": "Magas vérnyomás diagnózisa",
+        "text": "Magas vérnyomás 2015 óta ismert.",
+        "place": null,
+        "documentId": 2,
+        "kind": "HISTORY",
+        "flag": null
+      },
+      {
+        "date": "2018",
+        "title": "Diabetes mellitus diagnózisa",
+        "text": "2018 óta ismert 2-es típusú diabetes mellitus",
+        "place": null,
+        "documentId": 1,
+        "kind": "HISTORY",
+        "flag": null
+      },
+      {
+        "date": "2021",
+        "title": "Szívinfarktus diagnózisa",
+        "text": "2021-ben szívinfarktus miatt a jobb koszorúéren PCI és stent beültetés történt",
+        "place": null,
+        "documentId": 1,
+        "kind": "HISTORY",
+        "flag": null
+      },
+      {
+        "date": "2026-03-10",
+        "title": "Kardiológiai szakrendelés",
+        "text": "A beteg 2-es típusú cukorbetegségben és korábbi szívinfarktusban szenvedett. Terhelésre nehézlégzést tapasztal, ami a tüdővizsgálaton is megjelent. Echokardiográfia során bal kamra tágulást és alacsony ejekciós frakciót találtak.",
+        "place": "Szintetikus Megyei Kórház – Kardiológiai Szakrendelés",
+        "documentId": 1,
+        "kind": "DOCUMENT",
+        "flag": null
+      },
+      {
+        "date": "2026-06-02",
+        "title": "KONZÍLIUM",
+        "text": "A betegnek csökkent vesefunkciója van, a kreatininnivel és eGFR-rel is. Metformin adagját csökkenteni kell. Az anamnézisben magas vérnyomást említettek.",
+        "place": "Szintetikus Megyei Kórház – Nefrológiai Szakrendelés",
+        "documentId": 2,
+        "kind": "DOCUMENT",
+        "flag": null
+      },
+      {
+        "date": "2026-09-20",
+        "title": "Szívbetegség diagnózisa",
+        "text": "A beteg nehézlégzéssel, ödémával jelentkezett, kórtalanul szállították be. A laboreredmények alapján szívelégtelenséget és magas kaliumszintet találtak. Furosemidot adottak neki, majd hazaengedték.",
+        "place": "Szintetikus Megyei Kórház – Sürgősségi Betegellátó Osztály",
+        "documentId": 3,
+        "kind": "DOCUMENT",
+        "flag": null
+      },
+      {
+        "date": "2026-09-21",
+        "title": "Echo cardiográfiás lelet",
+        "text": "A beteget echo cardiográfiára küldték a tágult bal kamaráról és alacsony EF-ról szólva. A vélemény szerint a bal kamra végdiasztolése nagy volt (64mm), az ejekciós frakció pedig csak 30%. Van is mitralis regurgitáció.",
+        "place": "Szintetikus Megyei Kórház – Kardiológia",
+        "documentId": 4,
+        "kind": "DOCUMENT",
+        "flag": null
+      },
+      {
+        "date": "2026-09-21",
+        "title": "Echo cardiográfiás vizsgálat",
+        "text": "Bal kamra végdiasztolés átmérő: 64 mm Ejekciós frakció: 30 %",
+        "place": null,
+        "documentId": 4,
+        "kind": "HISTORY",
+        "flag": null
+      }
+    ],
+    "diagnoses": [
+      {
+        "name": "Táguló bal kamra",
+        "bnoCode": null,
+        "date": "2026-09-21",
+        "documentId": 4
+      },
+      {
+        "name": "Csökken a bal kamrai funkció",
+        "bnoCode": null,
+        "date": "2026-09-21",
+        "documentId": 4
+      },
+      {
+        "name": "Mitralis regurgitáció",
+        "bnoCode": null,
+        "date": "2026-09-21",
+        "documentId": 4
+      },
+      {
+        "name": "Krónikus vesebetegség",
+        "bnoCode": "N18.3",
+        "date": "2026-06-02",
+        "documentId": 2
+      },
+      {
+        "name": "Metformintolerancia",
+        "bnoCode": null,
+        "date": "2026-06-02",
+        "documentId": 2
+      },
+      {
+        "name": "Krónikus szívelégtelenség",
+        "bnoCode": "I50.9",
+        "date": "2026-03-10",
+        "documentId": 1
+      },
+      {
+        "name": "2-es típusú diabetes mellitus",
+        "bnoCode": "E11.9",
+        "date": "2026-03-10",
+        "documentId": 1
+      }
+    ]
+  },
+  {
+    "model": "medgemma:27b",
+    "doc": 1,
+    "digest": {
+      "documentId": 1,
+      "title": "Ambuláns lap",
+      "place": "Szintetikus Megyei Kórház – Kardiológiai Szakrendelés",
+      "summary": "A beteg terhelésre nehézlégzést és éjszakai köhécset tapasztal. A vizsgálat során krónikus szívelégtelenséget csökkent ejekciós frakcióval diagnosztizáltak (EF 32%), valamint ismert 2-es típusú cukorbetegség is fennáll. Javasolt a dapagliflozin bevezetése a meglévő terápiához.",
+      "quote": "Diagnózis: Krónikus szívelégtelenség csökkent ejekciós frakcióval (BNO: I50.9) 2-es típusú diabetes mellitus (BNO: E11.9)",
+      "events": [
+        {
+          "date": "2018",
+          "title": "2-es típusú diabetes mellitus diagnózisa",
+          "quote": "2018 óta ismert 2-es típusú diabetes mellitus, metforminnal kezelt."
+        },
+        {
+          "date": "2021",
+          "title": "Szívinfarktus miatt PCI és stent beültetés",
+          "quote": "2021-ben szívinfarktus miatt a jobb koszorúéren PCI és stent beültetés történt."
+        },
+        {
+          "date": "2021",
+          "title": "Dohányzás abbahagyása",
+          "quote": "Dohányzást 2021-ben abbahagyta."
+        }
+      ],
+      "diagnoses": [
+        {
+          "name": "Krónikus szívelégtelenség csökkent ejekciós frakcióval",
+          "bnoCode": "I50.9",
+          "since": null,
+          "quote": "Diagnózis: Krónikus szívelégtelenség csökkent ejekciós frakcióval (BNO: I50.9)"
+        },
+        {
+          "name": "2-es típusú diabetes mellitus",
+          "bnoCode": "E11.9",
+          "since": "2018",
+          "quote": "Diagnózis: 2-es típusú diabetes mellitus (BNO: E11.9)"
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "49150c4c5a1ec034b58395403fc9c1ca7818ecceff5a7fc67baec07fa5e040e8",
+        "extractorVersion": "docproc-18"
+      },
+      "promptHash": "49150c4c5a1ec034b58395403fc9c1ca7818ecceff5a7fc67baec07fa5e040e8"
+    },
+    "seconds": 199.1
+  },
+  {
+    "model": "medgemma:27b",
+    "doc": 2,
+    "digest": {
+      "documentId": 2,
+      "title": "KONZÍLIUM",
+      "place": "Szintetikus Megyei Kórház – Nefrológiai Szakrendelés",
+      "summary": "A beteg vizsgálatra jelentkezett csökkent vesefunkció és metformin adagolás miatt. Lelet alapján krónikus vesebetegség 3b stádium diagnózist állapították meg, javasolt a metformin adagjának csökkentése, valamint kálium ellenőrzés és nefrológiai kontroll.",
+      "quote": "A metformin adagja napi 2 x 500 mg-ra csökkentendő. Spironolakton mellett havonta kálium-ellenőrzés javasolt. Nefrológiai kontroll fél év múlva.",
+      "events": [
+        {
+          "date": "2015",
+          "title": "Magas vérnyomás",
+          "quote": "Magas vérnyomás 2015 óta ismert."
+        }
+      ],
+      "diagnoses": [
+        {
+          "name": "Krónikus vesebetegség 3b stádium",
+          "bnoCode": "N18.3",
+          "since": null,
+          "quote": "Diagnózis: Krónikus vesebetegség 3b stádium (BNO: N18.3)"
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "49150c4c5a1ec034b58395403fc9c1ca7818ecceff5a7fc67baec07fa5e040e8",
+        "extractorVersion": "docproc-18"
+      },
+      "promptHash": "49150c4c5a1ec034b58395403fc9c1ca7818ecceff5a7fc67baec07fa5e040e8"
+    },
+    "seconds": 92.7
+  },
+  {
+    "model": "medgemma:27b",
+    "doc": 3,
+    "digest": {
+      "documentId": 3,
+      "title": "Ambuláns lap",
+      "place": "Szintetikus Megyei Kórház – Sürgősségi Betegellátó Osztály",
+      "summary": "A beteg három napja fokozódó nehézlégzéssel, bokaödémával jelentkezett. A vizsgálat során szívelégtelenség dekompenzációját és hyperkaemiát diagnosztizáltak.",
+      "quote": "Panasz: három napja fokozódó nehézlégzés, mindkét oldali bokaödéma, éjszaka csak ülve tud aludni. Diagnózis: Szívelégtelenség dekompenzációja (BNO: I50.9) Hyperkalaemia (BNO: E87.5)",
+      "events": [],
+      "diagnoses": [
+        {
+          "name": "Szívelégtelenség dekompenzációja",
+          "bnoCode": "I50.9",
+          "since": null,
+          "quote": "Diagnózis: Szívelégtelenség dekompenzációja (BNO: I50.9)"
+        },
+        {
+          "name": "Hyperkalaemia",
+          "bnoCode": "E87.5",
+          "since": null,
+          "quote": "Hyperkalaemia"
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "49150c4c5a1ec034b58395403fc9c1ca7818ecceff5a7fc67baec07fa5e040e8",
+        "extractorVersion": "docproc-18"
+      },
+      "promptHash": "49150c4c5a1ec034b58395403fc9c1ca7818ecceff5a7fc67baec07fa5e040e8"
+    },
+    "seconds": 100.6
+  },
+  {
+    "model": "medgemma:27b",
+    "doc": 4,
+    "digest": {
+      "documentId": 4,
+      "title": "Echokardiográfiai lelet vizsgálat",
+      "place": "Szintetikus Megyei Kórház – Kardiológia",
+      "summary": "A vizsgálat tágult bal kamrát és súlyosan csökkent bal kamrai funkciót (EF 30%) mutatott ki, valamint közepes fokú mitralis regurgitációt is talált.",
+      "quote": "Tágult bal kamra, súlyosan csökkent bal kamrai funkció (EF 30%), közepes fokú mitralis regurgitáció.",
+      "events": [],
+      "diagnoses": [
+        {
+          "name": "Tágult bal kamra",
+          "bnoCode": null,
+          "since": null,
+          "quote": "Tágult bal kamra"
+        },
+        {
+          "name": "Súlyosan csökkent bal kamrai funkció",
+          "bnoCode": null,
+          "since": null,
+          "quote": "súlyosan csökkent bal kamrai funkció (EF 30%)"
+        },
+        {
+          "name": "Közepes fokú mitralis regurgitáció",
+          "bnoCode": null,
+          "since": null,
+          "quote": "közepes fokú mitralis regurgitáció"
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "49150c4c5a1ec034b58395403fc9c1ca7818ecceff5a7fc67baec07fa5e040e8",
+        "extractorVersion": "docproc-18"
+      },
+      "promptHash": "49150c4c5a1ec034b58395403fc9c1ca7818ecceff5a7fc67baec07fa5e040e8"
+    },
+    "seconds": 91.5
+  },
+  {
+    "model": "medgemma:27b",
+    "doc": null,
+    "timeline": [
+      {
+        "date": "2015",
+        "title": "Magas vérnyomás",
+        "text": "Magas vérnyomás 2015 óta ismert.",
+        "place": null,
+        "documentId": 2,
+        "kind": "HISTORY",
+        "flag": null
+      },
+      {
+        "date": "2018",
+        "title": "2-es típusú diabetes mellitus diagnózisa",
+        "text": "2018 óta ismert 2-es típusú diabetes mellitus, metforminnal kezelt.",
+        "place": null,
+        "documentId": 1,
+        "kind": "HISTORY",
+        "flag": null
+      },
+      {
+        "date": "2021",
+        "title": "Szívinfarktus miatt PCI és stent beültetés",
+        "text": "2021-ben szívinfarktus miatt a jobb koszorúéren PCI és stent beültetés történt.",
+        "place": null,
+        "documentId": 1,
+        "kind": "HISTORY",
+        "flag": null
+      },
+      {
+        "date": "2021",
+        "title": "Dohányzás abbahagyása",
+        "text": "Dohányzást 2021-ben abbahagyta.",
+        "place": null,
+        "documentId": 1,
+        "kind": "HISTORY",
+        "flag": null
+      },
+      {
+        "date": "2026-03-10",
+        "title": "Ambuláns lap",
+        "text": "A beteg terhelésre nehézlégzést és éjszakai köhécset tapasztal. A vizsgálat során krónikus szívelégtelenséget csökkent ejekciós frakcióval diagnosztizáltak (EF 32%), valamint ismert 2-es típusú cukorbetegség is fennáll. Javasolt a dapagliflozin bevezetése a meglévő terápiához.",
+        "place": "Szintetikus Megyei Kórház – Kardiológiai Szakrendelés",
+        "documentId": 1,
+        "kind": "DOCUMENT",
+        "flag": null
+      },
+      {
+        "date": "2026-06-02",
+        "title": "KONZÍLIUM",
+        "text": "A beteg vizsgálatra jelentkezett csökkent vesefunkció és metformin adagolás miatt. Lelet alapján krónikus vesebetegség 3b stádium diagnózist állapították meg, javasolt a metformin adagjának csökkentése, valamint kálium ellenőrzés és nefrológiai kontroll.",
+        "place": "Szintetikus Megyei Kórház – Nefrológiai Szakrendelés",
+        "documentId": 2,
+        "kind": "DOCUMENT",
+        "flag": null
+      },
+      {
+        "date": "2026-09-20",
+        "title": "Ambuláns lap",
+        "text": "A beteg három napja fokozódó nehézlégzéssel, bokaödémával jelentkezett. A vizsgálat során szívelégtelenség dekompenzációját és hyperkaemiát diagnosztizáltak.",
+        "place": "Szintetikus Megyei Kórház – Sürgősségi Betegellátó Osztály",
+        "documentId": 3,
+        "kind": "DOCUMENT",
+        "flag": null
+      },
+      {
+        "date": "2026-09-21",
+        "title": "Echokardiográfiai lelet vizsgálat",
+        "text": "A vizsgálat tágult bal kamrát és súlyosan csökkent bal kamrai funkciót (EF 30%) mutatott ki, valamint közepes fokú mitralis regurgitációt is talált.",
+        "place": "Szintetikus Megyei Kórház – Kardiológia",
+        "documentId": 4,
+        "kind": "DOCUMENT",
+        "flag": null
+      }
+    ],
+    "diagnoses": [
+      {
+        "name": "Tágult bal kamra",
+        "bnoCode": null,
+        "date": "2026-09-21",
+        "documentId": 4
+      },
+      {
+        "name": "Súlyosan csökkent bal kamrai funkció",
+        "bnoCode": null,
+        "date": "2026-09-21",
+        "documentId": 4
+      },
+      {
+        "name": "Közepes fokú mitralis regurgitáció",
+        "bnoCode": null,
+        "date": "2026-09-21",
+        "documentId": 4
+      },
+      {
+        "name": "Hyperkalaemia",
+        "bnoCode": "E87.5",
+        "date": "2026-09-20",
+        "documentId": 3
+      },
+      {
+        "name": "Krónikus vesebetegség 3b stádium",
+        "bnoCode": "N18.3",
+        "date": "2026-06-02",
+        "documentId": 2
+      },
+      {
+        "name": "Krónikus szívelégtelenség csökkent ejekciós frakcióval",
+        "bnoCode": "I50.9",
+        "date": "2026-03-10",
+        "documentId": 1
+      },
+      {
+        "name": "2-es típusú diabetes mellitus",
+        "bnoCode": "E11.9",
+        "date": "2018",
+        "documentId": 1
+      }
+    ]
+  }
+]

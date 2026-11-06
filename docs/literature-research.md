@@ -44,10 +44,20 @@ Frontend: lapozáskor a megnyitott oldal még nem értékelt cikkeit kéri (POST
 ```
 
 **A keresőkifejezés (2026-10-24)**: a modell nem a kész kifejezést írja (szabad szövegben a qwen3.5:9b csak
-kulcsszavakat adott), hanem JSON-sémával 1–3 fogalmat (`mesh` fejléc + 1–3 szabad szavas szinonima); a
-PubMed-szintaxist a kód rakja össze (`research.build_query`): `(Heading[MeSH Terms] OR Heading[tiab] OR
-syn[tiab]) AND (…)`. Idézőjel nélkül, mert így a PubMed a belépési alakot a fejlécre képezi le, és a nem
-létező fejlécet kihagyja (idézőjelesen a csoport nullázódhat) — ezért kell mellé a `[tiab]`. Nem és
+kulcsszavakat adott), hanem JSON-sémával egy fő problémát (`main`) és 0–3 társult problémát (`related`), mindegyik
+`mesh` fejléc + 1–2 szabad szavas szinonima; a PubMed-szintaxist a kód rakja össze (`research.build_query`):
+`(Heading[MeSH Terms] OR Heading OR syn) AND (társult1 OR syn OR társult2 …)`. Idézőjel nélkül, mert így a PubMed a
+belépési alakot a fejlécre képezi le, és a nem létező fejlécet kihagyja (idézőjelesen a csoport nullázódhat; a
+„Palpitations” pl. nem fejléc) — ezért kellenek mellé a szabad szavas alakok.
+**Javítás (2026-10-26)**, mert a 2026-10-24-es változat kevésbé releváns találatot adott (mérve a TAJ 200 403 111-es
+betegen): (1) a 2–3 ÉS-sel kötött fogalom (palpitáció + eozinopénia + reflux) 0 találatot adott, két fogalomnál pedig
+a modell mindig a „nyitott kérdést” (eozinopénia, NSVT) választotta, nem a GERD–aritmia cikkeket hozó refluxot — ezért
+fő probléma ÉS (társult problémák VAGY); (2) a szabad szavas alak **mezőjelölő nélkül** megy (nem `[tiab]`): így a
+PubMed automatikus leképezése a többes számot, a szóváltozatokat és a MeSH-et is keresi (a `[tiab]` csak a pontos
+alakot). A társult csoport jelölő nélküli (fejléc nélkül), így a felület chipjei bontani tudják. Az Europe PMC-nek a
+kifejezés a PubMed balról jobbra kiértékelése szerint bezárójelezve megy (ott az AND erősebb, vegyes ÉS / VAGY-nál
+mást keresett). A „találat a forrásban” legalább a letöltött különböző cikkek száma (a legnagyobb forrásé, de a
+források uniója több lehet — „34 találat, 41 letöltve”). Nem és
 életkor(csoport) (`male`, `adult`, `aged` …) determinisztikusan kimarad; életkori szűrőt az orvos kézzel adhat.
 
 **Kulcsszavak chipként (2026-10-24, Szabi kérése)**: a kifejezés alatt a fogalmak csoportonként, chipként
@@ -56,10 +66,10 @@ között alapból ÉS, de fogalmanként VAGY-ra váltható (ÉS / VAGY kapcsoló
 PubMed balról jobbra értékel (`A AND B OR C` = `(A AND B) OR C`), ezt a felület ki is írja. Chip szerkeszthető (kattintás), törölhető, csoporthoz új alak, új fogalom (MeSH-ként vagy szabad szóként)
 adható, fogalom törölhető — **minden változás azonnal újraépíti a kifejezést**. A fogalmak **nem tárolódnak
 külön** (nincs séma-változás): a `lib/keresoKifejezes.ts` a kifejezésből bontja vissza őket (`bont`), és ugyanazzal
-a szabállyal rakja össze (`epit`), mint a `build_query` (mesh → `[MeSH Terms]` + `[tiab]`, ismétlődő alak egyszer,
+a szabállyal rakja össze (`epit`), mint a `build_query` (mesh → `[MeSH Terms]` + jelölő nélkül, ismétlődő alak egyszer,
 szintaxisjel kiszűrve) — a modell kifejezésére `epit(bont(q)) == q`. Így a kifejezés marad az egyetlen igazság, a
-kézzel átírt kifejezés is bontható, ha ezt a szerkezetet követi; ha nem (pl. `NOT`, idézőjeles kifejezés, mezőjelölő
-nélküli szó), a chipek helyén üzenet áll, és csak a szövegmező szerkeszthető. A demográfiai szűrés a chipeknél nincs
+kézzel átírt kifejezés is bontható, ha ezt a szerkezetet követi (a régi `[tiab]`-os is: újraépítéskor jelölő nélküli
+lesz); ha nem (pl. `NOT`, csonkolás, más mezőjelölő), a chipek helyén üzenet áll, és csak a szövegmező szerkeszthető. A demográfiai szűrés a chipeknél nincs
 (az orvos döntése); a betegazonosító-kaput (`OutboundQueryGate`) ez nem érinti, minden keresésnél fut.
 
 ## AI-rangsor: a legrelevánsabb cikk kiemelése (V32)

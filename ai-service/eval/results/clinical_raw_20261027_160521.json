@@ -1,0 +1,917 @@
+[
+  {
+    "model": "medgemma:latest",
+    "part": "chat",
+    "question": "Melyek a kóros laborértékei?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "**Kálium**: 5,8 mmol/L (felett), 5,4 mmol/L (felett)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 100
+            },
+            {
+              "kind": "LAB_RESULT",
+              "id": 101
+            }
+          ]
+        },
+        {
+          "text": "**Kreatinin**: 156 µmol/L (felett)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 102
+            }
+          ]
+        },
+        {
+          "text": "**eGFR**: 38 mL/min/1,73m2 (alatt)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 103
+            }
+          ]
+        },
+        {
+          "text": "**NT-proBNP**: 4200 pg/mL (felett)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 104
+            }
+          ]
+        },
+        {
+          "text": "**HbA1c**: 7,9 % (felett)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 105
+            }
+          ]
+        },
+        {
+          "text": "**Nátrium**: 138 mmol/L (ref 136–145)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 106
+            }
+          ]
+        },
+        {
+          "text": "**Hemoglobin**: 136 g/L (ref 135–175)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 107
+            }
+          ]
+        },
+        {
+          "text": "**CRP**: 3,1 mg/L (ref < 5,0)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 108
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 15.0
+  },
+  {
+    "model": "medgemma:latest",
+    "part": "chat",
+    "question": "Milyen gyógyszereket szed jelenleg, milyen adagban?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "**Ramipril**: 5 mg, naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 11
+            }
+          ]
+        },
+        {
+          "text": "**Bisoprolol**: 5 mg, naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 12
+            }
+          ]
+        },
+        {
+          "text": "**Spironolakton**: 25 mg, naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 13
+            }
+          ]
+        },
+        {
+          "text": "**Furoszemid**: 80 mg, naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 14
+            }
+          ]
+        },
+        {
+          "text": "**Metformin**: 500 mg, naponta 2x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 15
+            }
+          ]
+        },
+        {
+          "text": "**Dapagliflozin**: 10 mg, naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 16
+            }
+          ]
+        },
+        {
+          "text": "**Penicillin**: Allergia",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "ALLERGY",
+              "id": 21
+            }
+          ]
+        },
+        {
+          "text": "**Kálium**: 5,8 mmol/L (ref 3,5–5,1) [felett], 2026-09-20",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 100
+            }
+          ]
+        },
+        {
+          "text": "**Kreatinin**: 156 µmol/L (ref 62–106) [felett], 2026-06-02",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 102
+            }
+          ]
+        },
+        {
+          "text": "**eGFR**: 38 mL/min/1,73m2 (ref > 60) [alatt], 2026-06-02",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 103
+            }
+          ]
+        },
+        {
+          "text": "**NT-proBNP**: 4200 pg/mL (ref < 125) [felett], 2026-09-20",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 104
+            }
+          ]
+        },
+        {
+          "text": "**HbA1c**: 7,9 % (ref 4,0–6,0) [felett], 2026-06-02",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 105
+            }
+          ]
+        },
+        {
+          "text": "**Ejekciós frakció**: 30%",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "STATEMENT",
+              "id": 35
+            }
+          ]
+        },
+        {
+          "text": "**Diagnózis**: Krónikus szívelégtelenség csökkent ejekciós frakcióval (2026-03-10)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "STATEMENT",
+              "id": 31
+            }
+          ]
+        },
+        {
+          "text": "**Diagnózis**: Krónikus vesebetegség 3b stádium (2026-06-02)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "STATEMENT",
+              "id": 32
+            }
+          ]
+        },
+        {
+          "text": "**Diagnózis**: Szívelégtelenség dekompenzációja; hyperkalaemia (2026-09-20)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "STATEMENT",
+              "id": 33
+            }
+          ]
+        },
+        {
+          "text": "**Panasz**: Három napja fokozódó nehézlégzés, kétoldali bokaödéma (2026-09-20)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "STATEMENT",
+              "id": 34
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 9.9
+  },
+  {
+    "model": "medgemma:latest",
+    "part": "chat",
+    "question": "Van gyógyszerallergiája?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "A beteg penicillin allergiaval rendelkezik.",
+          "list": false,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "ALLERGY",
+              "id": 21
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 2.4
+  },
+  {
+    "model": "medgemma:latest",
+    "part": "chat",
+    "question": "Mennyi volt az ejekciós frakció a legutóbbi echokardiográfián?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "Ejekciós frakció: 30% (2026-09-21)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "STATEMENT",
+              "id": 35
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 2.6
+  },
+  {
+    "model": "medgemma:latest",
+    "part": "summary",
+    "out": {
+      "status": "DONE",
+      "summary": "A beteg a vizsgálatok szerint szívelégtelenséggel küzd, melynek dekompenzált tünetei jelentkeztek. A bal kamra tágult, és súlyosan csökkent a bal kamrai funkció (EF 30%), valamint közepes fokú mitralis regurgitáció volt jelen. Az echokardiográfia során ez a helyzet megállapították. Krónikus vesebetegség is diagnosztizálva, szintén 2026-06-02-től. A beteget krónikus szívelégtelenségnél kezelik, ami ejekciós frakcióval 30% lett. Három nappal ezelőtt kezdődött nehézlégzés, kétoldali bokaödéma társul hozzá. Aktív gyógyszerei: ramipril, bisoprolol, spironolakton, furoszemid, metformin, dapagliflozin. Allergiája penicillinnel van.",
+      "recommendations": [
+        "A ramipril és a spironolakton kombinációja miatt monitorozni kell a káliumszintet.",
+        "Az HbA1c magas értéke miatt mérlegelendő a glikózskontroll intenzitásának növelése vagy antidiabetikum adagjának módosítása.",
+        "Kontrol labor vizsgálat szükséges: koleszterin, triglicerid, kreatinin, eGFR, kálium, NT-proBNP.",
+        "Szükséges egy konzíliumban megbeszélni a kezelést, figyelembe véve a szívelégtelenséget, a vesebetegettséget, a hiperkalémiát és a nehézlégzsért.",
+        "Érdemes áttekinti a furoszemid terápiáját, mivel a betegnek fokozódó nehézlégzését és bokaödémáit tapasztalja."
+      ],
+      "warnings": [
+        "A javaslatok nem térnek ki a súlyos gyógyszer-interakció(k)ra (1 db) — ellenőrizendő"
+      ],
+      "model": {
+        "modelName": "medgemma:latest",
+        "seed": 42,
+        "promptHash": "853aa595d9e95afa987d3a5bf38ea82f6f8be598dad35c09902cdd2f95805b87",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 11.0
+  },
+  {
+    "model": "qwen3.5:9b",
+    "part": "chat",
+    "question": "Melyek a kóros laborértékei?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "A rendelkezésre álló adatok alapján a beteg jelenlegi kóros laborértékei a következők:",
+          "list": false,
+          "heading": true,
+          "sources": []
+        },
+        {
+          "text": "**Kálium**: 5,8 mmol/L (referencia tartományon felül), az érték 2026-09-20-i mérése.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 100
+            }
+          ]
+        },
+        {
+          "text": "**Kreatinin**: 156 µmol/L (referencia tartományon felül), az érték 2026-06-02-i mérése.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 102
+            }
+          ]
+        },
+        {
+          "text": "**eGFR**: 38 mL/min/1,73m² (referencia tartomány alatt), az érték 2026-06-02-i mérése.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 103
+            }
+          ]
+        },
+        {
+          "text": "**NT-proBNP**: 4200 pg/mL (referencia tartományon felül), az érték 2026-09-20-i mérése.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 104
+            }
+          ]
+        },
+        {
+          "text": "**HbA1c**: 7,9 % (referencia tartományon felül), az érték 2026-06-02-i mérése.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 105
+            }
+          ]
+        },
+        {
+          "text": "Megjegyzés: A nátrium és a hemoglobin értékek a megadott referencia tartományokon belül vannak; a CRP szintje normális határok között van.",
+          "list": false,
+          "heading": false,
+          "sources": []
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "qwen3.5:9b",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 25.3
+  },
+  {
+    "model": "qwen3.5:9b",
+    "part": "chat",
+    "question": "Milyen gyógyszereket szed jelenleg, milyen adagban?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "Jelenlegi gyógyszerelésének részletei:",
+          "list": false,
+          "heading": true,
+          "sources": []
+        },
+        {
+          "text": "**Ramipril**: 5 mg naponta egyszer",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 11
+            }
+          ]
+        },
+        {
+          "text": "**Bisoprolol**: 5 mg naponta egyszer",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 12
+            }
+          ]
+        },
+        {
+          "text": "**Spironolakton**: 25 mg naponta egyszer",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 13
+            }
+          ]
+        },
+        {
+          "text": "**Furoszemid**: 80 mg naponta egyszer",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 14
+            }
+          ]
+        },
+        {
+          "text": "**Metformin**: 500 mg naponta kétszer",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 15
+            }
+          ]
+        },
+        {
+          "text": "**Dapagliflozin**: 10 mg naponta egyszer (nem ellenőrzött adat)",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 16
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "qwen3.5:9b",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 7.8
+  },
+  {
+    "model": "qwen3.5:9b",
+    "part": "chat",
+    "question": "Van gyógyszerallergiája?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "**Gyógyszerallergia**: A rendelkezésre álló adatok szerint penicillinre van allergiája.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "ALLERGY",
+              "id": 21
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "qwen3.5:9b",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 3.4
+  },
+  {
+    "model": "qwen3.5:9b",
+    "part": "chat",
+    "question": "Mennyi volt az ejekciós frakció a legutóbbi echokardiográfián?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "A legutóbbi echokardiográfián az ejekciós frakció **30%** volt.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "STATEMENT",
+              "id": 35
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "qwen3.5:9b",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 3.6
+  },
+  {
+    "model": "qwen3.5:9b",
+    "part": "summary",
+    "out": {
+      "status": "DONE",
+      "summary": "",
+      "recommendations": [],
+      "warnings": [
+        "Az összefoglaló nem említi a(z) echokardiográfia vizsgálatot (2026-09-21) — ellenőrizendő",
+        "A modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a szöveg az utolsó teljes mondatnál le lett zárva",
+        "A javaslatok nem térnek ki a súlyos gyógyszer-interakció(k)ra (1 db) — ellenőrizendő"
+      ],
+      "model": {
+        "modelName": "qwen3.5:9b",
+        "seed": 42,
+        "promptHash": "853aa595d9e95afa987d3a5bf38ea82f6f8be598dad35c09902cdd2f95805b87",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 49.3
+  },
+  {
+    "model": "medgemma:27b",
+    "part": "chat",
+    "question": "Melyek a kóros laborértékei?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "A beteg kóros laboreredményei a következők:",
+          "list": false,
+          "heading": true,
+          "sources": []
+        },
+        {
+          "text": "**Kálium**: Emelkedett, 5,8 mmol/L (referencia: 3,5–5,1 mmol/L) 2026-09-20-án.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 100
+            }
+          ]
+        },
+        {
+          "text": "**Kálium**: Emelkedett, 5,4 mmol/L (referencia: 3,5–5,1 mmol/L) 2026-06-02-án.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 101
+            }
+          ]
+        },
+        {
+          "text": "**Kreatinin**: Emelkedett, 156 µmol/L (referencia: 62–106 µmol/L) 2026-06-02-án.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 102
+            }
+          ]
+        },
+        {
+          "text": "**eGFR**: Csökkent, 38 mL/min/1,73m2 (referencia: > 60 mL/min/1,73m2) 2026-06-02-án.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 103
+            }
+          ]
+        },
+        {
+          "text": "**NT-proBNP**: Emelkedett, 4200 pg/mL (referencia: < 125 pg/mL) 2026-09-20-án.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 104
+            }
+          ]
+        },
+        {
+          "text": "**HbA1c**: Emelkedett, 7,9 % (referencia: 4,0–6,0 %) 2026-06-02-án.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "LAB_RESULT",
+              "id": 105
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 127.1
+  },
+  {
+    "model": "medgemma:27b",
+    "part": "chat",
+    "question": "Milyen gyógyszereket szed jelenleg, milyen adagban?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "A beteg jelenleg aktív gyógyszerei a következők:",
+          "list": false,
+          "heading": true,
+          "sources": []
+        },
+        {
+          "text": "**Ramipril**: 5 mg naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 11
+            }
+          ]
+        },
+        {
+          "text": "**Bisoprolol**: 5 mg naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 12
+            }
+          ]
+        },
+        {
+          "text": "**Spironolakton**: 25 mg naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 13
+            }
+          ]
+        },
+        {
+          "text": "**Furoszemid**: 80 mg naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 14
+            }
+          ]
+        },
+        {
+          "text": "**Metformin**: 500 mg naponta 2x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 15
+            }
+          ]
+        },
+        {
+          "text": "**Dapagliflozin**: 10 mg naponta 1x",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "MEDICATION",
+              "id": 16
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 48.4
+  },
+  {
+    "model": "medgemma:27b",
+    "part": "chat",
+    "question": "Van gyógyszerallergiája?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "**Allergia**: Penicillin allergiája van.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "ALLERGY",
+              "id": 21
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 8.7
+  },
+  {
+    "model": "medgemma:27b",
+    "part": "chat",
+    "question": "Mennyi volt az ejekciós frakció a legutóbbi echokardiográfián?",
+    "out": {
+      "status": "DONE",
+      "points": [
+        {
+          "text": "**Ejekciós frakció**: A legutóbbi echokardiográfián az ejekciós frakció 30% volt.",
+          "list": true,
+          "heading": false,
+          "sources": [
+            {
+              "kind": "STATEMENT",
+              "id": 35
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "5b34eb01ca96a3a38d2e83df17e2d1eb2857bb1f8bc211d2fb4c47c6746dca66",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 15.2
+  },
+  {
+    "model": "medgemma:27b",
+    "part": "summary",
+    "out": {
+      "status": "DONE",
+      "summary": "A 68 éves betegnek a panaszai és diagnózisaival kapcsolatban több bejegyzés is van. A fő panasza hármas nehézlégzés volt, ami szeptember 20-án fokozódott, valamint kétoldali bokaödémát tapasztalt. Ezek alapján szívelégtelenség dekompenzációja alakult ki. Korábban már ismert krónikus szívelégtelensége volt csökkent ejekciós frakcióval, melyet március 10-én állapították meg. Emellett június 2-án orvos által elfogadta a krónikus vesebetegség 3b stádiumának diagnózisát. Szeptember 20-i leletében hyperkalaemia szerepel jóváhagyásra várva. Szeptember 21-én végzett echokardiográfia tágult bal kamrát, súlyosan csökkent bal kamrai funkciót (EF 30%) és közepes fokú mitralis regurgitációt mutatott ki. Az ekkor készült lelet szerint az ejekciós frakció 30%, a mitralis regurgitáció pedig közepes. A beteg jelenlegi gyógyszerei: Ramipril 5 mg naponta egyszer, Bisoprolol 5 mg naponta egyszer, Spironolakton 25 mg naponta egyszer, Furosemid 80 mg naponta egyszer, Metformin 500 mg naponta kétszer, valamint Dapagliflozin 10 mg naponta egyszer (ellenőrzetlen). Allergiája van penicillinre.",
+      "recommendations": [
+        "A súlyos hyperkalaemiát okozó potenciális gyógyszerkombináció (Ramipril és Spironalakton) miatt javasolt a terápia felülvizsgálata, különös tekintettel ezeknek a gyógyszereknek az adagolására vagy esetleges kiváltására.",
+        "Az emelkedő káliumszint (5,4 mmol/L -> 5,8 mmol/L) és a diagnózis (hyperkalaemia) alapján indokolt kontroll labor vizsgálat a vérképek elemzésére.",
+        "A fokozódó nehézlégzés és bokaödéma panaszok, valamint az NT-proBNP értékének jelentős emelkedése (4200 pg/mL) alapján konzílium kardiológus szakorvoshoz javasolt szívelégtelenség optimalizálása érdekében.",
+        "A krónikus vesebetegség 3b stádiuma (eGFR 38 mL/min/1,73m2) és a magas HbA1c érték (7,9%) figyelembe véve, javasolt endokrinológiai konzílium a cukorbetegség kezelésének áttekintésére és optimalizálására, beleértve a vese funkciót kímélő terápiát."
+      ],
+      "warnings": [
+        "A modell ismétlésbe kezdett vagy elérte a hosszkorlátot — a szöveg az utolsó teljes mondatnál le lett zárva",
+        "A javaslatok nem térnek ki a súlyos gyógyszer-interakció(k)ra (1 db) — ellenőrizendő"
+      ],
+      "model": {
+        "modelName": "medgemma:27b",
+        "seed": 42,
+        "promptHash": "853aa595d9e95afa987d3a5bf38ea82f6f8be598dad35c09902cdd2f95805b87",
+        "extractorVersion": "docproc-18"
+      }
+    },
+    "seconds": 204.8
+  }
+]

@@ -1,0 +1,4199 @@
+[
+  {
+    "model": "medgemma:latest",
+    "run": 1,
+    "case": "mellkas",
+    "first_call": true,
+    "result": {
+      "fo_panasz": "mellkas szorítása, kisugárzás a bal karomba",
+      "tunetek": [
+        {
+          "tunet": "mellkas szorítása",
+          "jelen_van": true,
+          "lokalizacio": "bal oldal",
+          "kezdet_idotartam": "tegnap este",
+          "jelleg_sulyossag": "hetes",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "kisugárzás",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": "tegnap este",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "nehezen kap levegőt",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "izzadtság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [
+        "mellkas fájdalom",
+        "szorítás",
+        "kisugárzás",
+        "nehezen kap levegőt",
+        "izzadtság",
+        "szédülés",
+        "dohányzás"
+      ],
+      "_figyelmeztetesek": [
+        "ROSSZ FORRÁS: 'mellkas szorítása' jelleg_sulyossag='hetes' nem a megadott [1] megszólalásban, hanem itt hangzott el: [3]",
+        "'nehezen kap levegőt': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ÁTVETT, TÖRÖLVE: 'nehezen kap levegőt' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem",
+        "ÁTVETT, TÖRÖLVE: 'izzadtság' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem",
+        "ÁTVETT, TÖRÖLVE: 'szédülés' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem"
+      ]
+    },
+    "seconds": 17.25
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 1,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hasfájás",
+      "tunetek": [
+        {
+          "tunet": "hasfájás",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hasfájás",
+          "jelen_van": true,
+          "lokalizacio": "jobb oldal",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hasfájás",
+          "jelen_van": true,
+          "lokalizacio": "alul",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        },
+        {
+          "tunet": "széklet rendben",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasza",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            8
+          ]
+        },
+        {
+          "tunet": "csíp a vizelés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            8
+          ]
+        },
+        {
+          "tunet": "menstruáció",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két hete",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            10
+          ]
+        },
+        {
+          "tunet": "gyógyszer",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            12
+          ]
+        },
+        {
+          "tunet": "allergiás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            12
+          ]
+        },
+        {
+          "tunet": "ibuprofen",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        },
+        {
+          "tunet": "csalánkiütés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        },
+        {
+          "tunet": "fogamzásgátló",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            12
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "metformin",
+        "ibuprofen",
+        "fogamzásgátló"
+      ],
+      "allergiak": [
+        "csalánkiütés"
+      ],
+      "elozmenyek": [
+        "dohányzás",
+        "alkohol"
+      ],
+      "kulcsszavak": [
+        "hasfájás",
+        "hányás",
+        "láz",
+        "hasmenés",
+        "székrekedés",
+        "vizelési panasza",
+        "csíp a vizelés",
+        "menstruáció",
+        "gyógyszer",
+        "allergiás",
+        "ibuprofen",
+        "csalánkiütés",
+        "fogamzásgátló"
+      ],
+      "_figyelmeztetesek": [
+        "'hányás': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'hányás' kezdet_idotartam='ma reggel' nem a megadott [2] megszólalásban, hanem itt hangzott el: [3]",
+        "'étvágytalanság': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'étvágytalanság' kezdet_idotartam='ma reggel' nem a megadott [2] megszólalásban, hanem itt hangzott el: [3]",
+        "'láz': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'hasmenés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'székrekedés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'vizelési panasza': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'csíp a vizelés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'menstruáció': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'menstruáció' kezdet_idotartam='két hete' nem a megadott [10] megszólalásban, hanem itt hangzott el: [11]",
+        "'gyógyszer': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'allergiás': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'fogamzásgátló': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "NÉV NEM EGYEZIK: 'metformin' (gyogyszerek) nem szerepel az átiratban"
+      ]
+    },
+    "seconds": 28.81
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 1,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "jobb kéz mozgáskorlátozottság, beszédakadozás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "jobb kéz mozgáskorlátozottság",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "beszédakadozás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "Warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "reggel",
+        "furcsa",
+        "mozgáskorlátozottság",
+        "akadozik"
+      ],
+      "_figyelmeztetesek": [
+        "'fejfájás': a forrás csak orvosi megszólalás, beteg válasza nélkül"
+      ]
+    },
+    "seconds": 9.76
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 1,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "nehézlégzés, mellkasi sípolás",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két óra",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "mellkasi sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két óra",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol spray",
+        "budezonid",
+        "montelukast"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "asztma",
+        "salbutamol",
+        "budezonid",
+        "montelukast",
+        "allergiás"
+      ],
+      "_figyelmeztetesek": [
+        "NÉV NEM EGYEZIK: 'montelukast' (gyogyszerek) nem szerepel az átiratban – az átiratban elhangzott alak: 'montelukasztot'"
+      ]
+    },
+    "seconds": 8.63
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 1,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen iszonyú fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája",
+          "jelleg_sulyossag": "iszonyú",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényzavar",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "merev nyak",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "migrén",
+        "szokott fájni",
+        "vérhígító",
+        "gyógyszer"
+      ],
+      "_figyelmeztetesek": [
+        "'fényzavar': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ÁTVETT, TÖRÖLVE: 'fényzavar' jelleg_sulyossag='nagyon' egy másik tünethez hangzott el ([5]. megszólalás), erre a tünetre nem",
+        "'zsibbadás': a forrás csak orvosi megszólalás, beteg válasza nélkül"
+      ]
+    },
+    "seconds": 11.5
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 2,
+    "case": "mellkas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "mellkas szorítása, kisugárzás a bal karomba",
+      "tunetek": [
+        {
+          "tunet": "mellkas szorítása",
+          "jelen_van": true,
+          "lokalizacio": "bal oldal",
+          "kezdet_idotartam": "tegnap este",
+          "jelleg_sulyossag": "hetes",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "kisugárzás",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": "tegnap este",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "nehezen kap levegőt",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "izzadtság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [
+        "mellkas fájdalom",
+        "szorítás",
+        "kisugárzás",
+        "nehezen kap levegőt",
+        "izzadtság",
+        "szédülés",
+        "dohányzás"
+      ],
+      "_figyelmeztetesek": [
+        "ROSSZ FORRÁS: 'mellkas szorítása' jelleg_sulyossag='hetes' nem a megadott [1] megszólalásban, hanem itt hangzott el: [3]",
+        "'nehezen kap levegőt': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ÁTVETT, TÖRÖLVE: 'nehezen kap levegőt' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem",
+        "ÁTVETT, TÖRÖLVE: 'izzadtság' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem",
+        "ÁTVETT, TÖRÖLVE: 'szédülés' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem"
+      ]
+    },
+    "seconds": 11.73
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 2,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "has fájdalom",
+      "tunetek": [
+        {
+          "tunet": "has fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "has fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "jobb oldal",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "has fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "alul",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        },
+        {
+          "tunet": "széklet rendben",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasza",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            8
+          ]
+        },
+        {
+          "tunet": "csíp a vizelés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            8
+          ]
+        },
+        {
+          "tunet": "menstruáció",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két hete",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            10
+          ]
+        },
+        {
+          "tunet": "gyógyszer",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            12
+          ]
+        },
+        {
+          "tunet": "allergiás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            12
+          ]
+        },
+        {
+          "tunet": "fogamzásgátló",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        },
+        {
+          "tunet": "allergiás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        },
+        {
+          "tunet": "ibuprofen",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        },
+        {
+          "tunet": "csalánkiütés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "metformin",
+        "fogamzásgátló",
+        "ibuprofen"
+      ],
+      "allergiak": [
+        "csalánkiütés"
+      ],
+      "elozmenyek": [
+        "dohányzás",
+        "alkohol"
+      ],
+      "kulcsszavak": [
+        "has fájdalom",
+        "hányás",
+        "láz",
+        "hasmenés",
+        "székrekedés",
+        "vizelési panasza",
+        "menstruáció",
+        "gyógyszer",
+        "allergiás",
+        "fogamzásgátló",
+        "ibuprofen",
+        "csalánkiütés"
+      ],
+      "_figyelmeztetesek": [
+        "'hányás': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'hányás' kezdet_idotartam='ma reggel' nem a megadott [2] megszólalásban, hanem itt hangzott el: [3]",
+        "'étvágytalanság': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'étvágytalanság' kezdet_idotartam='ma reggel' nem a megadott [2] megszólalásban, hanem itt hangzott el: [3]",
+        "'láz': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'hasmenés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'székrekedés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'vizelési panasza': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'csíp a vizelés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'menstruáció': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'menstruáció' kezdet_idotartam='két hete' nem a megadott [10] megszólalásban, hanem itt hangzott el: [11]",
+        "'gyógyszer': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'allergiás': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "NÉV NEM EGYEZIK: 'metformin' (gyogyszerek) nem szerepel az átiratban"
+      ]
+    },
+    "seconds": 28.47
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 2,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "fáj a feje",
+      "tunetek": [
+        {
+          "tunet": "fáj a feje",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "akadozik a beszéde",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "jobb kezét nem tudja rendesen mozgatni",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "Warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "fáj a feje",
+        "akadozik a beszéde",
+        "jobb kéz",
+        "Warfarin",
+        "metformin"
+      ],
+      "_figyelmeztetesek": [
+        "'fáj a feje': a forrás csak orvosi megszólalás, beteg válasza nélkül"
+      ]
+    },
+    "seconds": 8.31
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 2,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "nehézlégzés, mellkasi sípolás",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két óra",
+          "jelleg_sulyossag": "nehézlégzés",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "mellkasi sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két óra",
+          "jelleg_sulyossag": "sípolás",
+          "forras_turn_ids": [
+            1
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol spray",
+        "budezonid",
+        "montelukast"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "asztma",
+        "salbutamol",
+        "budezonid",
+        "montelukast",
+        "allergiás"
+      ],
+      "_figyelmeztetesek": [
+        "NÉV NEM EGYEZIK: 'montelukast' (gyogyszerek) nem szerepel az átiratban – az átiratban elhangzott alak: 'montelukasztot'"
+      ]
+    },
+    "seconds": 8.38
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 2,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen iszonyú fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája",
+          "jelleg_sulyossag": "iszonyú",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényzavar",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "merev nyak",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "migrén",
+        "fejfájás",
+        "hányás",
+        "fényzavar",
+        "merev nyak",
+        "zsibbadás"
+      ],
+      "_figyelmeztetesek": [
+        "'fényzavar': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ÁTVETT, TÖRÖLVE: 'fényzavar' jelleg_sulyossag='nagyon' egy másik tünethez hangzott el ([5]. megszólalás), erre a tünetre nem",
+        "'zsibbadás': a forrás csak orvosi megszólalás, beteg válasza nélkül"
+      ]
+    },
+    "seconds": 10.3
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 3,
+    "case": "mellkas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "mellkas szorítása, kisugárzás a bal karomba",
+      "tunetek": [
+        {
+          "tunet": "mellkas szorítása",
+          "jelen_van": true,
+          "lokalizacio": "bal oldal",
+          "kezdet_idotartam": "tegnap este",
+          "jelleg_sulyossag": "hetes",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "kisugárzás",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": "tegnap este",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "nehezen kap levegőt",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "izzadtság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [
+        "mellkas fájdalom",
+        "szorítás",
+        "kisugárzás",
+        "nehezen kap levegőt",
+        "izzadtság",
+        "szédülés",
+        "dohányzás"
+      ],
+      "_figyelmeztetesek": [
+        "ROSSZ FORRÁS: 'mellkas szorítása' jelleg_sulyossag='hetes' nem a megadott [1] megszólalásban, hanem itt hangzott el: [3]",
+        "'nehezen kap levegőt': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ÁTVETT, TÖRÖLVE: 'nehezen kap levegőt' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem",
+        "ÁTVETT, TÖRÖLVE: 'izzadtság' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem",
+        "ÁTVETT, TÖRÖLVE: 'szédülés' kezdet_idotartam='tegnap este' egy másik tünethez hangzott el ([1]. megszólalás), erre a tünetre nem"
+      ]
+    },
+    "seconds": 14.0
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 3,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "has fájdalom",
+      "tunetek": [
+        {
+          "tunet": "has fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "has fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "jobb oldal",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "has fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "alul",
+          "kezdet_idotartam": "tegnap délután",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        },
+        {
+          "tunet": "széklet rendben",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasza",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            8
+          ]
+        },
+        {
+          "tunet": "csíp a vizelés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            8
+          ]
+        },
+        {
+          "tunet": "menstruáció",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két hete",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            10
+          ]
+        },
+        {
+          "tunet": "gyógyszer",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            12
+          ]
+        },
+        {
+          "tunet": "allergiás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            12
+          ]
+        },
+        {
+          "tunet": "fogamzásgátló",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        },
+        {
+          "tunet": "allergiás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        },
+        {
+          "tunet": "ibuprofen",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        },
+        {
+          "tunet": "csalánkiütés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            13
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "metformin",
+        "fogamzásgátló",
+        "ibuprofen"
+      ],
+      "allergiak": [
+        "csalánkiütés"
+      ],
+      "elozmenyek": [
+        "dohányzás",
+        "alkohol"
+      ],
+      "kulcsszavak": [
+        "has fájdalom",
+        "hányás",
+        "láz",
+        "hasmenés",
+        "székrekedés",
+        "vizelési panasza",
+        "menstruáció",
+        "gyógyszer",
+        "allergiás",
+        "fogamzásgátló",
+        "ibuprofen",
+        "csalánkiütés"
+      ],
+      "_figyelmeztetesek": [
+        "'hányás': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'hányás' kezdet_idotartam='ma reggel' nem a megadott [2] megszólalásban, hanem itt hangzott el: [3]",
+        "'étvágytalanság': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'étvágytalanság' kezdet_idotartam='ma reggel' nem a megadott [2] megszólalásban, hanem itt hangzott el: [3]",
+        "'láz': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'hasmenés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'székrekedés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'vizelési panasza': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'csíp a vizelés': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'menstruáció': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ROSSZ FORRÁS: 'menstruáció' kezdet_idotartam='két hete' nem a megadott [10] megszólalásban, hanem itt hangzott el: [11]",
+        "'gyógyszer': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "'allergiás': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "NÉV NEM EGYEZIK: 'metformin' (gyogyszerek) nem szerepel az átiratban"
+      ]
+    },
+    "seconds": 28.93
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 3,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "fáj a feje",
+      "tunetek": [
+        {
+          "tunet": "fáj a feje",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "akadozik a beszéde",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "jobb kezét nem tudja rendesen mozgatni",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "Warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "fáj a feje",
+        "akadozik a beszéde",
+        "jobb kéz",
+        "Warfarin",
+        "metformin"
+      ],
+      "_figyelmeztetesek": [
+        "'fáj a feje': a forrás csak orvosi megszólalás, beteg válasza nélkül"
+      ]
+    },
+    "seconds": 8.19
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 3,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "nehézlégzés, mellkasi sípolás",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két óra",
+          "jelleg_sulyossag": "nehézlégzés",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "mellkasi sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két óra",
+          "jelleg_sulyossag": "sípolás",
+          "forras_turn_ids": [
+            1
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol spray",
+        "budezonid",
+        "montelukast"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "asztma",
+        "salbutamol",
+        "budezonid",
+        "montelukast",
+        "allergiás"
+      ],
+      "_figyelmeztetesek": [
+        "NÉV NEM EGYEZIK: 'montelukast' (gyogyszerek) nem szerepel az átiratban – az átiratban elhangzott alak: 'montelukasztot'"
+      ]
+    },
+    "seconds": 7.84
+  },
+  {
+    "model": "medgemma:latest",
+    "run": 3,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen iszonyú fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája",
+          "jelleg_sulyossag": "iszonyú",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényzavar",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "merev nyak",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "migrén",
+        "fejfájás",
+        "hányás",
+        "fényzavar",
+        "merev nyak",
+        "zsibbadás"
+      ],
+      "_figyelmeztetesek": [
+        "'fényzavar': a forrás csak orvosi megszólalás, beteg válasza nélkül",
+        "ÁTVETT, TÖRÖLVE: 'fényzavar' jelleg_sulyossag='nagyon' egy másik tünethez hangzott el ([5]. megszólalás), erre a tünetre nem",
+        "'zsibbadás': a forrás csak orvosi megszólalás, beteg válasza nélkül"
+      ]
+    },
+    "seconds": 10.56
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 1,
+    "case": "mellkas",
+    "first_call": true,
+    "result": {
+      "fo_panasz": "mellkasi szorítás",
+      "tunetek": [
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "bal mellkas",
+          "kezdet_idotartam": "tegap este óta",
+          "jelleg_sulyossag": "hetes",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom kisugárzása",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "hányinger",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "sok izzadás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [],
+      "_figyelmeztetesek": [
+        "ROSSZ FORRÁS: 'mellkasi fájdalom' jelleg_sulyossag='hetes' nem a megadott [1] megszólalásban, hanem itt hangzott el: [3]"
+      ]
+    },
+    "seconds": 42.51
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 1,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "hasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül, majd jobb alhas",
+          "kezdet_idotartam": "tegap delutan",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "38.2 °C",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "fogamzásgátló"
+      ],
+      "allergiak": [
+        "ibuprofen"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": []
+    },
+    "seconds": 29.79
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 1,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "jobb kéz mozgásképessége csökkenése és beszédzavar",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "Talán egy kicsit",
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "jobb kéz mozgásképessége csökkenése",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "beszédzavar",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [
+        "pitvarfibrilláció",
+        "cukorbetegség"
+      ],
+      "kulcsszavak": []
+    },
+    "seconds": 18.29
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 1,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "nehézlégzés",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": "nagyon nehezen",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "köhög",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "köpet",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol",
+        "budezonid",
+        "montelukaszt"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [
+        "asztma gyerekkor óta"
+      ],
+      "kulcsszavak": [
+        "nehézlégzés",
+        "sípolás",
+        "köhög",
+        "aszpirinallergia",
+        "asztma"
+      ]
+    },
+    "seconds": 36.42
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 1,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája hirtelen",
+          "jelleg_sulyossag": "iszonyú; életem legrosszabb",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kétszer",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényérzékenység",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "nagyon zavar",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "nyak merevség",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [
+        "migrén"
+      ],
+      "kulcsszavak": []
+    },
+    "seconds": 25.87
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 2,
+    "case": "mellkas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "mellkasi szorítás",
+      "tunetek": [
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "bal mellkas",
+          "kezdet_idotartam": "tegap este óta",
+          "jelleg_sulyossag": "hetes",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom kisugárzása",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "hányinger",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "sok izzadás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [],
+      "_figyelmeztetesek": [
+        "ROSSZ FORRÁS: 'mellkasi fájdalom' jelleg_sulyossag='hetes' nem a megadott [1] megszólalásban, hanem itt hangzott el: [3]"
+      ]
+    },
+    "seconds": 43.93
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 2,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "hasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül, majd jobb alhas",
+          "kezdet_idotartam": "tegap delutan",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "38.2 °C",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "fogamzásgátló"
+      ],
+      "allergiak": [
+        "ibuprofen"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": []
+    },
+    "seconds": 29.78
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 2,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "jobb kéz mozgásképessége csökkenése és beszédzavar",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "Talán egy kicsit",
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "jobb kéz mozgásképessége csökkenése",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "beszédzavar",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [
+        "pitvarfibrilláció",
+        "cukorbetegség"
+      ],
+      "kulcsszavak": []
+    },
+    "seconds": 17.08
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 2,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "nehézlégzés",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": "nagyon nehezen",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "köhög",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "köpet",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol",
+        "budezonid",
+        "montelukaszt"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [
+        "asztma gyerekkor óta"
+      ],
+      "kulcsszavak": [
+        "nehézlégzés",
+        "sípolás",
+        "köhög",
+        "aszpirinallergia",
+        "asztma"
+      ]
+    },
+    "seconds": 27.84
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 2,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája hirtelen",
+          "jelleg_sulyossag": "iszonyú; életem legrosszabb",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kétszer",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényérzékenység",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "nagyon zavar",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "nyak merevség",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [
+        "migrén"
+      ],
+      "kulcsszavak": []
+    },
+    "seconds": 21.87
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 3,
+    "case": "mellkas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "mellkasi szorítás",
+      "tunetek": [
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "bal mellkas",
+          "kezdet_idotartam": "tegap este óta",
+          "jelleg_sulyossag": "hetes",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom kisugárzása",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "hányinger",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "sok izzadás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [],
+      "_figyelmeztetesek": [
+        "ROSSZ FORRÁS: 'mellkasi fájdalom' jelleg_sulyossag='hetes' nem a megadott [1] megszólalásban, hanem itt hangzott el: [3]"
+      ]
+    },
+    "seconds": 29.05
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 3,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "hasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül, majd jobb alhas",
+          "kezdet_idotartam": "tegap delutan",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "38.2 °C",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "fogamzásgátló"
+      ],
+      "allergiak": [
+        "ibuprofen"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": []
+    },
+    "seconds": 26.44
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 3,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "jobb kéz mozgásképessége csökkenése és beszédzavar",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "Talán egy kicsit",
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "jobb kéz mozgásképessége csökkenése",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "beszédzavar",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [
+        "pitvarfibrilláció",
+        "cukorbetegség"
+      ],
+      "kulcsszavak": []
+    },
+    "seconds": 15.73
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 3,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "nehézlégzés",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": "nagyon nehezen",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "köhög",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "köpet",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol",
+        "budezonid",
+        "montelukaszt"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [
+        "asztma gyerekkor óta"
+      ],
+      "kulcsszavak": [
+        "nehézlégzés",
+        "sípolás",
+        "köhög",
+        "aszpirinallergia",
+        "asztma"
+      ]
+    },
+    "seconds": 28.19
+  },
+  {
+    "model": "qwen3.5:9b",
+    "run": 3,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája hirtelen",
+          "jelleg_sulyossag": "iszonyú; életem legrosszabb",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kétszer",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényérzékenység",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "nagyon zavar",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "nyak merevség",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [
+        "migrén"
+      ],
+      "kulcsszavak": []
+    },
+    "seconds": 21.89
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 1,
+    "case": "mellkas",
+    "first_call": true,
+    "result": {
+      "fo_panasz": "Mellkasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "bal oldalon",
+          "kezdet_idotartam": "tegnap este óta",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "fájdalom kisugárzása",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "fájdalom súlyosbodása",
+          "jelen_van": true,
+          "lokalizacio": "lépcsőzéskor",
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit nehezebben kapok",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "izzadás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel",
+          "jelleg_sulyossag": "nagyon",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel",
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [
+        "mellkas",
+        "fájdalom",
+        "bal oldalon",
+        "kisugárzik",
+        "bal kar",
+        "erős",
+        "lépcsőzés",
+        "nehezen kap levegőt",
+        "láz",
+        "izzadás",
+        "szédülés",
+        "gyógyszer",
+        "vérnyomás",
+        "koleszterin",
+        "gyógyszerallergia",
+        "szívbetegség",
+        "cukorbetegség",
+        "dohányzás"
+      ],
+      "_figyelmeztetesek": [
+        "ÁTVETT, TÖRÖLVE: 'mellkasi fájdalom' jelleg_sulyossag='hetes' egy másik tünethez hangzott el ([3]. megszólalás), erre a tünetre nem"
+      ]
+    },
+    "seconds": 303.36
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 1,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Hasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "hasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül, átvándorolt jobb oldalra, alulra",
+          "kezdet_idotartam": "tegnap délután kezdett",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egyszer ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "38 egész 2",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        },
+        {
+          "tunet": "csípő vizelés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "fogamzásgátló"
+      ],
+      "allergiak": [
+        "ibuprofen"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "hasi fájdalom",
+        "köldök",
+        "jobb oldal",
+        "hányás",
+        "étvágy",
+        "láz",
+        "hasmenés",
+        "székrekedés",
+        "vizelés",
+        "menstruáció",
+        "gyógyszer",
+        "allergia"
+      ]
+    },
+    "seconds": 278.17
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 1,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Furcsa érzés reggel, jobb kéz mozgathatósága, akadozó beszéd",
+      "tunetek": [
+        {
+          "tunet": "jobb kéz mozgathatóságának zavara",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": "reggel óta",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "akadozó beszéd",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel óta",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "esés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [
+        "pitvarfibrilláció",
+        "cukorbetegség"
+      ],
+      "kulcsszavak": [
+        "furcsa",
+        "jobb kéz",
+        "mozgatni",
+        "akadozik",
+        "beszéd",
+        "fej",
+        "fáj",
+        "esett",
+        "fotel",
+        "gyógyszer",
+        "allergiás"
+      ]
+    },
+    "seconds": 197.77
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 1,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Nehézlégzés, sípolás a mellkasban",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": "nagyon",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "köhögés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "köpet",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol",
+        "budezonid",
+        "montelukast"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [
+        "asztma"
+      ],
+      "kulcsszavak": [
+        "nehezen kapok levegőt",
+        "sípol a mellkasom",
+        "rossz még sosem volt",
+        "köhögök",
+        "köpet nincs",
+        "láza",
+        "mellkasi fájdalma",
+        "salbutamol spray",
+        "budezonid",
+        "montelukasztot",
+        "aszpirinre",
+        "macskaszőrre",
+        "asztmás vagyok"
+      ],
+      "_figyelmeztetesek": [
+        "NÉV NEM EGYEZIK: 'montelukast' (gyogyszerek) nem szerepel az átiratban – az átiratban elhangzott alak: 'montelukasztot'"
+      ]
+    },
+    "seconds": 271.6
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 1,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen iszonyú fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája",
+          "jelleg_sulyossag": "hirtelen, iszonyú, életem legrosszabb",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényérzékenység",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "nagyon zavar",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "nyakmerevség",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [
+        "migrén"
+      ],
+      "kulcsszavak": [
+        "fejfájás",
+        "hányás",
+        "fény",
+        "nyak",
+        "zsibbadás",
+        "gyógyszer",
+        "vérhígító",
+        "migrén"
+      ]
+    },
+    "seconds": 159.13
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 2,
+    "case": "mellkas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Mellkasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "bal oldalon",
+          "kezdet_idotartam": "tegnap este óta",
+          "jelleg_sulyossag": "szorító",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": "tegnap este óta",
+          "jelleg_sulyossag": "kisugárzás",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "fájdalom",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "hetes",
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "fájdalom",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "terhelésfüggő (lépcsőzéskor rosszabb)",
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit nehezebben kapok levegőt",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "izzadás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel",
+          "jelleg_sulyossag": "nagyon",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel",
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [
+        "mellkas",
+        "fájdalom",
+        "szorít",
+        "bal oldalon",
+        "kisugárzik",
+        "bal kar",
+        "lépcsőzés",
+        "rosszabb",
+        "nehezen kap levegőt",
+        "láz",
+        "izzadtam",
+        "szédültem",
+        "vérnyomás",
+        "koleszterin",
+        "gyógyszerallergia",
+        "szívbetegség",
+        "cukorbetegség",
+        "dohányzik"
+      ]
+    },
+    "seconds": 272.32
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 2,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Hasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "hasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül, átvándorolt jobb oldalra, alulra",
+          "kezdet_idotartam": "tegnap délután kezdett",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egyszer, ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "38,2 °C",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        },
+        {
+          "tunet": "csípő vizelés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "fogamzásgátló"
+      ],
+      "allergiak": [
+        "ibuprofen"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "hasi fájdalom",
+        "köldök",
+        "jobb oldal",
+        "hányás",
+        "étvágy",
+        "láz",
+        "hasmenés",
+        "székrekedés",
+        "vizelés",
+        "menstruáció",
+        "gyógyszer",
+        "allergia"
+      ]
+    },
+    "seconds": 234.88
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 2,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Furcsa érzés reggel, jobb kéz mozgathatósága, akadozó beszéd",
+      "tunetek": [
+        {
+          "tunet": "jobb kéz mozgathatóságának zavara",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": "reggel óta",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "akadozó beszéd",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel óta",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "esés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [
+        "pitvarfibrilláció",
+        "cukorbetegség"
+      ],
+      "kulcsszavak": [
+        "furcsa",
+        "jobb kéz",
+        "mozgatni",
+        "akadozik",
+        "beszéd",
+        "fej",
+        "fáj",
+        "esett",
+        "fotel",
+        "gyógyszer",
+        "allergiás"
+      ]
+    },
+    "seconds": 159.09
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 2,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Nehézlégzés, sípolás a mellkasban",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": "nagyon",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "köhögés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "köpet",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol",
+        "budezonid",
+        "montelukast"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [
+        "asztma"
+      ],
+      "kulcsszavak": [
+        "nehezen kapok levegőt",
+        "sípol a mellkasom",
+        "rossz még sosem volt",
+        "köhögök",
+        "köpet nincs",
+        "láza",
+        "mellkasi fájdalma",
+        "salbutamol spray",
+        "budezonid",
+        "montelukasztot",
+        "aszpirinre",
+        "macskaszőrre",
+        "asztmás vagyok"
+      ],
+      "_figyelmeztetesek": [
+        "NÉV NEM EGYEZIK: 'montelukast' (gyogyszerek) nem szerepel az átiratban – az átiratban elhangzott alak: 'montelukasztot'"
+      ]
+    },
+    "seconds": 194.76
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 2,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen iszonyú fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája",
+          "jelleg_sulyossag": "hirtelen, iszonyú, életem legrosszabb",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényérzékenység",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "nagyon zavar",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "nyakmerevség",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [
+        "migrén"
+      ],
+      "kulcsszavak": [
+        "fejfájás",
+        "hányás",
+        "fény",
+        "nyak",
+        "zsibbadás",
+        "gyógyszer",
+        "vérhígító",
+        "migrén"
+      ]
+    },
+    "seconds": 157.01
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 3,
+    "case": "mellkas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Mellkasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "bal oldalon",
+          "kezdet_idotartam": "tegnap este óta",
+          "jelleg_sulyossag": "szorító",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "bal kar",
+          "kezdet_idotartam": "tegnap este óta",
+          "jelleg_sulyossag": "kisugárzás",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "fájdalom",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "hetes",
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "fájdalom",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "terhelésfüggő (lépcsőzéskor rosszabb)",
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit nehezebben kapok levegőt",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "izzadás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel",
+          "jelleg_sulyossag": "nagyon",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "szédülés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel",
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "ramipril",
+        "atorvasztatin"
+      ],
+      "allergiak": [
+        "penicillin"
+      ],
+      "elozmenyek": [
+        "magas vérnyomás"
+      ],
+      "kulcsszavak": [
+        "mellkas",
+        "fájdalom",
+        "szorít",
+        "bal oldalon",
+        "kisugárzik",
+        "bal kar",
+        "lépcsőzés",
+        "rosszabb",
+        "nehezen kap levegőt",
+        "láz",
+        "izzadtam",
+        "szédültem",
+        "vérnyomás",
+        "koleszterin",
+        "gyógyszerallergia",
+        "szívbetegség",
+        "cukorbetegség",
+        "dohányzik"
+      ]
+    },
+    "seconds": 251.52
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 3,
+    "case": "hasi",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Hasi fájdalom",
+      "tunetek": [
+        {
+          "tunet": "hasi fájdalom",
+          "jelen_van": true,
+          "lokalizacio": "köldök körül, átvándorolt jobb oldalra, alulra",
+          "kezdet_idotartam": "tegnap délután kezdett",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egyszer, ma reggel",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "étvágytalanság",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            3
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "38,2 °C",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "hasmenés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "székrekedés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "vizelési panasz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        },
+        {
+          "tunet": "csípő vizelés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            9
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "fogamzásgátló"
+      ],
+      "allergiak": [
+        "ibuprofen"
+      ],
+      "elozmenyek": [],
+      "kulcsszavak": [
+        "hasi fájdalom",
+        "köldök",
+        "jobb oldal",
+        "hányás",
+        "étvágy",
+        "láz",
+        "hasmenés",
+        "székrekedés",
+        "vizelés",
+        "menstruáció",
+        "gyógyszer",
+        "allergia"
+      ]
+    },
+    "seconds": 226.6
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 3,
+    "case": "idos",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Furcsa érzés reggel, jobb kéz mozgathatósága, akadozó beszéd",
+      "tunetek": [
+        {
+          "tunet": "jobb kéz mozgathatóságának zavara",
+          "jelen_van": true,
+          "lokalizacio": "jobb kéz",
+          "kezdet_idotartam": "reggel óta",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "akadozó beszéd",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "reggel óta",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            2
+          ]
+        },
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            4
+          ]
+        },
+        {
+          "tunet": "esés",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            6
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "warfarin",
+        "metformin"
+      ],
+      "allergiak": [],
+      "elozmenyek": [
+        "pitvarfibrilláció",
+        "cukorbetegség"
+      ],
+      "kulcsszavak": [
+        "furcsa",
+        "jobb kéz",
+        "mozgatni",
+        "akadozik",
+        "beszéd",
+        "fej",
+        "fáj",
+        "esett",
+        "fotel",
+        "gyógyszer",
+        "allergiás"
+      ]
+    },
+    "seconds": 148.32
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 3,
+    "case": "asztma",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "Nehézlégzés, sípolás a mellkasban",
+      "tunetek": [
+        {
+          "tunet": "nehézlégzés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": "nagyon",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "sípolás",
+          "jelen_van": true,
+          "lokalizacio": "mellkas",
+          "kezdet_idotartam": "két órája",
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "köhögés",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "köpet",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "láz",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "mellkasi fájdalom",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [
+        "salbutamol",
+        "budezonid",
+        "montelukast"
+      ],
+      "allergiak": [
+        "aszpirin",
+        "macskaszőr"
+      ],
+      "elozmenyek": [
+        "asztma"
+      ],
+      "kulcsszavak": [
+        "nehezen kapok levegőt",
+        "sípol a mellkasom",
+        "rossz még sosem volt",
+        "köhögök",
+        "köpet nincs",
+        "láza",
+        "mellkasi fájdalma",
+        "salbutamol spray",
+        "budezonid",
+        "montelukasztot",
+        "aszpirinre",
+        "macskaszőrre",
+        "asztmás vagyok"
+      ],
+      "_figyelmeztetesek": [
+        "NÉV NEM EGYEZIK: 'montelukast' (gyogyszerek) nem szerepel az átiratban – az átiratban elhangzott alak: 'montelukasztot'"
+      ]
+    },
+    "seconds": 201.18
+  },
+  {
+    "model": "medgemma:27b",
+    "run": 3,
+    "case": "fejfajas",
+    "first_call": false,
+    "result": {
+      "fo_panasz": "hirtelen iszonyú fejfájás",
+      "tunetek": [
+        {
+          "tunet": "fejfájás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": "egy órája",
+          "jelleg_sulyossag": "hirtelen, iszonyú, életem legrosszabb",
+          "forras_turn_ids": [
+            1
+          ]
+        },
+        {
+          "tunet": "hányás",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "fényérzékenység",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "nagyon zavar",
+          "forras_turn_ids": [
+            5
+          ]
+        },
+        {
+          "tunet": "nyakmerevség",
+          "jelen_van": true,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": "kicsit",
+          "forras_turn_ids": [
+            7
+          ]
+        },
+        {
+          "tunet": "zsibbadás",
+          "jelen_van": false,
+          "lokalizacio": null,
+          "kezdet_idotartam": null,
+          "jelleg_sulyossag": null,
+          "forras_turn_ids": [
+            7
+          ]
+        }
+      ],
+      "gyogyszerek": [],
+      "allergiak": [],
+      "elozmenyek": [
+        "migrén"
+      ],
+      "kulcsszavak": [
+        "fejfájás",
+        "hányás",
+        "fény",
+        "nyak",
+        "zsibbadás",
+        "gyógyszer",
+        "vérhígító",
+        "migrén"
+      ]
+    },
+    "seconds": 150.74
+  }
+]

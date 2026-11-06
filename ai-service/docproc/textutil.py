@@ -87,6 +87,47 @@ def find_span(text: str, quote: str, start_hint: int = 0) -> tuple[int, int] | N
     return start, end
 
 
+_TOKEN = re.compile(r"\w+")
+# Kihagyott szóként sosem fogadjuk el: a tagadás nélküli idézet a tagadott szövegrészre mutatna
+_NEGATIONS = ("nem", "nincs", "nincsen", "sem", "se", "nelkul", "negativ", "tagad", "kizar")
+
+
+def anchor_span(text: str, quote: str, start_hint: int = 0) -> tuple[int, int] | None:
+    """Ha az idézet szó szerint nincs a szövegben (find_span), a helye a szövegben, ahol az idézet
+    MINDEN szava ugyanebben a sorrendben megvan, legfeljebb néhány közbeékelt szóval: a modell az
+    idézetből gyakran kihagy egy sort ("…TARTÁLYBAN 3x(10x0,4 ml) Jogv.: … Scat Orig.") vagy egy
+    zárójeles részt ("bisoprolol E: 1x1,25 mg" ← "T. Bisoprolol (bisoprolol) E: 1x1,25 mg").
+    A találat [első szó eleje, utolsó szó vége) az EREDETI szövegben — ez lesz a forrás, nem a
+    modell idézete. Tagadószó nem maradhat ki; több jelöltből a legkevesebb kihagyású (azon belül
+    a start_hint utáni első) nyer. Legalább két szó kell."""
+    words = [fold(m.group()) for m in _TOKEN.finditer(quote)]
+    if len(words) < 2:
+        return None
+    tokens = [(m.start(), m.end(), fold(m.group())) for m in _TOKEN.finditer(text)]
+    max_skips = max(2, len(words) // 3)
+    best: tuple[tuple, tuple[int, int]] | None = None
+    for i, (start, _, word) in enumerate(tokens):
+        if word != words[0]:
+            continue
+        j, skips, k = i, 0, 1
+        while k < len(words) and skips <= max_skips:
+            j += 1
+            if j >= len(tokens):
+                break
+            if tokens[j][2] == words[k]:
+                k += 1
+            elif tokens[j][2].startswith(_NEGATIONS):
+                break
+            else:
+                skips += 1
+        if k < len(words) or skips > max_skips:
+            continue
+        rank = (skips, start < start_hint, start)
+        if best is None or rank < best[0]:
+            best = (rank, (start, tokens[j][1]))
+    return None if best is None else best[1]
+
+
 _CELL = re.compile(r"\S+(?: \S+)*")
 
 

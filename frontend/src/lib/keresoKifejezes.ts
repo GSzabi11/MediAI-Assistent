@@ -2,7 +2,9 @@
  * A PubMed-keresőkifejezés fogalmakra bontva (docs/literature-research.md, „Kulcsszavak”).
  *
  * Ugyanaz a szerkezet, amit a docproc `research.build_query` rak össze: fogalmanként
- * `(Heading[MeSH Terms] OR Heading[tiab] OR szinonima[tiab] …)`, a fogalmak AND-del, idézőjel nélkül.
+ * `(Heading[MeSH Terms] OR Heading OR szinonima …)`, a fogalmak AND-del, idézőjel nélkül. A szabad szavas alak
+ * mezőjelölő nélkül megy (2026-10-26): így a PubMed automatikus leképezése a többes számot és a MeSH-et is keresi.
+ * A régi `[tiab]`-os kifejezés is bontható (szabad szóként), újraépítéskor jelölő nélküli lesz.
  * A fogalmak között az orvos AND helyett OR-t is választhat (`elotte`); vegyes operátornál a PubMed
  * balról jobbra értékel: `A AND B OR C` = `(A AND B) OR C`.
  * A fogalmak nem tárolódnak külön: a kifejezésből bontjuk vissza (`bont`), és a chipek minden
@@ -11,9 +13,9 @@
  * A betegazonosító-szűrés nem itt van: a Spring `OutboundQueryGate` minden keresésnél ellenőriz.
  */
 export interface Fogalom {
-  /** MeSH-fejléc: `[MeSH Terms]`-ként és `[tiab]`-ként is bekerül (mint a build_query-ben) */
+  /** MeSH-fejléc: `[MeSH Terms]`-ként és jelölő nélkül is bekerül (mint a build_query-ben) */
   mesh: string | null;
-  /** szabad szavas alakok, `[tiab]` */
+  /** szabad szavas alakok, mezőjelölő nélkül */
   szinonimak: string[];
   /** az előző fogalomhoz kötő operátor (az elsőnél nincs jelentése) */
   elotte: Operator;
@@ -83,15 +85,18 @@ export function bont(kifejezes: string): Fogalom[] | null {
     if (!tagok) return null;
     const f: Fogalom = { mesh: null, szinonimak: [], elotte };
     for (const { resz: tag } of tagok) {
-      const m = /^"?([^"[\]()]+?)"?\s*\[([^\]]+)\]$/.exec(tag);
-      if (!m) return null;
+      // mezőjelölő nélkül is: a jelölő nélküli alak szabad szó (mint a [tiab])
+      const m = /^"?([^"[\]()]+?)"?\s*(?:\[([^\]]+)\])?$/.exec(tag);
+      // NOT, csonkolás (*), mezőkifejezés (:) a szóban: nem a build_query szerkezete — a tisztítás csendben elhagyná
+      if (!m || /\bNOT\b|[*:]/.test(m[1])) return null;
       const szo = tisztit(m[1]);
       if (!szo) return null;
-      if (MESH.test(m[2].trim())) {
+      const mezo = m[2]?.trim();
+      if (mezo !== undefined && MESH.test(mezo)) {
         if (f.mesh !== null) return null; // fogalmanként egy fejléc
         f.mesh = szo;
-      } else if (TIAB.test(m[2].trim())) {
-        // a fejléc [tiab]-alakja nem külön szinonima
+      } else if (mezo === undefined || TIAB.test(mezo)) {
+        // a fejléc szabad szavas alakja nem külön szinonima
         if (szo.toLowerCase() !== f.mesh?.toLowerCase()) f.szinonimak.push(szo);
       } else {
         return null;
@@ -114,7 +119,7 @@ export function epit(fogalmak: Fogalom[]): string {
     for (const szo of [mesh, ...f.szinonimak.map(tisztit)]) {
       if (szo && !latott.has(szo.toLowerCase())) {
         latott.add(szo.toLowerCase());
-        tagok.push(`${szo}[tiab]`);
+        tagok.push(szo);
       }
     }
     if (!tagok.length) continue;

@@ -166,6 +166,17 @@ törzset sem tudta értelmezni).
 - **Streamelt hívás hurok-figyeléssel**: ha egy már kiadott elem (labor: név+érték, ambuláns:
   idézet) újra megjelenik, a hívás leáll, és a hurok előtti teljes elemek maradnak
   (figyelmeztetéssel). `num_predict` felső korlát (`DOC_LLM_MAX_OUTPUT_TOKENS`, 4096).
+- **Ambuláns szakasz folytatása elakadás után** (docproc-18): ha a modell hurokba esett vagy elérte a
+  tokenkorlátot, a szakasz az utolsó visszakereshető idézet utáni részével újra a modellhez megy
+  (legfeljebb 2-szer, `llm.SEGMENT_CONTINUATIONS`). Oka: az Ollama 0.20.7 → 0.40.9 frissítése óta
+  (2026-10-23, a qwen3.5 miatt; a gemma3-at azóta a llama.cpp futtatja) ugyanaz a prompt + seed más,
+  rosszabb kimenetet ad: a 4B szinte minden szakaszban hurokba esik, és a hurok utáni elemek (a lap
+  végén álló gyógyszerlista, diagnózisok) elvesztek — kevesebb gyógyszer és panasz, mint 10-14-én.
+- **Pontatlan idézet visszakeresése** (`textutil.anchor_span`, docproc-18): ha az idézet szó szerint
+  nincs meg, de minden szava ugyanebben a sorrendben igen, legfeljebb néhány közbeékelt szóval (a modell
+  kihagyott egy sort vagy zárójeles részt: `bisoprolol E: 1x1,25 mg` ← `T. Bisoprolol (bisoprolol) E:
+  1x1,25 mg`), a forrás a dokumentum EREDETI szövegrésze lesz, és a gyógyszernév/adag abban ellenőrződik.
+  Tagadószó (`nem`, `nincs`, `nélkül`, …) nem maradhat ki — különben az állítás a tagadott részre mutatna.
 - A modell bemenetében a táblázat hosszú szóközsorai összevonva (~fele annyi token), a több
   sorba tört nevek folytatása (`(TSH)`, `térfoga`) visszafűzve az előző sorhoz. A visszakeresés
   és minden offset az eredeti szövegen fut.

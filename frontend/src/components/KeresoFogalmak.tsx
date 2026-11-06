@@ -194,7 +194,7 @@ function Chip({ szo, mesh, onSzerk, onTorol }: { szo: string; mesh?: boolean; on
         type="button"
         className="kutatas__chipszo"
         onClick={onSzerk}
-        title={mesh ? 'MeSH-fejléc ([MeSH Terms] és [tiab]) — kattints a szerkesztéshez' : 'Szabad szó a címben / absztraktban ([tiab]) — kattints a szerkesztéshez'}
+        title={mesh ? 'MeSH-fejléc ([MeSH Terms] és szabad szóként is) — kattints a szerkesztéshez' : 'Szabad szó (a PubMed a szóváltozatokat és a MeSH-et is keresi) — kattints a szerkesztéshez'}
       >
         {mesh && <span className="chip__tag">MeSH</span>}
         {szo}
@@ -243,7 +243,7 @@ function SzoUrlap({
         onKeyDown={(e) => e.key === 'Escape' && onMegse()}
       />
       {meshValaszthato && (
-        <label className="kutatas__meshvalaszto" title="MeSH-fejlécként: [MeSH Terms] és [tiab] is">
+        <label className="kutatas__meshvalaszto" title="MeSH-fejlécként: [MeSH Terms] és szabad szóként is">
           <input type="checkbox" checked={mesh} onChange={(e) => setMesh(e.target.checked)} /> MeSH
         </label>
       )}

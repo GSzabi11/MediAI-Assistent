@@ -238,12 +238,14 @@ function FoElteresek() {
     <section className="klinstatus__dev" aria-label="Fő eltérések">
       <span className="klinstatus__label">
         <Icon name="lock" size={12} />
-        Fő eltérések · referencia-szabály · elmúlt 6 hónap
+        Fő eltérések · referencia-szabály · a legutóbbi labor előtti 6 hónap
       </span>
       {labor.state.status === 'loading' && <Loading what="Eltérések" />}
       {labor.state.status === 'error' && <ErrorState error={labor.state.error} onRetry={labor.reload} />}
       {labor.state.status === 'ok' && chipek.length === 0 && (
-        <p className="meta">Az elmúlt 6 hónapban nincs a referenciatartományon kívüli legutóbbi laborérték.</p>
+        <p className="meta">
+          A legutóbbi labor előtti 6 hónapban nincs a referenciatartományon kívüli legutóbbi laborérték.
+        </p>
       )}
       {chipek.length > 0 && (
         <div className="klinstatus__chips">
@@ -263,12 +265,18 @@ function FoElteresek() {
   );
 }
 
-// Ugyanaz az időszak, amiről az összefoglaló szól (elmúlt 6 hónap)
+// Ugyanaz az ablak, mint a Labor nézet "6 hó" szűrője (LabTrend): 183 nap a beteg LEGUTÓBBI
+// mérésétől visszafelé, nem a mai naptól — különben egy fél évnél régebbi utolsó lelet eltérései
+// itt eltűnnének, miközben a Labor nézet mutatja őket.
 const IDOSZAK_NAP = 183;
 
 function elteresek(idosor: LaborIdosor, szabalyMeresek: Set<number>) {
   const out: { id: number; szoveg: string; datum: string }[] = [];
-  const hatar = Date.now() - IDOSZAK_NAP * 864e5;
+  const utolso = Math.max(
+    ...[...idosor.parameterek, ...idosor.szovegesek].flatMap((p) => p.meresek.map((m) => new Date(m.datum).getTime())),
+  );
+  if (!Number.isFinite(utolso)) return out;
+  const hatar = utolso - IDOSZAK_NAP * 864e5;
   const friss = (datum: string) => new Date(datum).getTime() >= hatar;
   for (const p of idosor.parameterek) {
     const m = [...p.meresek]

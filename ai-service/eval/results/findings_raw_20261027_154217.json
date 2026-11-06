@@ -1,0 +1,626 @@
+[
+  {
+    "model": "medgemma:latest",
+    "case": "mellkas",
+    "items": [
+      {
+        "category": "COMPLAINT",
+        "text": "mellkas szorítása és az állkapcsomba sugárzó fájdalom",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "DIAGNOSIS",
+        "text": "akut inferior szívinfarktus gyanú",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "REFERRAL",
+        "text": "kardiológia",
+        "bnoCode": null,
+        "turnIds": [
+          9
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "vérnyomás 165/95, pulzus 98, szívhangok tiszták, tüdő felett vezikuláris légzés",
+        "bnoCode": null,
+        "turnIds": [
+          6
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "II., III. és aVF elvezetésben ST-eleváció",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "300 milligramm aszpirin elrágva",
+        "bnoCode": null,
+        "turnIds": [
+          8
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "180 milligramm ticagrelor",
+        "bnoCode": null,
+        "turnIds": [
+          8
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "troponin",
+        "bnoCode": null,
+        "turnIds": [
+          11
+        ],
+        "flag": null
+      }
+    ],
+    "warnings": [],
+    "seconds": 16.2
+  },
+  {
+    "model": "medgemma:latest",
+    "case": "hasi",
+    "items": [
+      {
+        "category": "COMPLAINT",
+        "text": "tengernapjától fennálló hasi fájdalom, jobb oldalon",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "DIAGNOSIS",
+        "text": "akut vakbélgyulladás gyanúja",
+        "bnoCode": null,
+        "turnIds": [
+          5
+        ],
+        "flag": null
+      },
+      {
+        "category": "REFERRAL",
+        "text": "sebészeti konzílium",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a jobb alsó hasi kvadráns nyomásérzékeny, a McBurney-pont érzékeny, enyhe izomvédekezés van",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "testhőmérséklet 38,1 fok",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "gramm metamizol infúzióban",
+        "bnoCode": null,
+        "turnIds": [
+          8
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "ne egyen és ne igyon semmit",
+        "bnoCode": null,
+        "turnIds": [
+          9
+        ],
+        "flag": null
+      }
+    ],
+    "warnings": [],
+    "seconds": 10.7
+  },
+  {
+    "model": "medgemma:latest",
+    "case": "copd",
+    "items": [
+      {
+        "category": "COMPLAINT",
+        "text": "nehezebben kapok levegőt",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "COMPLAINT",
+        "text": "sárgászöld köpetet köhögök fel",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "DIAGNOSIS",
+        "text": "COPD akut exacerbációja",
+        "bnoCode": "J44.1",
+        "turnIds": [
+          6
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "tüdő felett mindkét oldalon kilégzési sípolás hallható",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a szaturáció 91 százalék szobalevegőn",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a légzésszám 24",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "prednizolon",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "amoxicillin-klavulánsavat",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "salbutamol sprayt rohamban használja, akár négyóránként",
+        "bnoCode": null,
+        "turnIds": [
+          8
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "egy hét múlva jöjjön vissza kontrollra a tüdőgondozóba",
+        "bnoCode": null,
+        "turnIds": [
+          9
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "ha romlik a légzése vagy magas láza lesz, azonnal jöjjön vissza",
+        "bnoCode": null,
+        "turnIds": [
+          10
+        ],
+        "flag": null
+      }
+    ],
+    "warnings": [],
+    "seconds": 12.2
+  },
+  {
+    "model": "medgemma:27b",
+    "case": "mellkas",
+    "items": [
+      {
+        "category": "COMPLAINT",
+        "text": "két órája szorít a mellkasom",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "COMPLAINT",
+        "text": "kisugárzik az állkapcsomba",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "COMPLAINT",
+        "text": "nagyon izzadok",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "COMPLAINT",
+        "text": "egy kicsit fulladok is",
+        "bnoCode": null,
+        "turnIds": [
+          3
+        ],
+        "flag": null
+      },
+      {
+        "category": "DIAGNOSIS",
+        "text": "akut inferior szívinfarktus gyanúja",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "REFERRAL",
+        "text": "kardiológiára",
+        "bnoCode": null,
+        "turnIds": [
+          9
+        ],
+        "flag": null
+      },
+      {
+        "category": "REFERRAL",
+        "text": "katéteres laborba koronarográfiára",
+        "bnoCode": null,
+        "turnIds": [
+          9
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "vérnyomása 165 per 95",
+        "bnoCode": null,
+        "turnIds": [
+          6
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "pulzusa 98",
+        "bnoCode": null,
+        "turnIds": [
+          6
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a szívhangok tiszták, zörej nincs",
+        "bnoCode": null,
+        "turnIds": [
+          6
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a tüdő felett vezikuláris légzés hallható",
+        "bnoCode": null,
+        "turnIds": [
+          6
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "300 milligramm aszpirint",
+        "bnoCode": null,
+        "turnIds": [
+          8
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "180 milligramm ticagrelort",
+        "bnoCode": null,
+        "turnIds": [
+          8
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "A ramiprilt most ne vegye be",
+        "bnoCode": null,
+        "turnIds": [
+          11
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "Troponint is kérek",
+        "bnoCode": null,
+        "turnIds": [
+          11
+        ],
+        "flag": null
+      }
+    ],
+    "warnings": [],
+    "seconds": 146.5
+  },
+  {
+    "model": "medgemma:27b",
+    "case": "hasi",
+    "items": [
+      {
+        "category": "COMPLAINT",
+        "text": "tegnap este óta fennálló hasi fájdalom",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "COMPLAINT",
+        "text": "a legrosszabb most jobb oldalt lent",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "COMPLAINT",
+        "text": "kétszer hánytam",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "DIAGNOSIS",
+        "text": "akut vakbélgyulladás gyanúja merül fel",
+        "bnoCode": null,
+        "turnIds": [
+          5
+        ],
+        "flag": null
+      },
+      {
+        "category": "REFERRAL",
+        "text": "sebészeti konzíliumot kérek",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a jobb alsó negyed nyomásérzékeny",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "McBurney-pont érzékeny",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "enyhe izomvédekezés van",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a testhőmérséklete 38,1 fok",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "gramm metamizol infúzióban",
+        "bnoCode": null,
+        "turnIds": [
+          8
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "Addig ne egyen és ne igyon semmit.",
+        "bnoCode": null,
+        "turnIds": [
+          9
+        ],
+        "flag": null
+      }
+    ],
+    "warnings": [],
+    "seconds": 123.3
+  },
+  {
+    "model": "medgemma:27b",
+    "case": "copd",
+    "items": [
+      {
+        "category": "COMPLAINT",
+        "text": "három napja egyre nehezebben kapok levegőt",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "COMPLAINT",
+        "text": "sárgászöld köpetet köhögök fel",
+        "bnoCode": null,
+        "turnIds": [
+          1
+        ],
+        "flag": null
+      },
+      {
+        "category": "DIAGNOSIS",
+        "text": "COPD akut exacerbációja",
+        "bnoCode": "J44.1",
+        "turnIds": [
+          6
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "kilégzési sípolás hallható mindkét oldalon a tüdő felett",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a szaturáció 91 százalék szobalevegőn",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "a légzésszám 24",
+        "bnoCode": null,
+        "turnIds": [
+          4
+        ],
+        "flag": null
+      },
+      {
+        "category": "EXAM_FINDING",
+        "text": "mellkasröntgen-felvételen beszűrődés nem látszik",
+        "bnoCode": null,
+        "turnIds": [
+          5
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "napi 40 milligramm prednizolont",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "MEDICATION",
+        "text": "amoxicillin-klavulánsavat naponta kétszer 875/125 milligrammot hét napig",
+        "bnoCode": null,
+        "turnIds": [
+          7
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "salbutamol sprayt rohamban használja, akár négyóránként",
+        "bnoCode": null,
+        "turnIds": [
+          8
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "egy hét múlva jöjjön vissza kontrollra a tüdőgondozóba",
+        "bnoCode": null,
+        "turnIds": [
+          9
+        ],
+        "flag": null
+      },
+      {
+        "category": "RECOMMENDATION",
+        "text": "Ha romlik a légzése vagy magas láza lesz, azonnal jöjjön vissza",
+        "bnoCode": null,
+        "turnIds": [
+          10
+        ],
+        "flag": null
+      }
+    ],
+    "warnings": [],
+    "seconds": 150.6
+  }
+]

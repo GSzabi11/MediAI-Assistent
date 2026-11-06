@@ -74,11 +74,56 @@ def search_ids(term: str, limit: int) -> tuple[int, list[str]]:
     return int(result.get("count") or 0), [i for i in result.get("idlist") or [] if i.isdigit()]
 
 
+_BOOL_OP = re.compile(r"\s+(AND|OR|NOT)\s+")
+
+
+def _left_to_right(query: str) -> str:
+    """A PubMed balról jobbra értékel (`A AND B OR C` = `(A AND B) OR C`), az Europe PMC-ben az AND erősebb
+    (`A AND (B OR C)`-ként is érthető): zárójelezéssel a PubMed-jelentést rögzítjük, a zárójelen belül is."""
+    parts, ops, depth, start, i = [], [], 0, 0, 0
+    while i < len(query):
+        c = query[i]
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        elif depth == 0 and (m := _BOOL_OP.match(query, i)):
+            parts.append(query[start:i])
+            ops.append(m.group(1))
+            start = i = m.end()
+            continue
+        i += 1
+    if depth != 0:
+        return query  # hibás zárójelezés: ahogy jött (a forrás hibát vagy szűkebb találatot ad)
+    parts.append(query[start:])
+    parts = ["(" + _left_to_right(p[1:-1].strip()) + ")" if _wrapped(p) else p for p in map(str.strip, parts)]
+    if len(set(ops)) <= 1:
+        return f" {ops[0]} ".join(parts) if ops else parts[0]
+    out = parts[0]
+    for op, part in zip(ops, parts[1:]):
+        out = f"({out} {op} {part})"
+    return out
+
+
+def _wrapped(part: str) -> bool:
+    """Egyetlen zárójelpár öleli-e körül a teljes részt (`(A OR B)` igen, `(A) B (C)` nem)."""
+    if not (part.startswith("(") and part.endswith(")")):
+        return False
+    depth = 0
+    for i, c in enumerate(part):
+        depth += (c == "(") - (c == ")")
+        if depth == 0 and i < len(part) - 1:
+            return False
+    return True
+
+
 def europepmc_query(query: str) -> str:
     """A PubMed-szintaxisú kifejezés Europe PMC-re: a mezőjelölők ([MeSH], [tiab] …) nélkül (ott mást
-    jelentenek), és csak a PubMedben is meglévő (PMID-es) rekordokra — így a cikkadatok és a hivatkozási
-    szám ugyanonnan jönnek, mint a többi forrásnál."""
-    return f"({' '.join(_FIELD_TAG.sub('', query).split())}) AND SRC:MED"
+    jelentenek), a PubMed balról jobbra kiértékelését zárójelekkel rögzítve (vegyes ÉS / VAGY a chipekből is
+    jöhet; enélkül a két forrás mást keresett, és több cikk jött le, mint a „találat”), és csak a PubMedben is
+    meglévő (PMID-es) rekordokra — így a cikkadatok és a hivatkozási szám ugyanonnan jönnek, mint a többi
+    forrásnál."""
+    return f"({_left_to_right(' '.join(_FIELD_TAG.sub('', query).split()))}) AND SRC:MED"
 
 
 def europepmc_ids(query: str, limit: int) -> tuple[int, list[str]]:
@@ -140,9 +185,11 @@ def search(query: str, sources: list[str], limit: int, progress) -> tuple[int, l
         for source, ids in (("PUBMED", pubmed), ("EUROPE_PMC", epmc)):
             if i < len(ids):
                 add(ids[i], source)
+    # a források átfednek (a Cochrane a PubMed része): az összes a legnagyobb forrásé, de legalább a ténylegesen
+    # talált különböző cikkek száma — különben a felület kevesebb „találatot” írt, mint ahány cikk letöltődött
+    # (34 találat, 41 letöltve: a PubMed 34-éhez az Europe PMC más cikkei is hozzájöttek, 2026-10-26)
+    total = max(max(totals.values(), default=0), len(order))
     order = order[:limit]
-    # a források átfednek (a Cochrane a PubMed része): az összes a legnagyobb forrásé
-    total = max(totals.values(), default=0)
     summary = ", ".join([f"{SOURCE_LABELS[s]}: {n} találat" for s, n in totals.items()] + notes)
     if not order:
         progress(f"{summary} — nincs letölthető cikk")

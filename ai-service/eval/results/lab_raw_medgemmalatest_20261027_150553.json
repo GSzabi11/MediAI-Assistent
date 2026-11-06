@@ -1,0 +1,1800 @@
+[
+  {
+    "model": "medgemma:latest",
+    "panel": "lab1_eeszt",
+    "docType": "LAB",
+    "clinicalDate": "2026-09-14",
+    "rows": [
+      {
+        "groupName": "Hematológia",
+        "name": "Fehérvérsejtszám (WBC)",
+        "value": "11.8",
+        "comparator": null,
+        "valueText": null,
+        "unit": "G/L",
+        "refLow": "4.0",
+        "refHigh": "10.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.1726,
+          "width": 0.7085,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Vörösvérsejtszám (RBC)",
+        "value": "4.21",
+        "comparator": null,
+        "valueText": null,
+        "unit": "T/L",
+        "refLow": "4.50",
+        "refHigh": "5.90",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.18804,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Hemoglobin",
+        "value": "128",
+        "comparator": null,
+        "valueText": null,
+        "unit": "g/L",
+        "refLow": "135",
+        "refHigh": "175",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.20348,
+          "width": 0.70853,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Hematokrit",
+        "value": "0.382",
+        "comparator": null,
+        "valueText": null,
+        "unit": "L/L",
+        "refLow": "0.400",
+        "refHigh": "0.520",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.21892,
+          "width": 0.73373,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "MCV",
+        "value": "90.7",
+        "comparator": null,
+        "valueText": null,
+        "unit": "fL",
+        "refLow": "80.0",
+        "refHigh": "100.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.23436,
+          "width": 0.72532,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "MCH",
+        "value": "30.4",
+        "comparator": null,
+        "valueText": null,
+        "unit": "pg",
+        "refLow": "27.0",
+        "refHigh": "34.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.2498,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "MCHC",
+        "value": "335",
+        "comparator": null,
+        "valueText": null,
+        "unit": "g/L",
+        "refLow": "310",
+        "refHigh": "370",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.26524,
+          "width": 0.70853,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "RDW-CV",
+        "value": "14.9",
+        "comparator": null,
+        "valueText": null,
+        "unit": "%",
+        "refLow": "11.5",
+        "refHigh": "14.5",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Thrombocytaszám",
+        "value": "312",
+        "comparator": null,
+        "valueText": null,
+        "unit": "G/L",
+        "refLow": "150",
+        "refHigh": "400",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.29612,
+          "width": 0.70853,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Neutrophil granulocyta %",
+        "value": "78.2",
+        "comparator": null,
+        "valueText": null,
+        "unit": "%",
+        "refLow": "40.0",
+        "refHigh": "75.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.31155,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Lymphocyta %",
+        "value": "14.1",
+        "comparator": null,
+        "valueText": null,
+        "unit": "%",
+        "refLow": "20.0",
+        "refHigh": "45.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.32699,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Monocyta %",
+        "value": "6.0",
+        "comparator": null,
+        "valueText": null,
+        "unit": "%",
+        "refLow": "2.0",
+        "refHigh": "10.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.34243,
+          "width": 0.7085,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Eosinophil granulocyta %",
+        "value": "1.2",
+        "comparator": null,
+        "valueText": null,
+        "unit": "%",
+        "refLow": "0.0",
+        "refHigh": "6.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.35787,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Hematológia",
+        "name": "Basophil granulocyta %",
+        "value": "0.5",
+        "comparator": null,
+        "valueText": null,
+        "unit": "%",
+        "refLow": "0.0",
+        "refHigh": "2.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.37331,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "Glükóz",
+        "value": "7.9",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "3.9",
+        "refHigh": "6.1",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.41013,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "Karbamid",
+        "value": "9.4",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "2.8",
+        "refHigh": "8.1",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.42557,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "Kreatinin",
+        "value": "132",
+        "comparator": null,
+        "valueText": null,
+        "unit": "µmol/L",
+        "refLow": "62",
+        "refHigh": "106",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.44101,
+          "width": 0.70012,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "eGFR-EPI",
+        "value": "90",
+        "comparator": ">",
+        "valueText": null,
+        "unit": "mL/min/1,73m2",
+        "refLow": "60",
+        "refHigh": null,
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "Nátrium",
+        "value": "136",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "136",
+        "refHigh": "145",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.47189,
+          "width": 0.70853,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "Kálium",
+        "value": "5.6",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "3.5",
+        "refHigh": "5.1",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.48733,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "Klorid",
+        "value": "101",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "98",
+        "refHigh": "107",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.50277,
+          "width": 0.70012,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "Húgysav",
+        "value": "421",
+        "comparator": null,
+        "valueText": null,
+        "unit": "µmol/L",
+        "refLow": "202",
+        "refHigh": "417",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.51821,
+          "width": 0.70853,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Klinikai kémia",
+        "name": "Összfehérje",
+        "value": "68.4",
+        "comparator": null,
+        "valueText": null,
+        "unit": "g/L",
+        "refLow": "66.0",
+        "refHigh": "83.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.53364,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Albumin",
+        "value": "38.1",
+        "comparator": null,
+        "valueText": null,
+        "unit": "g/L",
+        "refLow": "35.0",
+        "refHigh": "52.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.54908,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Összbilirubin",
+        "value": "14.2",
+        "comparator": null,
+        "valueText": null,
+        "unit": "µmol/L",
+        "refLow": "5.0",
+        "refHigh": "21.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.56452,
+          "width": 0.7085,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "GOT (AST)",
+        "value": "41",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "40",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.57996,
+          "width": 0.67448,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "GPT (ALT)",
+        "value": "38",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "41",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.5954,
+          "width": 0.67448,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Gamma-GT",
+        "value": "72",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "60",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Alkalikus foszfatáz",
+        "value": "96",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": "40",
+        "refHigh": "130",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.62628,
+          "width": 0.70012,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "LDH",
+        "value": "245",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "250",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.64172,
+          "width": 0.68289,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "CRP",
+        "value": "0.5",
+        "comparator": "<",
+        "valueText": null,
+        "unit": "mg/L",
+        "refLow": null,
+        "refHigh": "5.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.65716,
+          "width": 0.67867,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Kalcium",
+        "value": "2.31",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "2.15",
+        "refHigh": "2.55",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.6726,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Magnézium",
+        "value": "0.78",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "0.66",
+        "refHigh": "1.07",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.68804,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Foszfát",
+        "value": "1.12",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "0.81",
+        "refHigh": "1.45",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.70348,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Vas",
+        "value": "11.3",
+        "comparator": null,
+        "valueText": null,
+        "unit": "µmol/L",
+        "refLow": "12.5",
+        "refHigh": "32.2",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.71892,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "Ferritin",
+        "value": "38",
+        "comparator": null,
+        "valueText": null,
+        "unit": "µg/L",
+        "refLow": "30",
+        "refHigh": "400",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.73436,
+          "width": 0.70012,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Laboratóriumi lelet",
+        "name": "NT-proBNP",
+        "value": "1840",
+        "comparator": null,
+        "valueText": null,
+        "unit": "pg/mL",
+        "refLow": null,
+        "refHigh": "125",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      }
+    ],
+    "seconds": 37.8,
+    "warnings": []
+  },
+  {
+    "model": "medgemma:latest",
+    "panel": "lab2_privat",
+    "docType": "LAB",
+    "clinicalDate": "2026-10-02",
+    "rows": [
+      {
+        "groupName": "Vérkép",
+        "name": "Fehérvérsejt",
+        "value": "6.4",
+        "comparator": null,
+        "valueText": null,
+        "unit": "Giga/L",
+        "refLow": "3.8",
+        "refHigh": "10.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.15597,
+          "width": 0.64128,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vérkép",
+        "name": "Vörösvérsejt",
+        "value": "4.62",
+        "comparator": null,
+        "valueText": null,
+        "unit": "Tera/L",
+        "refLow": "3.90",
+        "refHigh": "5.20",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.17141,
+          "width": 0.64969,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vérkép",
+        "name": "Hemoglobin",
+        "value": "131",
+        "comparator": null,
+        "valueText": null,
+        "unit": "g/L",
+        "refLow": "117",
+        "refHigh": "153",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.18685,
+          "width": 0.64131,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vérkép",
+        "name": "Hematokrit",
+        "value": "39.8",
+        "comparator": null,
+        "valueText": null,
+        "unit": "%",
+        "refLow": "35.0",
+        "refHigh": "46.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.20229,
+          "width": 0.64969,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vérkép",
+        "name": "MCV",
+        "value": "86.1",
+        "comparator": null,
+        "valueText": null,
+        "unit": "fL",
+        "refLow": "80.0",
+        "refHigh": "98.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.21773,
+          "width": 0.64969,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vérkép",
+        "name": "Thrombocyta",
+        "value": "198",
+        "comparator": null,
+        "valueText": null,
+        "unit": "Giga/L",
+        "refLow": "150",
+        "refHigh": "400",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.23317,
+          "width": 0.64131,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Anyagcsere",
+        "name": "Éhgyomri vércukor",
+        "value": "5.4",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "3.9",
+        "refHigh": "5.6",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.26999,
+          "width": 0.63287,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Anyagcsere",
+        "name": "HbA1c (IFCC)",
+        "value": "41",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/mol",
+        "refLow": null,
+        "refHigh": "42",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.28543,
+          "width": 0.60726,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Anyagcsere",
+        "name": "Koleszterin összes",
+        "value": "6.3",
+        "comparator": null,
+        "valueText": null,
+        "unit": "H mmol/L",
+        "refLow": null,
+        "refHigh": "5.2",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.30087,
+          "width": 0.61145,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Anyagcsere",
+        "name": "HDL-koleszterin",
+        "value": "1.21",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "1.20",
+        "refHigh": null,
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Anyagcsere",
+        "name": "LDL-koleszterin",
+        "value": "4.4",
+        "comparator": null,
+        "valueText": null,
+        "unit": "H mmol/L",
+        "refLow": null,
+        "refHigh": "3.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Anyagcsere",
+        "name": "Triglicerid",
+        "value": "1.9",
+        "comparator": null,
+        "valueText": null,
+        "unit": "H mmol/L",
+        "refLow": null,
+        "refHigh": "1.7",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.34718,
+          "width": 0.61145,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vese",
+        "name": "Kreatinin",
+        "value": "71",
+        "comparator": null,
+        "valueText": null,
+        "unit": "µmol/L",
+        "refLow": "45",
+        "refHigh": "84",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.384,
+          "width": 0.62449,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vese",
+        "name": "eGFR (CKD-EPI)",
+        "value": "88",
+        "comparator": null,
+        "valueText": null,
+        "unit": "L mL/min/1,73m2",
+        "refLow": "90",
+        "refHigh": null,
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.39944,
+          "width": 0.60726,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vese",
+        "name": "Karbamid",
+        "value": "5.1",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "2.8",
+        "refHigh": "7.2",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.41488,
+          "width": 0.63287,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Májfunkció",
+        "name": "ASAT (GOT)",
+        "value": "22",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "32",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.4517,
+          "width": 0.60726,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Májfunkció",
+        "name": "ALAT (GPT)",
+        "value": "19",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "33",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.46714,
+          "width": 0.60726,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Májfunkció",
+        "name": "GGT",
+        "value": "18",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "40",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.48258,
+          "width": 0.60726,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Májfunkció",
+        "name": "Bilirubin, összes",
+        "value": "9.8",
+        "comparator": null,
+        "valueText": null,
+        "unit": "µmol/L",
+        "refLow": null,
+        "refHigh": "21.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.49802,
+          "width": 0.61986,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Pajzsmirigy",
+        "name": "TSH",
+        "value": "4.92",
+        "comparator": null,
+        "valueText": null,
+        "unit": "H mU/L",
+        "refLow": "0.27",
+        "refHigh": "4.20",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.53483,
+          "width": 0.64969,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Pajzsmirigy",
+        "name": "Szabad T4 (FT4)",
+        "value": "13.1",
+        "comparator": null,
+        "valueText": null,
+        "unit": "pmol/L",
+        "refLow": "12.0",
+        "refHigh": "22.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.55027,
+          "width": 0.64969,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Pajzsmirigy",
+        "name": "Anti-TPO",
+        "value": "112",
+        "comparator": null,
+        "valueText": null,
+        "unit": "H IU/mL",
+        "refLow": null,
+        "refHigh": "34",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Gyulladás",
+        "name": "CRP",
+        "value": "2.1",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mg/L",
+        "refLow": null,
+        "refHigh": "5.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.60253,
+          "width": 0.61145,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Gyulladás",
+        "name": "Süllyedés (We)",
+        "value": "18",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mm/h",
+        "refLow": null,
+        "refHigh": "20",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.61797,
+          "width": 0.60726,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vérkép",
+        "name": "25-OH-D-vitamin",
+        "value": "42",
+        "comparator": null,
+        "valueText": null,
+        "unit": "nmol/L",
+        "refLow": "75",
+        "refHigh": "250",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Vérkép",
+        "name": "B12-vitamin",
+        "value": "298",
+        "comparator": null,
+        "valueText": null,
+        "unit": "pmol/L",
+        "refLow": "145",
+        "refHigh": "569",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Vérkép",
+        "name": "Folsav",
+        "value": "45.4",
+        "comparator": ">",
+        "valueText": null,
+        "unit": "nmol/L",
+        "refLow": "7.0",
+        "refHigh": null,
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.68566,
+          "width": 0.61145,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Fajsúly",
+        "value": "1018",
+        "comparator": null,
+        "valueText": null,
+        "unit": "g/L",
+        "refLow": "1005",
+        "refHigh": "1030",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.72248,
+          "width": 0.65813,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "pH",
+        "value": "6.0",
+        "comparator": null,
+        "valueText": null,
+        "unit": null,
+        "refLow": "5.0",
+        "refHigh": "7.5",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.73792,
+          "width": 0.63287,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Fehérje",
+        "value": null,
+        "comparator": null,
+        "valueText": "Negatív",
+        "unit": null,
+        "refLow": null,
+        "refHigh": null,
+        "refText": "Negatív",
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.75336,
+          "width": 0.62952,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Glükóz",
+        "value": null,
+        "comparator": null,
+        "valueText": "Negatív",
+        "unit": null,
+        "refLow": null,
+        "refHigh": null,
+        "refText": "Negatív",
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.7688,
+          "width": 0.62952,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Keton",
+        "value": null,
+        "comparator": null,
+        "valueText": "Negatív",
+        "unit": null,
+        "refLow": null,
+        "refHigh": null,
+        "refText": "Negatív",
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.78424,
+          "width": 0.62952,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Urobilinogén",
+        "value": null,
+        "comparator": null,
+        "valueText": "Normális",
+        "unit": null,
+        "refLow": null,
+        "refHigh": null,
+        "refText": "Normális",
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.79968,
+          "width": 0.63709,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Bilirubin",
+        "value": null,
+        "comparator": null,
+        "valueText": "Negatív",
+        "unit": null,
+        "refLow": null,
+        "refHigh": null,
+        "refText": "Negatív",
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.81512,
+          "width": 0.62952,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Nitrit",
+        "value": null,
+        "comparator": null,
+        "valueText": "Pozitív",
+        "unit": null,
+        "refLow": null,
+        "refHigh": null,
+        "refText": "Negatív",
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.83056,
+          "width": 0.62952,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Leukocyta",
+        "value": null,
+        "comparator": null,
+        "valueText": "kevés",
+        "unit": null,
+        "refLow": null,
+        "refHigh": null,
+        "refText": "Negatív",
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.846,
+          "width": 0.62952,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vizelet",
+        "name": "Vér",
+        "value": null,
+        "comparator": null,
+        "valueText": "Negatív",
+        "unit": null,
+        "refLow": null,
+        "refHigh": null,
+        "refText": "Negatív",
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.86144,
+          "width": 0.62952,
+          "height": 0.01793
+        }
+      }
+    ],
+    "seconds": 36.3,
+    "warnings": []
+  },
+  {
+    "model": "medgemma:latest",
+    "panel": "lab3_eeszt",
+    "docType": "LAB",
+    "clinicalDate": "2026-10-11",
+    "rows": [
+      {
+        "groupName": "Véralvadás",
+        "name": "Protrombin idő (INR)",
+        "value": "2.8",
+        "comparator": null,
+        "valueText": null,
+        "unit": null,
+        "refLow": "0.8",
+        "refHigh": "1.2",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.1726,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Véralvadás",
+        "name": "Protrombin %",
+        "value": "31",
+        "comparator": null,
+        "valueText": null,
+        "unit": "%",
+        "refLow": "70",
+        "refHigh": "120",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.18804,
+          "width": 0.70012,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Véralvadás",
+        "name": "APTI",
+        "value": "34.2",
+        "comparator": null,
+        "valueText": null,
+        "unit": "s",
+        "refLow": "25.0",
+        "refHigh": "37.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.20348,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Véralvadás",
+        "name": "Fibrinogén",
+        "value": "4.1",
+        "comparator": null,
+        "valueText": null,
+        "unit": "g/L",
+        "refLow": "2.0",
+        "refHigh": "4.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.21892,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Véralvadás",
+        "name": "D-dimer",
+        "value": "0.42",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mg/L FEU",
+        "refLow": null,
+        "refHigh": "0.50",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Szív",
+        "name": "Troponin T (hs)",
+        "value": "38",
+        "comparator": null,
+        "valueText": null,
+        "unit": "ng/L",
+        "refLow": null,
+        "refHigh": "14",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.27117,
+          "width": 0.67448,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Szív",
+        "name": "CK",
+        "value": "184",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "190",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.28661,
+          "width": 0.68289,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Szív",
+        "name": "CK-MB",
+        "value": "21",
+        "comparator": null,
+        "valueText": null,
+        "unit": "U/L",
+        "refLow": null,
+        "refHigh": "24",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Elektrolit",
+        "name": "Nátrium",
+        "value": "131",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "136",
+        "refHigh": "145",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.33887,
+          "width": 0.70853,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Elektrolit",
+        "name": "Kálium",
+        "value": "3.3",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "3.5",
+        "refHigh": "5.1",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.35431,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Elektrolit",
+        "name": "Magnézium",
+        "value": "0.61",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "0.66",
+        "refHigh": "1.07",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.36975,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vese",
+        "name": "Kreatinin",
+        "value": "156",
+        "comparator": null,
+        "valueText": null,
+        "unit": "µmol/L",
+        "refLow": "62",
+        "refHigh": "106",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.40657,
+          "width": 0.70012,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Vese",
+        "name": "eGFR-EPI",
+        "value": "38",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mL/min/1,73m2",
+        "refLow": "60",
+        "refHigh": null,
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": null
+      },
+      {
+        "groupName": "Vese",
+        "name": "Cisztatin C",
+        "value": "1.62",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mg/L",
+        "refLow": "0.61",
+        "refHigh": "0.95",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.43745,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Gyulladás",
+        "name": "Prokalcitonin",
+        "value": "0.05",
+        "comparator": "<",
+        "valueText": null,
+        "unit": "ng/mL",
+        "refLow": null,
+        "refHigh": "0.50",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.47426,
+          "width": 0.68708,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Gyulladás",
+        "name": "CRP",
+        "value": "48.7",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mg/L",
+        "refLow": null,
+        "refHigh": "5.0",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.4897,
+          "width": 0.67867,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Gyulladás",
+        "name": "Laktát",
+        "value": "2.4",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mmol/L",
+        "refLow": "0.5",
+        "refHigh": "2.2",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.50514,
+          "width": 0.70009,
+          "height": 0.01793
+        }
+      },
+      {
+        "groupName": "Pajzsmirigy",
+        "name": "TSH",
+        "value": "1.85",
+        "comparator": null,
+        "valueText": null,
+        "unit": "mU/L",
+        "refLow": "0.27",
+        "refHigh": "4.20",
+        "refText": null,
+        "measuredAt": null,
+        "code": null,
+        "sourceBox": {
+          "page": 1,
+          "x": 0.06423,
+          "y": 0.54196,
+          "width": 0.71691,
+          "height": 0.01793
+        }
+      }
+    ],
+    "seconds": 18.4,
+    "warnings": []
+  }
+]

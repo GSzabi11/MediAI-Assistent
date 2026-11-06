@@ -8,7 +8,7 @@ import datetime as dt
 import re
 from decimal import Decimal, InvalidOperation
 
-from textutil import cells, contains_phrase, find_span, fold, join_wrapped
+from textutil import anchor_span, cells, contains_phrase, find_span, fold, join_wrapped
 
 # ---------------------------------------------------------------- dátum
 
@@ -711,7 +711,9 @@ def ambulance_statements(data: dict, text: str, warnings: list[str]) -> list[dic
         if uncertainty not in _UNCERTAINTY:
             uncertainty = "HIGH"  # MODEL_INFERENCE-nél kötelező; ismeretlen = legóvatosabb
 
-        span = find_span(text, quote)
+        # Ha szó szerint nincs meg: a szavai sorrendjében, kihagyott sorral / zárójellel (anchor_span).
+        # A forrás ekkor is a dokumentum saját szövegrésze; a gyógyszer neve és adagja abban ellenőrződik.
+        span = find_span(text, quote) or anchor_span(text, quote)
         if span is None:
             warnings.append(f"Állítás kihagyva — az idézet nem található szó szerint a dokumentumban: {quote[:120]!r}")
             continue

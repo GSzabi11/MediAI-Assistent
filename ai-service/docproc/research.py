@@ -36,28 +36,40 @@ Szabályok:
 # A modell nem a kész kifejezést írja (szabad szövegben a qwen3.5:9b csak kulcsszavakat adott:
 # „male adult palpitations reflux”, 2026-10-24), hanem fogalmakat JSON-ban; a PubMed-szintaxist a kód
 # rakja össze (build_query) — így a zárójelezés és a mezőjelölők mindig helyesek.
+# Fő probléma AND (bármelyik társult probléma): a korábbi 2–3, egymással AND-del kötött fogalomra (palpitáció +
+# eozinopénia + reflux, ill. palpitáció + NSVT + metabolikus szindróma) a PubMed 0, ill. néhány mellékes találatot
+# adott, a kéttagú változatban pedig a modell mindig a beteg „nyitott kérdését” (eozinopénia, NSVT) választotta
+# második fogalomnak, a GERD–aritmia cikkeket hozó refluxot nem (a régi szabad szavas „palpitations reflux”
+# hozta). VAGY-gyal a társult problémák mind bekerülnek, a PubMed relevancia-sorrendje és az AI-rangsor dönt
+# (mérve, 2026-10-26, TAJ 200 403 111-es beteg).
 SYSTEM_QUERY = """You turn a Hungarian clinical summary into the concepts of ONE PubMed search, in English.
+The search is: main AND (related 1 OR related 2 OR related 3).
 Rules:
-- 2–3 concepts: the main diagnosis or problem, and the key associated problem or treatment question.
-  The concepts will be combined with AND, so every one must be essential.
+- "main": the main problem (usually the presenting complaint or the main diagnosis).
+- "related": 0–3 other diagnoses or problems of the patient from the summary that may be linked to the
+  main problem (a possible cause, a comorbidity, a finding of its work-up, or the treatment question).
+  An article about the main problem together with ANY of them will be found.
 - For each concept: "mesh" is the exact MeSH heading (e.g. "Gastroesophageal Reflux", "Heart Failure");
-  "synonyms" are 1–3 short free-text English variants as written in abstracts (e.g. "GERD", "acid reflux").
+  "synonyms" are 1–2 short free-text English variants as written in abstracts (e.g. "GERD", "reflux").
 - Do not add allergies or routine medications unless they are the question itself.
 - Never use sex, age or age group (male, female, adult, aged, elderly, child …), names, identifiers,
   places, dates or lab values as a concept or synonym."""
 
-QUERY_MAX_CONCEPTS = 3
-QUERY_MAX_SYNONYMS = 3
+QUERY_MAX_RELATED = 3
+QUERY_MAX_SYNONYMS = 2
 QUERY_TERM_MAX_CHARS = 60
+_CONCEPT_SCHEMA = {
+    "type": "object",
+    "properties": {"mesh": {"type": "string", "maxLength": QUERY_TERM_MAX_CHARS},
+                   "synonyms": {"type": "array", "maxItems": QUERY_MAX_SYNONYMS,
+                                "items": {"type": "string", "maxLength": QUERY_TERM_MAX_CHARS}}},
+    "required": ["mesh", "synonyms"],
+}
 QUERY_SCHEMA = {
     "type": "object",
-    "properties": {"concepts": {"type": "array", "minItems": 1, "maxItems": QUERY_MAX_CONCEPTS, "items": {
-        "type": "object",
-        "properties": {"mesh": {"type": "string", "maxLength": QUERY_TERM_MAX_CHARS},
-                       "synonyms": {"type": "array", "maxItems": QUERY_MAX_SYNONYMS,
-                                    "items": {"type": "string", "maxLength": QUERY_TERM_MAX_CHARS}}},
-        "required": ["mesh", "synonyms"]}}},
-    "required": ["concepts"],
+    "properties": {"main": _CONCEPT_SCHEMA,
+                   "related": {"type": "array", "maxItems": QUERY_MAX_RELATED, "items": _CONCEPT_SCHEMA}},
+    "required": ["main", "related"],
 }
 
 SYSTEM_EVAL = """Magyar klinikus asszisztens vagy. Egy orvosnak segítesz szakirodalmat átnézni egy
@@ -201,28 +213,41 @@ def _term(raw) -> str:
     return term
 
 
-def build_query(concepts: list) -> str:
-    """Fogalmanként (Heading[MeSH Terms] OR synonym[tiab] …), a fogalmak AND-del. Idézőjel nélkül: így a
-    PubMed a MeSH-belépési alakot a fejlécre képezi le („Chronic Kidney Disease” → Renal Insufficiency,
-    Chronic), a nem létező fejlécet pedig a csoportból kihagyja (idézőjelesen ez a csoportot nullázhatja);
-    a szabad szavas [tiab] alakok ezért kellenek mellé (mérve, 2026-10-24). Ha nem fér a hosszkorlátba, a
-    szinonimák fogynak (vágás a zárójelezést rontaná el)."""
+def _forms(concept, max_synonyms: int) -> tuple[str, list[str]]:
+    """(MeSH-fejléc, a szabad szavas alakok: a fejléc maga + a szinonimák), tisztítva."""
+    if not isinstance(concept, dict):
+        return "", []
+    mesh = _term(concept.get("mesh"))
+    synonyms = [s for s in (_term(s) for s in (concept.get("synonyms") or [])[:QUERY_MAX_SYNONYMS]) if s]
+    return mesh, [t for t in [mesh] + synonyms[:max_synonyms] if t]
+
+
+def build_query(main, related: list) -> str:
+    """(Heading[MeSH Terms] OR Heading OR synonym …) AND (társult1 OR szinonima OR társult2 …). Idézőjel nélkül: így
+    a PubMed a MeSH-belépési alakot a fejlécre képezi le („Chronic Kidney Disease” → Renal Insufficiency, Chronic),
+    a nem létező fejlécet pedig a csoportból kihagyja (idézőjelesen ez a csoportot nullázhatja; „Palpitations” pl.
+    nem MeSH-fejléc) — ezért kellenek mellé a szabad szavas alakok (mérve, 2026-10-24). Ezek mezőjelölő nélkül
+    mennek: így a PubMed automatikus leképezése a többes számot, a MeSH-et és a szóváltozatokat is keresi
+    („palpitations” → palpitation OR palpitations, „GERD” → Gastroesophageal Reflux[MeSH]); a [tiab] csak a pontos
+    alakot, ezért kevesebb, kevésbé releváns találatot adott (mérve, 2026-10-26). A társult problémák egy csoportban,
+    jelölő nélkül (az automatikus leképezés ott is a MeSH-re visz): így a kifejezés két ÉS-sel kötött fogalom marad,
+    amit a felület chipjei bontani tudnak (lib/keresoKifejezes.ts). Ha nem fér a hosszkorlátba, a szinonimák
+    fogynak (vágás a zárójelezést rontaná el)."""
     for max_synonyms in range(QUERY_MAX_SYNONYMS, -1, -1):
-        groups, seen = [], set()
-        for concept in concepts[:QUERY_MAX_CONCEPTS]:
-            if not isinstance(concept, dict):
-                continue
-            parts = []
-            mesh = _term(concept.get("mesh"))
-            if mesh:
-                parts.append(f"{mesh}[MeSH Terms]")
-            synonyms = [_term(s) for s in (concept.get("synonyms") or [])[:QUERY_MAX_SYNONYMS]]
-            for term in [mesh] + [s for s in synonyms if s][:max_synonyms]:
-                if term and term.lower() not in seen:
-                    seen.add(term.lower())
-                    parts.append(f"{term}[tiab]")
-            if parts:
-                groups.append(parts[0] if len(parts) == 1 else "(" + " OR ".join(parts) + ")")
+        seen = set()
+
+        def unique(terms: list[str]) -> list[str]:
+            out = []
+            for t in terms:
+                if t.lower() not in seen:
+                    seen.add(t.lower())
+                    out.append(t)
+            return out
+
+        mesh, forms = _forms(main, max_synonyms)
+        main_parts = ([f"{mesh}[MeSH Terms]"] if mesh else []) + unique(forms)
+        related_parts = unique([t for c in (related or [])[:QUERY_MAX_RELATED] for t in _forms(c, max_synonyms)[1]])
+        groups = [p[0] if len(p) == 1 else "(" + " OR ".join(p) + ")" for p in (main_parts, related_parts) if p]
         query = " AND ".join(groups)
         if len(query) <= MAX_QUERY_CHARS:
             return query
@@ -230,8 +255,8 @@ def build_query(concepts: list) -> str:
 
 
 def suggest_query(summary: str) -> str:
-    data = _chat_json(SYSTEM_QUERY, summary, QUERY_SCHEMA, 300)
-    return clean_query(build_query(data.get("concepts") or []))
+    data = _chat_json(SYSTEM_QUERY, summary, QUERY_SCHEMA, 500)
+    return clean_query(build_query(data.get("main"), data.get("related") or []))
 
 
 def context(facts: dict) -> dict:
