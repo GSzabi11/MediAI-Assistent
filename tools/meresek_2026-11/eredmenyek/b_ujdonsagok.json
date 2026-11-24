@@ -1,0 +1,472 @@
+{
+  "date": "2026-11-15T15:44:20",
+  "patient_id": 19,
+  "document_quotes": {
+    "verbatim": [
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      }
+    ],
+    "paraphrase": [
+      {
+        "cat": "szám",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A beteg 3 napja észlel nehézlégzést.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szám",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A vérnyomása 150/95 Hgmm volt a felvételkor.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rög"
+      },
+      {
+        "cat": "szám",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A pulzusszám 104/perc, szabálytalan.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szám",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A testhőmérséklet 37,8 fok.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szám",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Az oxigénszaturáció 91 százalék szobalevegőn.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rö"
+      },
+      {
+        "cat": "szinonima",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Ismert magasvérnyomás-betegség miatt ramiprilt szed.\"); ha átfogalmazott, MODEL_INFERENCE-ként "
+      },
+      {
+        "cat": "szinonima",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Penicillinre kiütéssel reagált korábban.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíte"
+      },
+      {
+        "cat": "szinonima",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A mellkasröntgen bal oldali alsó lebenyben beszűrődést mutat.\"); ha átfogalmazott, MODEL_INFERE"
+      },
+      {
+        "cat": "szinonima",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A hasi ultrahang eltérést nem igazolt.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szinonima",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A nyaki vénák nem teltebbek.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szórend",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Bokaödéma mindkét oldalon látható.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szórend",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A beteg dohányzik, napi egy doboz cigarettát szív.\"); ha átfogalmazott, MODEL_INFERENCE-ként ke"
+      },
+      {
+        "cat": "szórend",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Alkoholt alkalmanként fogyaszt.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szórend",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Az EKG-n pitvarfibrilláció látható.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szórend",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A hasa puha, betapintható, nyomásérzékenység nincs.\"); ha átfogalmazott, MODEL_INFERENCE-ként k"
+      },
+      {
+        "cat": "kihagyás",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Kardiológiai konzílium javasolt.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "kihagyás",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Antibiotikum-kezelést kezdtünk.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "kihagyás",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A kontrollvizsgálat egy hét múlva esedékes.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögz"
+      },
+      {
+        "cat": "kihagyás",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"A beteg a kezeléssel egyetért.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "kihagyás",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem egyezik a hivatkozott szövegrésszel (\"Az állapota stabil, otthonába bocsátható.\"); ha átfogalmazott, MODEL_INFERENCE-ként kell rögzít"
+      }
+    ]
+  },
+  "audio_quotes": {
+    "setup": [
+      200,
+      201,
+      200
+    ],
+    "verbatim": [
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      },
+      {
+        "status": 201,
+        "err": null
+      }
+    ],
+    "paraphrase": [
+      {
+        "cat": "szinonima",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szám",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "kihagyás",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szám",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szórend",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szinonima",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szám",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szórend",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "kihagyás",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      },
+      {
+        "cat": "szinonima",
+        "status": 400,
+        "err": "RETRIEVED_FACT szövege nem szerepel szó szerint a hivatkozott megszólalásokban; ha átfogalmazott, MODEL_INFERENCE-ként kell rögzíteni"
+      }
+    ]
+  },
+  "lab_retraction": {
+    "post_out_of_range": 201,
+    "alerts_after_out_of_range": 10,
+    "post_in_range": [
+      201,
+      201,
+      201,
+      201,
+      201,
+      201,
+      201,
+      201,
+      201,
+      201
+    ],
+    "alerts_after_in_range": 0,
+    "alerts_retracted": 10
+  },
+  "drug_retraction": [
+    {
+      "pair": "Warfarin + Fluconazole",
+      "ddinter_level": "Major",
+      "expected": "Major",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "CRITICAL",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Simvastatin + Clarithromycin",
+      "ddinter_level": "Major",
+      "expected": "Major",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "CRITICAL",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Sildenafil + Nitroglycerin",
+      "ddinter_level": "Major",
+      "expected": "Major",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "CRITICAL",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Clopidogrel + Omeprazole",
+      "ddinter_level": "Major",
+      "expected": "Major",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "CRITICAL",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Methotrexate + Trimethoprim",
+      "ddinter_level": "Major",
+      "expected": "Major",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "CRITICAL",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Acetylsalicylic acid + Ramipril",
+      "ddinter_level": "Moderate",
+      "expected": "Moderate",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "WARNING",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Allopurinol + Warfarin",
+      "ddinter_level": "Moderate",
+      "expected": "Moderate",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "WARNING",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Amiodarone + Bisoprolol",
+      "ddinter_level": "Moderate",
+      "expected": "Moderate",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "WARNING",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Acetylsalicylic acid + Digoxin",
+      "ddinter_level": "Moderate",
+      "expected": "Moderate",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "WARNING",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    },
+    {
+      "pair": "Acetylsalicylic acid + Amlodipine",
+      "ddinter_level": "Moderate",
+      "expected": "Moderate",
+      "create": [
+        201,
+        201
+      ],
+      "alert": 1,
+      "severity": "WARNING",
+      "discontinue": 200,
+      "alert_after_discontinue": 0
+    }
+  ],
+  "rule_via_api": [
+    {
+      "attempt": "DOCUMENT forrás, RULE előállító",
+      "status": 400,
+      "err": "Szabály-alapú állítást csak a szabálymotor hozhat létre, az API nem"
+    },
+    {
+      "attempt": "LAB forrás (mint a szabálymotor)",
+      "status": 400,
+      "err": "Szabály-alapú állítást csak a szabálymotor hozhat létre, az API nem"
+    },
+    {
+      "attempt": "MEDICATION forrás (mint az interakció-szabály)",
+      "status": 400,
+      "err": "Szabály-alapú állítást csak a szabálymotor hozhat létre, az API nem"
+    },
+    {
+      "attempt": "AUDIO forrás",
+      "status": 400,
+      "err": "Szabály-alapú állítást csak a szabálymotor hozhat létre, az API nem"
+    },
+    {
+      "attempt": "MODEL előállító (álcázott LLM-kimenet)",
+      "status": 400,
+      "err": "Szabály-alapú állítást csak a szabálymotor hozhat létre, az API nem"
+    }
+  ],
+  "deleted_dirs": [
+    "backend\\data\\documents\\19"
+  ],
+  "patient_deleted": true
+}

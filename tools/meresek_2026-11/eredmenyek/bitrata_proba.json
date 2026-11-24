@@ -1,0 +1,27 @@
+{
+  "status": "DONE",
+  "error": null,
+  "bytes_per_sec_32k": 4254.5,
+  "bytes_per_sec_orig": 16220.2,
+  "utterances": {
+    "orig": 13,
+    "32k": 13
+  },
+  "speakers": {
+    "orig": [
+      "DOCTOR",
+      "PATIENT"
+    ],
+    "32k": [
+      "DOCTOR",
+      "PATIENT"
+    ]
+  },
+  "asr_word_diff_vs_orig": {
+    "N": 96,
+    "S": 0,
+    "D": 0,
+    "I": 0,
+    "wer": 0.0
+  }
+}

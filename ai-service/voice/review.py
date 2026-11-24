@@ -29,6 +29,9 @@ log = logging.getLogger("voice.review")
 # helyes, az echo „555 százalék” ellenőrizendőként jelölve; medgemma1.5:4b — 1 javítás, beszélőcsere
 # egy sem, a válaszai többször a kérdéshez sem illettek (az őrök elvetették).
 REVIEW_MODEL = os.environ.get("VOICE_REVIEW_MODEL", "").strip() or bp.LLM_MODEL
+# Opcionális véletlenmag az átnéző hívásokhoz (megismételhetőség). Üresen nem küldünk seedet (a korábbi viselkedés).
+_SEED = os.environ.get("VOICE_REVIEW_SEED", "").strip()
+REVIEW_SEED = int(_SEED) if _SEED else None
 BATCH_TURNS = 40          # ennyi megszólalás megy egy hívásba kontextusként
 MAX_QUESTIONS = 30        # és legfeljebb ennyi kérdés
 ROLES = ("orvos", "beteg", "egyéb")
@@ -198,7 +201,7 @@ def _ask(mode: str, batch: list[dict], questions: list[dict]) -> list[dict]:
     for temp in (0.0, 0.3):
         try:
             raw = bp._call_ollama(REVIEW_MODEL, content, "json", bp.LLM_DEADLINE, keep_loaded=False,
-                                  temperature=temp)
+                                  temperature=temp, seed=REVIEW_SEED)
             data = json.loads(raw)
             items = data.get("valaszok") if isinstance(data, dict) else None
             if not isinstance(items, list):

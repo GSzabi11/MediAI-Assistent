@@ -1,0 +1,109 @@
+{
+  "documents": {
+    "rows": 190,
+    "unique_files": 27,
+    "patients": 16,
+    "by_type_status": {
+      "AMBULANCE": {
+        "PROCESSED": 111
+      },
+      "(nincs)": {
+        "FAILED": 14
+      },
+      "LAB": {
+        "PROCESSED": 65
+      }
+    },
+    "unique_by_type": {
+      "AMBULANCE": 17,
+      "LAB": 10
+    },
+    "status": {
+      "PROCESSED": 176,
+      "FAILED": 14
+    },
+    "mime": {
+      "application/pdf": 190
+    },
+    "extraction_model": {
+      "(nincs)": 15,
+      "medgemma:latest": 175
+    },
+    "processing_seconds_upload_to_processed": {
+      "n": 175,
+      "mean": 72146.05,
+      "median": 472.17,
+      "min": 6.31,
+      "max": 1919342.99
+    }
+  },
+  "lab_rows": {
+    "total": 1831,
+    "with_document": 1831,
+    "located_in_pdf": 1179,
+    "numeric": 1541,
+    "censored": 61,
+    "text": 229
+  },
+  "verbatim_check": {
+    "rows": 1831,
+    "with_doc": 1831,
+    "doc_has_text": 1831,
+    "name": 1637,
+    "value": 1822,
+    "both": 1628,
+    "near": 1616,
+    "name_relaxed": 1822,
+    "both_relaxed": 1813,
+    "kinds": {
+      "numeric": [
+        1541,
+        1446
+      ],
+      "censored": [
+        61,
+        42
+      ],
+      "text": [
+        229,
+        140
+      ]
+    }
+  },
+  "repeat_processing": {
+    "files_multi": 9,
+    "files_same_count": 3,
+    "same_version_groups": 10,
+    "same_version_identical": 10,
+    "same_version_runs": 26
+  },
+  "medications": [
+    {
+      "origin": "DOCUMENT_PIPELINE",
+      "n": 55
+    }
+  ],
+  "allergies": [],
+  "rule_statements": [
+    {
+      "rule": "drug-interaction",
+      "severity": "CRITICAL",
+      "n": 3
+    },
+    {
+      "rule": "drug-interaction",
+      "severity": "INFO",
+      "n": 4
+    },
+    {
+      "rule": "drug-interaction",
+      "severity": "WARNING",
+      "n": 3
+    },
+    {
+      "rule": "lab-reference-range",
+      "severity": "WARNING",
+      "n": 144
+    }
+  ]
+}

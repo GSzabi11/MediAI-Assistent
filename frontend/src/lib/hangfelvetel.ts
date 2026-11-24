@@ -49,9 +49,15 @@ export async function mikrofonMegnyitasa(): Promise<MediaStream> {
   }
 }
 
+/**
+ * Beszédhez elég 32 kbit/s Opus (a böngésző alapja ~128 kbit/s): 5 perc ≈ 1,2 MB a ≈ 4,8 MB helyett.
+ * A hangprofil és a betegfelvétel ugyanígy készül (a hanglenyomat és a diarizáció azonos minőségű hangon fut).
+ */
+const HANG_BITRATA = 32_000;
+
 export function felvetelInditasa(stream: MediaStream): Felvevo {
   const mimeType = MIME_PREFERENCIA.find((m) => MediaRecorder.isTypeSupported(m));
-  const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+  const recorder = new MediaRecorder(stream, { ...(mimeType ? { mimeType } : {}), audioBitsPerSecond: HANG_BITRATA });
   const chunks: Blob[] = [];
   recorder.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
 

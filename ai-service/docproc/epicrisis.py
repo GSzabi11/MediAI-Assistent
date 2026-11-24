@@ -106,7 +106,7 @@ MAX_TOTAL = 60
 
 # A csoportelemek helye az epikrízisben és a címkéje a pótolt sorban
 _GROUP_LABEL = {"COMPLAINT": "Panasz", "DIAGNOSIS": "Diagnózis", "REFERRAL": "Beutaló",
-                "EXAM_FINDING": "Vizsgálati megállapítás", "MEDICATION": "Javasolt gyógyszer",
+                "EXAM_FINDING": "Vizsgálati megállapítás", "MEDICATION": "Gyógyszer",
                 "RECOMMENDATION": "Javaslat / kontroll"}
 _GROUP_FINDING = ("COMPLAINT", "EXAM_FINDING")
 _GROUP_RECOMMENDATION = ("REFERRAL", "MEDICATION", "RECOMMENDATION")

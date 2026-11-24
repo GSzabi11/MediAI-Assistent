@@ -1,0 +1,6 @@
+# leletadatot tartalmaz (Szabi valós leletei) — a gépen marad
+kezi_ellenorzes.csv
+__pycache__/
+eredmenyek/naplo/
+# a felolvasók hangja (biometrikus) — a gépen marad
+eredmenyek/der/*.wav

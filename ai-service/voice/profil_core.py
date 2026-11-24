@@ -17,18 +17,24 @@ EMBED_MODEL = "pyannote/wespeaker-voxceleb-resnet34-LM"
 
 
 # A felolvasandó mondatok. A hanglenyomat szövegfüggetlen, tehát nem a tartalom a
-# lényeg, hanem hogy (1) elég nettó beszéd legyen (~30+ mp), (2) sokféle magyar hang
-# szerepeljen (ö/ő/ü/ű, gy/ny/ty, sz/zs/cs, hosszú magánhangzók), és (3) a stílus a
-# munka közbeni beszédhez hasonlítson: kérdések, utasítások, számok diktálása.
+# lényeg, hanem hogy (1) elég nettó beszéd legyen (~30 mp összesen), (2) sokféle magyar hang
+# szerepeljen (ö/ő/ü/ű, gy/ny, sz/zs/cs, hosszú magánhangzók), és (3) a stílus a munka közbeni
+# beszédhez hasonlítson. Rövid, könnyen felolvasható mondatok (Szabi kérése, 2026-11-23):
+# 12 db, egyenként ~3 mp — legalább MIN_SENTENCE_SPEECH (2 mp) nettó beszéd kell mindegyikben,
+# és a Spring legfeljebb 12 mondatot fogad (VoiceProfileService.MAX_SENTENCES).
 ENROLL_SENTENCES = [
-    "Jó napot kívánok, kérem, mondja el, mi történt önnel.",
-    "Mióta tart a fájdalom, hová sugárzik, és érez-e zsibbadást a kezében vagy a lábában?",
-    "Szed rendszeresen gyógyszert, például vérnyomáscsökkentőt, vérhígítót vagy inzulint?",
-    "Most meghallgatom a szívét és a tüdejét. Vegyen mély levegőt, és tartsa bent egy pillanatig.",
-    "A bal kamra ejekciós frakciója ötvenöt százalék, regionális falmozgászavar nem látható.",
-    "Az E per e vessző arány tizenkettő, a tricuspidalis regurgitáció sebessége két egész nyolc méter per szekundum.",
-    "Hány éves korában műtötték, és volt-e azóta szövődménye vagy gyógyszerallergiás reakciója?",
-    "Köszönöm a türelmét. Az eredményeket egy óra múlva megbeszéljük a hozzátartozójával együtt.",
+    "Jó napot kívánok, kérem, foglaljon helyet itt a széken.",
+    "Mondja el, kérem, mióta érzi magát rosszul.",
+    "Hol fáj pontosan, és mikor kezdődött a fájdalom?",
+    "Érez szűk mellkasi nyomást vagy zsibbadást a kezében?",
+    "Szed most valamilyen gyógyszert, vagy allergiás valamire?",
+    "Most meghallgatom a szívét és a tüdejét.",
+    "Vegyen mély levegőt, és lassan fújja ki.",
+    "Kérem, feküdjön le az ágyra, és lazítson el.",
+    "A vérnyomása százharminc per nyolcvan, a pulzusa hetvenkettő.",
+    "Reggel harmincnyolc egész öt fokos láza volt.",
+    "Holnap reggel éhgyomorra jöjjön vissza vérvételre.",
+    "Köszönöm a türelmét, az eredményt hamarosan megbeszéljük.",
 ]
 
 MIN_SENTENCE_SPEECH = 2.0    # mp nettó beszéd mondatonként

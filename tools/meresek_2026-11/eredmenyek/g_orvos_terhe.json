@@ -1,0 +1,256 @@
+{
+  "patients_total": 19,
+  "patients_with_statements": 16,
+  "statements_total": 1077,
+  "totals": {
+    "DETERMINISTIC_RULE": 154,
+    "DETERMINISTIC_RULE|review:PENDING": 154,
+    "DETERMINISTIC_RULE|sev:CRITICAL": 3,
+    "DETERMINISTIC_RULE|sev:INFO": 4,
+    "DETERMINISTIC_RULE|sev:WARNING": 147,
+    "MODEL_INFERENCE": 922,
+    "MODEL_INFERENCE|review:ACCEPTED": 12,
+    "MODEL_INFERENCE|review:MODIFIED": 4,
+    "MODEL_INFERENCE|review:PENDING": 902,
+    "MODEL_INFERENCE|review:REJECTED": 4,
+    "MODEL_INFERENCE|sev:INFO": 912,
+    "MODEL_INFERENCE|sev:WARNING": 10,
+    "RETRIEVED_FACT": 1,
+    "RETRIEVED_FACT|review:ACCEPTED": 1,
+    "RETRIEVED_FACT|sev:CRITICAL": 1,
+    "all": 1077,
+    "review:ACCEPTED": 13,
+    "review:MODIFIED": 4,
+    "review:PENDING": 1056,
+    "review:REJECTED": 4,
+    "sev:CRITICAL": 4,
+    "sev:INFO": 916,
+    "sev:WARNING": 157
+  },
+  "per_patient": {
+    "DETERMINISTIC_RULE": {
+      "n": 16,
+      "mean": 9.62,
+      "median": 10.0,
+      "min": 0,
+      "max": 15
+    },
+    "DETERMINISTIC_RULE|review:PENDING": {
+      "n": 16,
+      "mean": 9.62,
+      "median": 10.0,
+      "min": 0,
+      "max": 15
+    },
+    "DETERMINISTIC_RULE|sev:CRITICAL": {
+      "n": 16,
+      "mean": 0.19,
+      "median": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "DETERMINISTIC_RULE|sev:INFO": {
+      "n": 16,
+      "mean": 0.25,
+      "median": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "DETERMINISTIC_RULE|sev:WARNING": {
+      "n": 16,
+      "mean": 9.19,
+      "median": 9.5,
+      "min": 0,
+      "max": 14
+    },
+    "MODEL_INFERENCE": {
+      "n": 16,
+      "mean": 57.62,
+      "median": 6.0,
+      "min": 0,
+      "max": 162
+    },
+    "MODEL_INFERENCE|review:ACCEPTED": {
+      "n": 16,
+      "mean": 0.75,
+      "median": 0.0,
+      "min": 0,
+      "max": 6
+    },
+    "MODEL_INFERENCE|review:MODIFIED": {
+      "n": 16,
+      "mean": 0.25,
+      "median": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "MODEL_INFERENCE|review:PENDING": {
+      "n": 16,
+      "mean": 56.38,
+      "median": 0.0,
+      "min": 0,
+      "max": 161
+    },
+    "MODEL_INFERENCE|review:REJECTED": {
+      "n": 16,
+      "mean": 0.25,
+      "median": 0.0,
+      "min": 0,
+      "max": 2
+    },
+    "MODEL_INFERENCE|sev:INFO": {
+      "n": 16,
+      "mean": 57.0,
+      "median": 6.0,
+      "min": 0,
+      "max": 161
+    },
+    "MODEL_INFERENCE|sev:WARNING": {
+      "n": 16,
+      "mean": 0.62,
+      "median": 0.0,
+      "min": 0,
+      "max": 3
+    },
+    "RETRIEVED_FACT": {
+      "n": 16,
+      "mean": 0.06,
+      "median": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "RETRIEVED_FACT|review:ACCEPTED": {
+      "n": 16,
+      "mean": 0.06,
+      "median": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "RETRIEVED_FACT|sev:CRITICAL": {
+      "n": 16,
+      "mean": 0.06,
+      "median": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "all": {
+      "n": 16,
+      "mean": 67.31,
+      "median": 18.5,
+      "min": 1,
+      "max": 173
+    },
+    "review:ACCEPTED": {
+      "n": 16,
+      "mean": 0.81,
+      "median": 0.0,
+      "min": 0,
+      "max": 7
+    },
+    "review:MODIFIED": {
+      "n": 16,
+      "mean": 0.25,
+      "median": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "review:PENDING": {
+      "n": 16,
+      "mean": 66.0,
+      "median": 14.0,
+      "min": 0,
+      "max": 173
+    },
+    "review:REJECTED": {
+      "n": 16,
+      "mean": 0.25,
+      "median": 0.0,
+      "min": 0,
+      "max": 2
+    },
+    "sev:CRITICAL": {
+      "n": 16,
+      "mean": 0.25,
+      "median": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "sev:INFO": {
+      "n": 16,
+      "mean": 57.25,
+      "median": 6.0,
+      "min": 0,
+      "max": 161
+    },
+    "sev:WARNING": {
+      "n": 16,
+      "mean": 9.81,
+      "median": 10.0,
+      "min": 0,
+      "max": 16
+    }
+  },
+  "by_rule": {
+    "MODEL_INFERENCE": {
+      "MODIFIED": 4,
+      "ACCEPTED": 12,
+      "REJECTED": 4,
+      "PENDING": 902
+    },
+    "lab-reference-range": {
+      "PENDING": 144
+    },
+    "RETRIEVED_FACT": {
+      "ACCEPTED": 1
+    },
+    "drug-interaction": {
+      "PENDING": 10
+    }
+  },
+  "approvals_total": 22,
+  "medications": [
+    {
+      "origin": "DOCUMENT_PIPELINE",
+      "active": false,
+      "review": "PENDING",
+      "n": 27
+    },
+    {
+      "origin": "DOCUMENT_PIPELINE",
+      "active": true,
+      "review": "PENDING",
+      "n": 28
+    }
+  ],
+  "recording_keywords": [
+    {
+      "status": "SUGGESTED",
+      "origin": "MODEL",
+      "n": 57
+    },
+    {
+      "status": "ACCEPTED",
+      "origin": "DOCTOR",
+      "n": 2
+    },
+    {
+      "status": "ACCEPTED",
+      "origin": "MODEL",
+      "n": 4
+    }
+  ],
+  "recording_findings": [
+    {
+      "origin": "MODEL",
+      "active": 38,
+      "edited": 4,
+      "deleted": 0
+    },
+    {
+      "origin": "DOCTOR",
+      "active": 5,
+      "edited": 0,
+      "deleted": 0
+    }
+  ]
+}

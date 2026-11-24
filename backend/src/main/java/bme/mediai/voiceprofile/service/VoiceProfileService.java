@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Service
 public class VoiceProfileService {
 
-    // A prototípus (hangprofil.py) 8 mondatot olvastat fel; néhány kieshet a minőségellenőrzésen
+    // A profil 12 rövid mondatot olvastat fel (profil_core.ENROLL_SENTENCES); néhány kieshet a minőségellenőrzésen
     public static final int MIN_SENTENCES = 4;
     public static final int MAX_SENTENCES = 12;
     private static final int MAX_ERROR_LENGTH = 2000;

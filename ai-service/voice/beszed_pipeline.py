@@ -319,7 +319,7 @@ def _runaway(text: str, window: int = 200) -> bool:
 
 
 def _call_ollama(model: str, content: str, fmt, deadline: int,
-                 keep_loaded: bool, temperature: float = 0.0) -> str:
+                 keep_loaded: bool, temperature: float = 0.0, seed: int | None = None) -> str:
     """Streamelt hívás valódi határidővel. Ha lejár, a kapcsolat bontása az
     Ollamában is leállítja a generálást, így nem blokkolja a következő kérést."""
     body = {
@@ -337,6 +337,8 @@ def _call_ollama(model: str, content: str, fmt, deadline: int,
         "keep_alive": "5m" if keep_loaded else 0,
         "messages": [{"role": "user", "content": content}],
     }
+    if seed is not None:  # alapból nincs (a korábbi viselkedés); ld. review.VOICE_REVIEW_SEED
+        body["options"]["seed"] = seed
     t0 = time.perf_counter()
     parts: list[str] = []
     with requests.post(OLLAMA_URL, json=body, stream=True, timeout=(10, deadline)) as resp:

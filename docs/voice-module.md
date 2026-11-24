@@ -15,7 +15,7 @@ duplikáld ide.
 Korábbi terv: böngésző → WebSocket → Python, a Spring csak a végeredményt kapja. **Módosítva**:
 
 ```
-Böngésző (MediaRecorder, WebM/Opus) ──multipart──▶ Spring (data/documents/{beteg}/hangfelvetelek/, gitignore)
+Böngésző (MediaRecorder, WebM/Opus, 32 kbit/s) ──multipart──▶ Spring (data/documents/{beteg}/hangfelvetelek/, gitignore)
    Spring ──{fájl útja, mód, az orvos hanglenyomata}──▶ Python hangszolgáltatás (ai-service/voice/service.py, :8002)
    Python: Whisper → pyannote → szerepkiosztás → MedGemma-átnézés → kulcsszavak
    Python ──callback (X-Internal-Token)──▶ Spring: megszólalások + kulcsszó-javaslatok, egy tranzakcióban
@@ -32,13 +32,17 @@ megmarad** (a felhasználó döntése, 2026-10-13): a beteg dokumentum-mappájá
 relatívan) a `recording.audio_path`. A `recording.audio_deleted_at` csak a korábbi (törölt hangú)
 felvételeknél van kitöltve. Ismert rés (mint a dokumentumoknál): a beteg törlésekor a fájl a lemezen marad.
 
+**Bitráta (2026-11-15, Szabi döntése)**: a böngésző `audioBitsPerSecond: 32000`-rel rögzít (`frontend/src/lib/hangfelvetel.ts`,
+a hangprofil és a betegfelvétel is). Korábban a böngésző alapja (≈ 128 kbit/s, 5 perc ≈ 4,8 MB) ment; 32 kbit/s-mal
+5 perc ≈ 1,2 MB. A régi felvételek változatlanok.
+
 A Spring sosem hívja az Ollamát. GPU (8 GB): a Python saját soros sora + a docproc-kal közös
 folyamatközi fájlzár (`ai-service/gpulock.py`) — egyszerre egy GPU-feladat fut a gépen; a Whisper és
 a diarizáció modellje a lépés után felszabadul, hogy a MedGemma elférjen.
 
 ## Hangprofil (V26) — felvétel feltétele
 
-- A Profil oldalon a böngészőben: 2 mp csend (zajszint), majd a prototípus 8 mondata
+- A Profil oldalon a böngészőben: 2 mp csend (zajszint), majd 12 rövid, könnyen felolvasható mondat
   (`profil_core.ENROLL_SENTENCES`), mondatonként azonnali durva ellenőrzéssel (hossz, hangerő).
 - `POST /api/voice-profiles` (multipart: `userId`, `sentences[]`, `noise`, `microphone`) → 202,
   `voice_profile.status = PROCESSING`, nem aktív. Csak `DOCTOR`. Felhasználónként egy készülő profil.
@@ -130,8 +134,8 @@ Tudatosan **külön táblák, nem `statement`** (mint a `clinical_summary`).
 ## Csoportok (V34)
 
 Az átiratból hat csoport, mindegyik az orvos szerkeszthető listája: **Panaszok** (+ BNO), **Diagnózisok** (+ BNO),
-**Beutalók**, **Vizsgálati megállapítások**, **Javasolt gyógyszerek**, **Javaslatok / kontroll**. Szabi kérése
-(2026-10-23). Tudatosan **külön táblák, nem `statement`** (mint a kulcsszó és az összefoglaló).
+**Beutalók**, **Vizsgálati megállapítások**, **Gyógyszerek** (2026-11-15-ig „Javasolt gyógyszerek”), **Javaslatok /
+kontroll**. Szabi kérése (2026-10-23). Tudatosan **külön táblák, nem `statement`** (mint a kulcsszó és az összefoglaló).
 
 - **Folyamat**: a felvétel elkészültekor (`RecordingTranscribedEvent`) automatikusan, utána gombbal újra
   (`POST /api/recordings/{id}/findings/extractions`, 202). Spring → Python `POST /recording-findings` (a teljes,
@@ -140,6 +144,18 @@ Az átiratból hat csoport, mindegyik az orvos szerkeszthető listája: **Panasz
   szótő-egyezés (`summary.ground`), ha így sincs forrás, **az elem kimarad** (figyelmeztetéssel). Tagadott tünet
   (`nincs…`, `tagad…`) nem panasz. Az átiratban nem szereplő szám → „Ellenőrizendő” jelölés az elemen. A Spring
   újra ellenőrzi, hogy a `turn_id`-k léteznek. Echo-diktálásnál csak az orvos megszólalásai (mint az összefoglalónál).
+- **Gyógyszerek (2026-11-15)**: a csoport MINDEN elhangzott gyógyszer — a szedett gyógyszerlista, a most felírt /
+  módosított / leállított („(leállítva …)”) szer és a gyógyszer-allergia („Allergia: …”); a kerülendő gyógyszer(-pár)
+  javaslat. Oka: egy diktált gyógyszerlistánál (beteg 22, felvétel 21) a 4B minden szert panasznak vett, a 27B pedig
+  mindent üresen hagyott, mert a régi prompt szerint csak a MOST felírt szer tartozott ide. Determinisztikus javítás
+  (`findings.py`): (1) név + adag + gyógyszer-mértékegység (`mg`, `mcg`, `NE`, `tbl`… — `ml`/`g` nem) az átiratban →
+  ha a modell nem vette fel, szó szerint, a megszólalásra hivatkozva pótoljuk; (2) panaszba / vizsgálati
+  megállapításba tett gyógyszer (adaggal, INN-szóvéggel — `-olol`, `-pril`, `-statin`, `-farin`… — vagy az átiratban
+  adaggal elhangzott névvel) és allergia → Gyógyszerek, „kerülendő” gyógyszer → Javaslatok; diagnózist / beutalót
+  nem mozgatunk; (3) ha egy elem sem említ allergiát, de elhangzott (nem tagadva), az „allergi…” mondat szó szerint
+  bekerül. Gyógyszert csak adagos alakból veszünk fel (szóvégből nem), és BNO-t ez sem ad. Mérés a 21-es felvételen:
+  mindkét modellel mind a 11 elem (8 szer, leállított ibuprofen, penicillin-allergia, kerülendő pár) jó helyen,
+  forrással; 4B ~100 mp, 27B ~180 mp (a hosszabb JSON miatt a `num_predict` 3000).
 - **BNO-kód**: a modell nem ad. Csak ha a hivatkozott megszólalásban a „BNO” szó mellett szó szerint elhangzott
   (pl. „BNO I20.0”) és pontosan egy ilyen kód van; különben az orvos írja be. Formátum-ellenőrzés (DB CHECK +
   entitás), kódtábla még nincs — létező kódra nem ellenőrzünk.

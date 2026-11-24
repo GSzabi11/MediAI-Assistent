@@ -7,6 +7,9 @@ A modell (MedGemma, kötött JSON) csak JAVASOL; determinisztikus ellenőrzés:
     (figyelmeztetéssel) — ami nem hangzott el, nem kerül a listába;
   - a tagadott tünet ("nincs láz") nem panasz: kimarad, figyelmeztetéssel;
   - az átiratban nem szereplő szám → az elem "ellenőrizendő" jelölést kap;
+  - gyógyszer (név + adag + mértékegység, pl. "metoprolol 50 mg") a Gyógyszerek csoportba kerül: ha a modell
+    másik csoportba tette (a 4B a diktált gyógyszerlistát panasznak vette, 2026-11-15), áthelyezzük; ha
+    kihagyta (a 27B ugyanarra üres listát adott), az átiratból — szó szerint, a megszólalásra hivatkozva — pótoljuk;
   - BNO-kódot a modell nem ad. Panasznál / diagnózisnál csak akkor kerül kód az elemre, ha a hivatkozott
     megszólalásban a "BNO" szó mellett szó szerint elhangzott (pl. diktálásnál); különben az orvos írja be.
 Echo-diktálásnál csak az orvos megszólalásai (mint az összefoglalónál — a felhasználó döntése, 2026-10-15).
@@ -27,21 +30,28 @@ log = logging.getLogger("voice.findings")
 
 SEED = 42
 MAX_PER_CATEGORY = 8
+# egy diktált gyógyszerlista ennél hosszabb is lehet (a 21-es felvételen 8 szer + 1 leállított + allergia)
+MAX_MEDICATIONS = 20
 MAX_TEXT = 300
 
 # (JSON-kulcs a modellnek, a Spring kategóriája, leírás a promptban)
 CATEGORIES = [
     ("panaszok", "COMPLAINT", "a beteg JELENLEGI panaszai, tünetei (ha elhangzott: kezdet, lokalizáció, jelleg). "
-                              "A tagadott tünet (\"nincs láza\") NEM panasz."),
+                              "A tagadott tünet (\"nincs láza\") NEM panasz. Gyógyszer, gyógyszerlista, "
+                              "allergia SOSEM panasz."),
     ("diagnozisok", "DIAGNOSIS", "diagnózis vagy diagnózis-gyanú, CSAK ha az orvos kimondta (a \"gyanú\" szót tartsd "
                                  "meg). Ne következtess tünetekből."),
     ("beutalok", "REFERRAL", "hova / milyen szakrendelésre, osztályra, vizsgálatra küldi vagy utalja az orvos a beteget."),
     ("vizsgalati_megallapitasok", "EXAM_FINDING", "fizikális vizsgálat és mérések eredménye (vérnyomás, pulzus, "
                                                   "echo-paraméterek stb.), értékkel és mértékegységgel, pontosan úgy, "
                                                   "ahogy elhangzott; a tagadó lelet is (\"has puha, nem érzékeny\")."),
-    ("javasolt_gyogyszerek", "MEDICATION", "gyógyszer, amit az orvos MOST javasol, felír vagy módosít (név, és ha "
-                                           "elhangzott: adag, szedés). A beteg által eddig szedett gyógyszer NEM ide."),
-    ("javaslatok", "RECOMMENDATION", "egyéb teendő: kontroll (mikor, hol), életmód, diéta, mikor jöjjön vissza."),
+    ("gyogyszerek", "MEDICATION", "MINDEN elhangzott gyógyszer, soronként egy: a jelenleg szedett gyógyszerek "
+                                  "(gyógyszerlista), a most felírt, módosított vagy leállított szerek — név, és ha "
+                                  "elhangzott: adag, szedés. Leállítottnál írd mögé zárójelben, és ha elhangzott, "
+                                  "az okát (pl. \"diklofenak (leállítva gyomorvérzés miatt)\"). "
+                                  "Gyógyszer-allergia is ide, pl. \"Allergia: szulfonamid (csalánkiütés)\"."),
+    ("javaslatok", "RECOMMENDATION", "egyéb teendő: kontroll (mikor, hol), életmód, diéta, mikor jöjjön vissza; "
+                                     "kerülendő gyógyszer vagy gyógyszer-kombináció."),
 ]
 CATEGORY_OF = {key: cat for key, cat, _ in CATEGORIES}
 
@@ -54,7 +64,7 @@ SCHEMA = {"type": "object",
 
 PROMPT = {
     "sbo": "sürgősségi osztályos orvos–beteg beszélgetés",
-    "echo": "echokardiográfiás vizsgálat diktálásának (csak az orvos megszólalásai)",
+    "echo": "orvosi diktálás (echokardiográfiás lelet, gyógyszerlista, anamnézis stb.; csak az orvos megszólalásai)",
 }
 
 RULES = """A {what} átiratát kapod, sorszámozott megszólalásokkal. Gyűjtsd ki belőle csoportonként az elemeket egy
@@ -68,21 +78,40 @@ SZABÁLYOK:
   szám.
 - Ha egy csoportba nem hangzott el semmi, az üres lista. Csoportonként legfeljebb {n} elem, ismétlés nélkül.
 PÉLDA (más betegről, ne ezeket add vissza):
-[0] ORVOS: Mi a panasza? [1] BETEG: Két napja fáj a hasam jobb oldalt, lázam nincs. [2] ORVOS: A has jobb alsó
-negyede nyomásérzékeny. Appendicitis gyanú, sebészeti konzílium. Metamizolt adunk, holnap kontroll.
+[0] ORVOS: Mi a panasza? [1] BETEG: Két napja fáj a hasam jobb oldalt, lázam nincs. Bisoprololt szedek, 5 mg
+reggel, a szulfonamidra csalánkiütést kaptam. [2] ORVOS: A has jobb alsó negyede nyomásérzékeny. Appendicitis gyanú,
+sebészeti konzílium. Metamizolt adunk, holnap kontroll.
 → {{"panaszok": [{{"szoveg": "két napja fennálló jobb oldali hasi fájdalom", "forras": [1]}}],
 "diagnozisok": [{{"szoveg": "appendicitis gyanú", "forras": [2]}}],
 "beutalok": [{{"szoveg": "sebészeti konzílium", "forras": [2]}}],
 "vizsgalati_megallapitasok": [{{"szoveg": "a has jobb alsó negyede nyomásérzékeny", "forras": [2]}}],
-"javasolt_gyogyszerek": [{{"szoveg": "metamizol", "forras": [2]}}],
+"gyogyszerek": [{{"szoveg": "bisoprolol 5 mg reggel", "forras": [1]}}, {{"szoveg": "Allergia: szulfonamid
+(csalánkiütés)", "forras": [1]}}, {{"szoveg": "metamizol", "forras": [2]}}],
 "javaslatok": [{{"szoveg": "kontroll holnap", "forras": [2]}}]}}"""
 
-_OPTIONS = {"temperature": 0, "seed": SEED, "repeat_penalty": 1.1, "num_ctx": 8192, "num_predict": 1500}
+_OPTIONS = {"temperature": 0, "seed": SEED, "repeat_penalty": 1.1, "num_ctx": 8192, "num_predict": 3000}
 # A JSON-kimenet hosszabb, mint az összefoglalóé: a 27B (8 GB VRAM-on részben CPU-n) 120 mp alatt nem végzett
 # egy 8 megszólalásos próbán (2026-10-23); a 4B ~20–60 mp
 DEADLINE = int(os.environ.get("FINDINGS_DEADLINE", str(max(bp.LLM_DEADLINE, 600))))
 
 _NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+# Gyógyszer az átiratban: név + adag + gyógyszer-mértékegység, utána a szedés a tagolójelig ("metoprolol 50 mg
+# reggel és este"). A mértékegység szűr: a mérés (Hgmm, /perc, %, mm) nem ilyen; a "ml"/"g" kimarad (folyadék, só).
+_DOSE = re.compile(r"(?<![\w])(?P<name>[^\W\d_][\w-]{3,})\s+(?P<dose>\d+(?:[.,]\d+)?)\s?"
+                   r"(?P<unit>mg|mcg|µg|μg|ug|NE|IU|tabletta|tbl|csepp|puff)(?![\w])(?P<rest>[^,.;:]{0,80})")
+# "nincs ismert allergiája", "allergiát tagad": nem allergia
+_NEG_ALLERGY = re.compile(r"(?i)\b(nincs|nincsen|nem ismert|tagad|negatív)")
+# Hatóanyag-név a nemzetközi (INN) szóvégekről, magyar raggal is ("ibuprofent", "varfarinnal") — csak a
+# panasz / vizsgálati megállapítás átsorolásához, gyógyszert nem ebből veszünk fel
+_DRUG_SUFFIX = re.compile(r"(?i)[a-z]{2,}(?:prol|olol|pril|sartan|statin|profen|farin|daron|cillin|mycin|micin|prazol|"
+                          r"szemid|semid|formin|gliflozin|gliptin|dipin|xaban|gatran|parin|fenac|fenak|oxacin|"
+                          r"cyclin|ciklin|tiazid|lukast|azepam|zepam|setron|tidin|metazon|nizolon|szalicilsav|"
+                          r"salicilsav)[a-záéíóöőúüű]{0,5}\b")
+_AVOID = re.compile(r"(?i)kerülend|kerülni|kerülje|ne szedje|ne adjuk|kontraindik|ellenjavallt")
+# a szám előtt álló, nem gyógyszernév szavak ("napi 50 mg", "összesen 100 mg")
+_NOT_DRUG = {"napi", "naponta", "összesen", "maximum", "maximálisan", "legfeljebb", "legalább", "körülbelül",
+             "mintegy", "adag", "adagja", "adagban", "dózis", "dózisban", "plusz", "reggel", "este", "délben",
+             "után", "előtt", "helyett", "további", "egyszer", "kétszer", "háromszor", "szükség", "esetén"}
 # "nem" nem: "nem kap levegőt" valódi panasz
 _NEGATED = re.compile(r"^(nincs|nincsen|tagad|negatív)", re.IGNORECASE)
 # A "BNO" szó mellett elhangzott kód: R07.4, R 07.4, R07,4, I10
@@ -128,21 +157,62 @@ def bno_from(utterances: list[dict]) -> str | None:
     return codes.pop() if len(codes) == 1 else None
 
 
+def drug_mentions(utterances: list[dict]) -> list[dict]:
+    """Az átiratban elhangzott gyógyszer + adag, szó szerint ("metoprolol 50 mg reggel és este"), a
+    megszólalására hivatkozva."""
+    found: list[dict] = []
+    for u in utterances:
+        for m in _DOSE.finditer(u["text"]):
+            name = m.group("name")
+            if name.lower() in _NOT_DRUG:
+                continue
+            rest = " ".join(m.group("rest").split()[:8])
+            found.append({"name": name, "text": f"{name} {m.group('dose')} {m.group('unit')} {rest}".strip(),
+                          "turnId": u["turnId"]})
+    return found
+
+
+def _drug_stem(word: str) -> str:
+    return word.lower()[:5]
+
+
+def _route(category: str, text: str, drug_stems: set[str]) -> str:
+    """Determinisztikus csoport-javítás: gyógyszer és gyógyszer-allergia a Gyógyszerek csoportba, a kerülendő
+    gyógyszer a Javaslatok közé. Diagnózist és beutalót nem mozgatunk (a "warfarin-túladagolás" diagnózis)."""
+    if category in ("MEDICATION", "RECOMMENDATION", "DIAGNOSIS", "REFERRAL"):
+        return category
+    first = re.findall(r"[^\W\d_]{4,}", text)
+    drug = (_DOSE.search(text) or _DRUG_SUFFIX.search(text)
+            or (first and _drug_stem(first[0]) in drug_stems))
+    if drug and _AVOID.search(text):
+        return "RECOMMENDATION"
+    if drug or re.match(r"(?i)allergi", text):
+        return "MEDICATION"
+    return category
+
+
 def validate(raw: dict, utterances: list[dict], warnings: list[str]) -> list[dict]:
     by_turn = {u["turnId"]: u for u in utterances}
     transcript = " ".join(u["text"] for u in utterances)
     items: list[dict] = []
-    for key, category, _ in CATEGORIES:
+    drugs = drug_mentions(utterances)
+    drug_stems = {_drug_stem(d["name"]) for d in drugs}
+    seen: set[str] = set()
+    for key, model_category, _ in CATEGORIES:
         entries = raw.get(key) if isinstance(raw.get(key), list) else []
-        seen: set[str] = set()
         for entry in entries:
             if not isinstance(entry, dict) or not isinstance(entry.get("szoveg"), str):
                 continue
-            text = " ".join(entry["szoveg"].replace("**", "").split()).strip(" -•;")[:MAX_TEXT]
+            text = re.sub(r"\(\s*\)", "", re.sub(r":?\s*<[^<>]*>", "", entry["szoveg"].replace("**", "")))  # sablon-hely
+            text = " ".join(text.split()).strip(" -•;:")[:MAX_TEXT]
             if not text or text.lower() in seen:
                 continue
-            if len([i for i in items if i["category"] == category]) >= MAX_PER_CATEGORY:
-                break
+            category = _route(model_category, text, drug_stems)
+            if category != model_category:
+                log.info("Csoport javítva: %s → %s: %s", model_category, category, text[:80])
+            limit = MAX_MEDICATIONS if category == "MEDICATION" else MAX_PER_CATEGORY
+            if len([i for i in items if i["category"] == category]) >= limit:
+                continue
             if category == "COMPLAINT" and _NEGATED.match(text):
                 warnings.append(f"Panasz kimaradt (tagadott tünet): „{text[:80]}”")
                 continue
@@ -169,6 +239,28 @@ def validate(raw: dict, utterances: list[dict], warnings: list[str]) -> list[dic
                 "turnIds": refs[:20],
                 "flag": ("Ellenőrizendő: " + "; ".join(flags))[:500] if flags else None,
             })
+    # a modell által kihagyott gyógyszer (név + adag) pótlása az átiratból, szó szerint
+    med_text = " ".join(i["text"] for i in items if i["category"] == "MEDICATION").lower()
+    med_stems = {_drug_stem(w) for w in re.findall(r"[^\W\d_]{4,}", med_text)}
+    for d in drugs:
+        if _drug_stem(d["name"]) in med_stems or d["text"].lower() in seen:
+            continue
+        if len([i for i in items if i["category"] == "MEDICATION"]) >= MAX_MEDICATIONS:
+            break
+        log.info("Gyógyszer pótolva az átiratból: %s", d["text"])
+        seen.add(d["text"].lower())
+        med_stems.add(_drug_stem(d["name"]))
+        items.append({"category": "MEDICATION", "text": d["text"][:MAX_TEXT], "bnoCode": None,
+                      "turnIds": [d["turnId"]], "flag": None})
+    # a kihagyott allergia: az "allergi…" mondat szó szerint (a 4B a diktált penicillin-allergiát kihagyta)
+    if not any(re.search(r"(?i)allergi", i["text"]) for i in items):
+        for u in utterances:
+            for sent in re.split(r"(?<=[.!?])\s+", u["text"]):
+                if re.search(r"(?i)\ballergi", sent) and not _NEG_ALLERGY.search(sent):
+                    text = " ".join(sent.split()).strip(" .")[:MAX_TEXT]
+                    log.info("Allergia pótolva az átiratból: %s", text)
+                    items.append({"category": "MEDICATION", "text": text, "bnoCode": None,
+                                  "turnIds": [u["turnId"]], "flag": None})
     return items
 
 

@@ -1,0 +1,130 @@
+{
+  "date": "2026-11-15T16:17:52",
+  "patient_id": 21,
+  "cases": [
+    {
+      "case": "D1 Ollama",
+      "document": 193,
+      "final_without_action": "FAILED (AI-feldolgozás: Az Ollama-hívás sikertelen: (\"Connection broken: ConnectionResetError(10054, 'An existing connection was)",
+      "final_after_reprocess": "PROCESSED",
+      "recovery_after_reprocess_s": 56.9,
+      "recovered_s_after_restart": 57.0,
+      "timeline": [
+        {
+          "t": 0.2,
+          "event": "PDF feltöltve (dokumentum 193)"
+        },
+        {
+          "t": 3.9,
+          "event": "Ollama leállítva"
+        },
+        {
+          "t": 3.9,
+          "event": "állapot: PROCESSING"
+        },
+        {
+          "t": 6.1,
+          "event": "állapot: FAILED (AI-feldolgozás: Az Ollama-hívás sikertelen: (\"Connection broken: ConnectionResetError(10054, 'An existing connection was)"
+        },
+        {
+          "t": 36.4,
+          "event": "Ollama újraindítva"
+        },
+        {
+          "t": 36.5,
+          "event": "kézi újrafeldolgozás kérve (202)"
+        },
+        {
+          "t": 36.5,
+          "event": "állapot: PROCESSING"
+        },
+        {
+          "t": 93.4,
+          "event": "állapot: PROCESSED"
+        }
+      ]
+    },
+    {
+      "case": "D3 docproc",
+      "document": 194,
+      "final": "PROCESSED",
+      "recovered_s_after_restart": 117.4,
+      "timeline": [
+        {
+          "t": 0.1,
+          "event": "PDF feltöltve (dokumentum 194)"
+        },
+        {
+          "t": 7.4,
+          "event": "docproc leállítva (PID 8780)"
+        },
+        {
+          "t": 7.5,
+          "event": "állapot: PROCESSING"
+        },
+        {
+          "t": 27.8,
+          "event": "határidő (20 s) lejárt"
+        },
+        {
+          "t": 27.8,
+          "event": "docproc újraindítva"
+        },
+        {
+          "t": 29.4,
+          "event": "docproc /health válaszol"
+        },
+        {
+          "t": 145.2,
+          "event": "állapot: PROCESSED"
+        }
+      ]
+    },
+    {
+      "case": "D2 voice",
+      "recording": 17,
+      "final": "DONE",
+      "after": {
+        "utterances": 13,
+        "findings": "PROCESSING",
+        "summary": null
+      },
+      "recovered_s_after_restart": 370.1,
+      "timeline": [
+        {
+          "t": 0.5,
+          "event": "felvétel feltöltve (17, 57 s hang)"
+        },
+        {
+          "t": 11.7,
+          "event": "voice service leállítva (PID 37844)"
+        },
+        {
+          "t": 11.8,
+          "event": "állapot: PROCESSING"
+        },
+        {
+          "t": 32.0,
+          "event": "határidő (20 s) lejárt"
+        },
+        {
+          "t": 32.1,
+          "event": "voice service újraindítva"
+        },
+        {
+          "t": 44.2,
+          "event": "voice /health válaszol"
+        },
+        {
+          "t": 74.7,
+          "event": "a felvétel újra a voice sorában (VoiceLostJobs átadta)"
+        },
+        {
+          "t": 401.9,
+          "event": "állapot: DONE"
+        }
+      ]
+    }
+  ],
+  "patient_deleted": true
+}

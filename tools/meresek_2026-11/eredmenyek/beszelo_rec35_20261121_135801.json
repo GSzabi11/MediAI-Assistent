@@ -1,0 +1,96 @@
+{
+  "recording": 35,
+  "mode": "SBO",
+  "ref_words": 541,
+  "sys_words": 555,
+  "aligned": 536,
+  "aligned_exact": 492,
+  "deleted": 5,
+  "inserted": 19,
+  "wer_fold": 0.1257,
+  "speaker_changed_by_review": 0,
+  "asr_speaker": {
+    "osszes": {
+      "n": 536,
+      "ok": 531,
+      "acc": 0.9907
+    },
+    "fo_szoveg": {
+      "n": 528,
+      "ok": 523,
+      "acc": 0.9905
+    },
+    "atfedes": {
+      "n": 8,
+      "ok": 8,
+      "acc": 1.0
+    },
+    "orvos": {
+      "n": 310,
+      "ok": 310,
+      "acc": 1.0
+    },
+    "beteg": {
+      "n": 218,
+      "ok": 213,
+      "acc": 0.9771
+    },
+    "forgatokonyv_sor": {
+      "n": 75,
+      "ok": 74,
+      "acc": 0.9867,
+      "missing": 0,
+      "wrong": [
+        "B48"
+      ]
+    },
+    "rendszer_megszolalas": {
+      "n": 87,
+      "ok": 86,
+      "acc": 0.9885,
+      "vegyes": 4
+    }
+  },
+  "speaker": {
+    "osszes": {
+      "n": 536,
+      "ok": 531,
+      "acc": 0.9907
+    },
+    "fo_szoveg": {
+      "n": 528,
+      "ok": 523,
+      "acc": 0.9905
+    },
+    "atfedes": {
+      "n": 8,
+      "ok": 8,
+      "acc": 1.0
+    },
+    "orvos": {
+      "n": 310,
+      "ok": 310,
+      "acc": 1.0
+    },
+    "beteg": {
+      "n": 218,
+      "ok": 213,
+      "acc": 0.9771
+    },
+    "forgatokonyv_sor": {
+      "n": 75,
+      "ok": 74,
+      "acc": 0.9867,
+      "missing": 0,
+      "wrong": [
+        "B48"
+      ]
+    },
+    "rendszer_megszolalas": {
+      "n": 87,
+      "ok": 86,
+      "acc": 0.9885,
+      "vegyes": 4
+    }
+  }
+}

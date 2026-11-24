@@ -153,18 +153,22 @@ function ProfilAdatok({ p }: { p: Hangprofil }) {
   );
 }
 
-// A prototípus (ai-service/voice/hangprofil.py) mondatai: sokféle magyar hang (ö/ő/ü/ű, gy/ny/ty,
-// sz/zs/cs), és a munka közbeni beszédhez hasonló stílus (kérdés, utasítás, számok diktálása).
-// A hanglenyomat szövegfüggetlen: a tartalom nem számít, csak az elég nettó beszéd.
+// Ugyanazok, mint az ai-service/voice/profil_core.py ENROLL_SENTENCES-e: rövid, könnyen felolvasható
+// mondatok, sokféle magyar hanggal (ö/ő/ü/ű, gy/ny, sz/zs/cs). A hanglenyomat szövegfüggetlen: a tartalom
+// nem számít, csak az elég nettó beszéd (mondatonként ≥ 2 mp, összesen ~30 mp; a Spring max. 12-t fogad).
 const MONDATOK = [
-  'Jó napot kívánok, kérem, mondja el, mi történt önnel.',
-  'Mióta tart a fájdalom, hová sugárzik, és érez-e zsibbadást a kezében vagy a lábában?',
-  'Szed rendszeresen gyógyszert, például vérnyomáscsökkentőt, vérhígítót vagy inzulint?',
-  'Most meghallgatom a szívét és a tüdejét. Vegyen mély levegőt, és tartsa bent egy pillanatig.',
-  'A bal kamra ejekciós frakciója ötvenöt százalék, regionális falmozgászavar nem látható.',
-  'Az E per e vessző arány tizenkettő, a tricuspidalis regurgitáció sebessége két egész nyolc méter per szekundum.',
-  'Hány éves korában műtötték, és volt-e azóta szövődménye vagy gyógyszerallergiás reakciója?',
-  'Köszönöm a türelmét. Az eredményeket egy óra múlva megbeszéljük a hozzátartozójával együtt.',
+  'Jó napot kívánok, kérem, foglaljon helyet itt a széken.',
+  'Mondja el, kérem, mióta érzi magát rosszul.',
+  'Hol fáj pontosan, és mikor kezdődött a fájdalom?',
+  'Érez szűk mellkasi nyomást vagy zsibbadást a kezében?',
+  'Szed most valamilyen gyógyszert, vagy allergiás valamire?',
+  'Most meghallgatom a szívét és a tüdejét.',
+  'Vegyen mély levegőt, és lassan fújja ki.',
+  'Kérem, feküdjön le az ágyra, és lazítson el.',
+  'A vérnyomása százharminc per nyolcvan, a pulzusa hetvenkettő.',
+  'Reggel harmincnyolc egész öt fokos láza volt.',
+  'Holnap reggel éhgyomorra jöjjön vissza vérvételre.',
+  'Köszönöm a türelmét, az eredményt hamarosan megbeszéljük.',
 ];
 
 // Gyors, kliensoldali szűrés (a valódi ellenőrzés a Pythonban fut, VAD-dal)

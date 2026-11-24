@@ -55,7 +55,7 @@ export const csoportok: { kategoria: FindingCategoryDto; cim: string; bno: boole
   { kategoria: 'DIAGNOSIS', cim: 'Diagnózisok', bno: true, pelda: 'pl. akut koronária szindróma gyanúja' },
   { kategoria: 'REFERRAL', cim: 'Beutalók', bno: false, pelda: 'pl. kardiológiai konzílium' },
   { kategoria: 'EXAM_FINDING', cim: 'Vizsgálati megállapítások', bno: false, pelda: 'pl. RR 165/95 Hgmm' },
-  { kategoria: 'MEDICATION', cim: 'Javasolt gyógyszerek', bno: false, pelda: 'pl. Aspirin 100 mg' },
+  { kategoria: 'MEDICATION', cim: 'Gyógyszerek', bno: false, pelda: 'pl. Aspirin 100 mg, Allergia: penicillin' },
   { kategoria: 'RECOMMENDATION', cim: 'Javaslatok / kontroll', bno: false, pelda: 'pl. kontroll 2 hét múlva' },
 ];
 

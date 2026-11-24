@@ -62,7 +62,7 @@ def _keywords_line(keywords: list[str]) -> str:
 
 
 CATEGORY_LABEL = {"COMPLAINT": "Panasz", "DIAGNOSIS": "Diagnózis", "REFERRAL": "Beutaló",
-                  "EXAM_FINDING": "Vizsgálati megállapítás", "MEDICATION": "Javasolt gyógyszer",
+                  "EXAM_FINDING": "Vizsgálati megállapítás", "MEDICATION": "Gyógyszer",
                   "RECOMMENDATION": "Javaslat / kontroll"}
 # ennyi pont jöhet a modelltől + a pótolt csoportelemek (a Spring legfeljebb 30-at fogad)
 MAX_TOTAL_POINTS = 30

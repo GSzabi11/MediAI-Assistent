@@ -1,0 +1,30 @@
+{
+  "recordings_measured": 8,
+  "recordings_total_sec": 352,
+  "audio_formats": [
+    ".webm"
+  ],
+  "audio_bytes_per_sec_weighted": 16076.2,
+  "audio_bytes_per_sec_per_file": {
+    "n": 8,
+    "mean": 15949.52,
+    "median": 16027.99,
+    "min": 15025.25,
+    "max": 16378.43
+  },
+  "pdf_rows": 190,
+  "pdf_unique": 27,
+  "pdf_mean_bytes_unique": 115651,
+  "pdf_size_unique": {
+    "n": 27,
+    "mean": 115651.07,
+    "median": 97922,
+    "min": 23438,
+    "max": 236107
+  },
+  "assumption": "100 orvos × 10 beteg/nap × 250 nap = 250 000 ellátás/év; ellátásonként 300 mp hang + 2 PDF",
+  "audio_per_visit_MB": 4.82,
+  "audio_year_GB": 1205.7,
+  "pdf_year_GB": 57.8,
+  "total_year_GB": 1263.5
+}

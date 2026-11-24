@@ -1,0 +1,473 @@
+[
+ {
+  "model": "medgemma:27b",
+  "seed": 1,
+  "run": 0,
+  "sbo": {
+   "seconds": 148.0,
+   "ran": true,
+   "out": [
+    {
+     "id": 0,
+     "role": "orvos",
+     "text": "Jó napot, mi a panasza?",
+     "review_note": null
+    },
+    {
+     "id": 1,
+     "role": "beteg",
+     "text": "Tegnap óta szorít a mellkasom, és a bal karomba sugárzik.",
+     "review_note": null
+    },
+    {
+     "id": 2,
+     "role": "orvos",
+     "text": "Milyen gyógyszereket szed?",
+     "review_note": null
+    },
+    {
+     "id": 3,
+     "role": "beteg",
+     "text": "Vérnyomásra ramiprilt szedek, koleszterinre atorvasztatint.",
+     "review_note": null
+    },
+    {
+     "id": 4,
+     "role": "orvos",
+     "text": "Cukorbetegsége van?",
+     "review_note": null
+    },
+    {
+     "id": 5,
+     "role": "beteg",
+     "text": "Igen, esténként inulint adok be magamnak, és metformint is szedek.",
+     "review_note": null
+    },
+    {
+     "id": 6,
+     "role": "orvos",
+     "text": "Van gyógyszerallergiája?",
+     "review_note": null
+    },
+    {
+     "id": 7,
+     "role": "beteg",
+     "text": "A penicilintől kiütéses leszek.",
+     "review_note": null
+    },
+    {
+     "id": 8,
+     "role": "orvos",
+     "text": "Volt már szívinfarktusa?",
+     "review_note": null
+    },
+    {
+     "id": 9,
+     "role": "beteg",
+     "text": "Két éve volt egy kisebb, akkor sztentet kaptam.",
+     "review_note": null
+    },
+    {
+     "id": 10,
+     "role": "beteg",
+     "text": "És most milyen vizsgálatokat kér, doktor úr?",
+     "review_note": null
+    },
+    {
+     "id": 11,
+     "role": "orvos",
+     "text": "EKG-t és troponint kérek, és adok egy aszpirint.",
+     "review_note": null
+    },
+    {
+     "id": 12,
+     "role": "beteg",
+     "text": "Szívritmusra metoprololt is szedek.",
+     "review_note": null
+    },
+    {
+     "id": 13,
+     "role": "orvos",
+     "text": "Rendben, a nitroglicerin spray-t használta?",
+     "review_note": null
+    },
+    {
+     "id": 14,
+     "role": "beteg",
+     "text": "Igen, kétszer fújtam, de nem múlt el.",
+     "review_note": null
+    },
+    {
+     "id": 15,
+     "role": "orvos",
+     "text": "A pulzusa százhúsz, a vérnyomása száz per hatvan.",
+     "review_note": null
+    }
+   ],
+   "warnings": []
+  },
+  "echo": {
+   "seconds": 176.1,
+   "ran": true,
+   "out": [
+    {
+     "id": 0,
+     "role": "orvos",
+     "text": "Bal kamra végdiasztolés átmérője 52 milliméter, a szeptum 11 milliméter.",
+     "review_note": null
+    },
+    {
+     "id": 1,
+     "role": "orvos",
+     "text": "Az ejekciós frakció 555 százalék, a fali mozgászavar nem látható.",
+     "review_note": "Érték ellenőrizendő: «555 százalék» — Az ejekciós frakció (EF) általában 55-70% között van. Az '555%' érték nyilvánvalóan hibás, valószínűleg az '55%' a helyes érték."
+    },
+    {
+     "id": 2,
+     "role": "orvos",
+     "text": "E/A arány 0,8, a septalis e' 7 centiméter per szekundum.",
+     "review_note": null
+    },
+    {
+     "id": 3,
+     "role": "orvos",
+     "text": "TAPSE 21 milliméter, a jobb kamra nem tágult.",
+     "review_note": null
+    },
+    {
+     "id": 4,
+     "role": "orvos",
+     "text": "A bal pitvar átmérője 41 milliméter.",
+     "review_note": null
+    },
+    {
+     "id": 5,
+     "role": "orvos",
+     "text": "Az aorta gyök átmérője 340 milliméter.",
+     "review_note": "Érték ellenőrizendő: «340 milliméter» — Az aorta gyök átmérője általában 25-40 mm között van. A '340 mm' érték nyilvánvalóan hibás, valószínűleg a '34 mm' a helyes érték."
+    },
+    {
+     "id": 6,
+     "role": "orvos",
+     "text": "A becsült pulmonalis nyomás 32 Hgmm.",
+     "review_note": null
+    }
+   ],
+   "warnings": []
+  }
+ },
+ {
+  "model": "medgemma:27b",
+  "seed": 42,
+  "run": 0,
+  "sbo": {
+   "seconds": 152.7,
+   "ran": true,
+   "out": [
+    {
+     "id": 0,
+     "role": "orvos",
+     "text": "Jó napot, mi a panasza?",
+     "review_note": null
+    },
+    {
+     "id": 1,
+     "role": "beteg",
+     "text": "Tegnap óta szorít a mellkasom, és a bal karomba sugárzik.",
+     "review_note": null
+    },
+    {
+     "id": 2,
+     "role": "orvos",
+     "text": "Milyen gyógyszereket szed?",
+     "review_note": null
+    },
+    {
+     "id": 3,
+     "role": "beteg",
+     "text": "Vérnyomásra ramiprilt szedek, koleszterinre atorvasztatint.",
+     "review_note": null
+    },
+    {
+     "id": 4,
+     "role": "orvos",
+     "text": "Cukorbetegsége van?",
+     "review_note": null
+    },
+    {
+     "id": 5,
+     "role": "beteg",
+     "text": "Igen, esténként inulint adok be magamnak, és metformint is szedek.",
+     "review_note": null
+    },
+    {
+     "id": 6,
+     "role": "orvos",
+     "text": "Van gyógyszerallergiája?",
+     "review_note": null
+    },
+    {
+     "id": 7,
+     "role": "beteg",
+     "text": "A penicilintől kiütéses leszek.",
+     "review_note": null
+    },
+    {
+     "id": 8,
+     "role": "orvos",
+     "text": "Volt már szívinfarktusa?",
+     "review_note": null
+    },
+    {
+     "id": 9,
+     "role": "beteg",
+     "text": "Két éve volt egy kisebb, akkor sztentet kaptam.",
+     "review_note": null
+    },
+    {
+     "id": 10,
+     "role": "beteg",
+     "text": "És most milyen vizsgálatokat kér, doktor úr?",
+     "review_note": null
+    },
+    {
+     "id": 11,
+     "role": "orvos",
+     "text": "EKG-t és troponint kérek, és adok egy aszpirint.",
+     "review_note": null
+    },
+    {
+     "id": 12,
+     "role": "beteg",
+     "text": "Szívritmusra metoprololt is szedek.",
+     "review_note": null
+    },
+    {
+     "id": 13,
+     "role": "orvos",
+     "text": "Rendben, a nitroglicerin spray-t használta?",
+     "review_note": null
+    },
+    {
+     "id": 14,
+     "role": "beteg",
+     "text": "Igen, kétszer fújtam, de nem múlt el.",
+     "review_note": null
+    },
+    {
+     "id": 15,
+     "role": "orvos",
+     "text": "A pulzusa százhúsz, a vérnyomása száz per hatvan.",
+     "review_note": null
+    }
+   ],
+   "warnings": []
+  },
+  "echo": {
+   "seconds": 184.1,
+   "ran": true,
+   "out": [
+    {
+     "id": 0,
+     "role": "orvos",
+     "text": "Bal kamra végdiasztolés átmérője 52 milliméter, a szeptum 11 milliméter.",
+     "review_note": null
+    },
+    {
+     "id": 1,
+     "role": "orvos",
+     "text": "Az ejekciós frakció 555 százalék, a fali mozgászavar nem látható.",
+     "review_note": "Érték ellenőrizendő: «555 százalék» — Az ejekciós frakció (EF) általában 55-70% között van. Az '555%' érték nyilvánvalóan hibás, valószínűleg az '55%' a helyes érték."
+    },
+    {
+     "id": 2,
+     "role": "orvos",
+     "text": "E/A arány 0,8, a septalis e' 7 centiméter per szekundum.",
+     "review_note": null
+    },
+    {
+     "id": 3,
+     "role": "orvos",
+     "text": "TAPSE 21 milliméter, a jobb kamra nem tágult.",
+     "review_note": null
+    },
+    {
+     "id": 4,
+     "role": "orvos",
+     "text": "A bal pitvar átmérője 41 milliméter.",
+     "review_note": null
+    },
+    {
+     "id": 5,
+     "role": "orvos",
+     "text": "Az aorta gyök átmérője 340 milliméter.",
+     "review_note": "Érték ellenőrizendő: «340 milliméter» — Az aorta gyök átmérője általában 25-40 mm között van. A '340 mm' érték nyilvánvalóan hibás, valószínűleg a '34 mm' a helyes érték."
+    },
+    {
+     "id": 6,
+     "role": "orvos",
+     "text": "A becsült pulmonalis nyomás 32 Hgmm.",
+     "review_note": null
+    }
+   ],
+   "warnings": []
+  }
+ },
+ {
+  "model": "medgemma:27b",
+  "seed": 1234,
+  "run": 0,
+  "sbo": {
+   "seconds": 149.1,
+   "ran": true,
+   "out": [
+    {
+     "id": 0,
+     "role": "orvos",
+     "text": "Jó napot, mi a panasza?",
+     "review_note": null
+    },
+    {
+     "id": 1,
+     "role": "beteg",
+     "text": "Tegnap óta szorít a mellkasom, és a bal karomba sugárzik.",
+     "review_note": null
+    },
+    {
+     "id": 2,
+     "role": "orvos",
+     "text": "Milyen gyógyszereket szed?",
+     "review_note": null
+    },
+    {
+     "id": 3,
+     "role": "beteg",
+     "text": "Vérnyomásra ramiprilt szedek, koleszterinre atorvasztatint.",
+     "review_note": null
+    },
+    {
+     "id": 4,
+     "role": "orvos",
+     "text": "Cukorbetegsége van?",
+     "review_note": null
+    },
+    {
+     "id": 5,
+     "role": "beteg",
+     "text": "Igen, esténként inulint adok be magamnak, és metformint is szedek.",
+     "review_note": null
+    },
+    {
+     "id": 6,
+     "role": "orvos",
+     "text": "Van gyógyszerallergiája?",
+     "review_note": null
+    },
+    {
+     "id": 7,
+     "role": "beteg",
+     "text": "A penicilintől kiütéses leszek.",
+     "review_note": null
+    },
+    {
+     "id": 8,
+     "role": "orvos",
+     "text": "Volt már szívinfarktusa?",
+     "review_note": null
+    },
+    {
+     "id": 9,
+     "role": "beteg",
+     "text": "Két éve volt egy kisebb, akkor sztentet kaptam.",
+     "review_note": null
+    },
+    {
+     "id": 10,
+     "role": "beteg",
+     "text": "És most milyen vizsgálatokat kér, doktor úr?",
+     "review_note": null
+    },
+    {
+     "id": 11,
+     "role": "orvos",
+     "text": "EKG-t és troponint kérek, és adok egy aszpirint.",
+     "review_note": null
+    },
+    {
+     "id": 12,
+     "role": "beteg",
+     "text": "Szívritmusra metoprololt is szedek.",
+     "review_note": null
+    },
+    {
+     "id": 13,
+     "role": "orvos",
+     "text": "Rendben, a nitroglicerin spray-t használta?",
+     "review_note": null
+    },
+    {
+     "id": 14,
+     "role": "beteg",
+     "text": "Igen, kétszer fújtam, de nem múlt el.",
+     "review_note": null
+    },
+    {
+     "id": 15,
+     "role": "orvos",
+     "text": "A pulzusa százhúsz, a vérnyomása száz per hatvan.",
+     "review_note": null
+    }
+   ],
+   "warnings": []
+  },
+  "echo": {
+   "seconds": 191.2,
+   "ran": true,
+   "out": [
+    {
+     "id": 0,
+     "role": "orvos",
+     "text": "Bal kamra végdiasztolés átmérője 52 milliméter, a szeptum 11 milliméter.",
+     "review_note": null
+    },
+    {
+     "id": 1,
+     "role": "orvos",
+     "text": "Az ejekciós frakció 555 százalék, a fali mozgászavar nem látható.",
+     "review_note": "Érték ellenőrizendő: «555 százalék» — Az ejekciós frakció (EF) általában 55-70% között van. Az '555%' érték nyilvánvalóan hibás, valószínűleg az '55%' a helyes érték."
+    },
+    {
+     "id": 2,
+     "role": "orvos",
+     "text": "E/A arány 0,8, a septalis e' 7 centiméter per szekundum.",
+     "review_note": null
+    },
+    {
+     "id": 3,
+     "role": "orvos",
+     "text": "TAPSE 21 milliméter, a jobb kamra nem tágult.",
+     "review_note": null
+    },
+    {
+     "id": 4,
+     "role": "orvos",
+     "text": "A bal pitvar átmérője 41 milliméter.",
+     "review_note": null
+    },
+    {
+     "id": 5,
+     "role": "orvos",
+     "text": "Az aorta gyök átmérője 340 milliméter.",
+     "review_note": "Érték ellenőrizendő: «340 milliméter» — Az aorta gyök átmérője általában 25-40 mm között van. A '340 mm' érték nyilvánvalóan hibás, valószínűleg a '34 mm' a helyes érték."
+    },
+    {
+     "id": 6,
+     "role": "orvos",
+     "text": "A becsült pulmonalis nyomás 32 Hgmm.",
+     "review_note": null
+    }
+   ],
+   "warnings": []
+  }
+ }
+]
